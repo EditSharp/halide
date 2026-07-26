@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+Slopmaxxing/Runtime/ffmpeg/ffmpeg.exe
+Slopmaxxing/Runtime/ffmpeg/ffplay.exe
+Slopmaxxing/Runtime/ffmpeg/ffprobe.exe
