@@ -6,6 +6,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
+  <Project Path="EditSharp/EditSharp.csproj" Id="a6492b06-aea6-400d-837a-934e39f0c8e7" />
   <Project Path="Slopmaxxing/Slopmaxxing.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
