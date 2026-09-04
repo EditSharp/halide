@@ -40,6 +40,7 @@ public partial class UIPlayback : Control
 		playButton.Pressed += PlayButton_Pressed;
 
 		slider.DragStarted += Slider_DragStarted;
+		slider.ValueChanged += Slider_ValueChanged;
 		slider.DragEnded += Slider_DragEnded;
 
 		playback.VideoFrame += OnVideoFrame;
@@ -77,9 +78,23 @@ public partial class UIPlayback : Control
 		}
     }
 
+	void Slider_DragStarted()
+	{
+		playback.Pause();
+		SetPlayButtonText("Play");
+	}
+
+	void Slider_ValueChanged(double value)
+	{
+		if (!playback.IsPaused && playback.IsPlaying) return;
+
+		Debug.WriteLine($"scrubbing to {CalculateTimestamp(playback.Timeline.Duration * value, playback.Timeline.Duration, playback.RenderSettings.Framerate)}");
+		playback.ScrubToAsync(playback.Timeline.Duration * value);
+	}
+
 	void Slider_DragEnded(bool valueChanged)
 	{
-		
+		if (valueChanged) playback.ScrubToAsync(playback.Timeline.Duration * slider.Value);
 	}
 
 	Image _frame = Image.CreateEmpty(1920, 1080, false, Image.Format.Rgba8);

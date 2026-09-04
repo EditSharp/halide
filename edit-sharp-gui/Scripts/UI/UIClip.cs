@@ -5,11 +5,9 @@ using EditSharp.Components.Clips;
 
 public partial class UIClip : Control
 {
-	[Export]
-	Label clipName;
+	[Export] Label clipName;
 
-	[Export]
-	Panel thumbnail;
+	[Export] Panel thumbnail;
 
 	Clip Clip;
 
