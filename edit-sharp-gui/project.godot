@@ -11,17 +11,28 @@ config_version=5
 [application]
 
 config/name="EditSharp GUI"
-config/features=PackedStringArray("4.7", "Forward Plus")
+run/main_scene="uid://g6wy0pbq4w6j"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+ProjectManager="*uid://bc68xkyitnlxp"
 
 [display]
 
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
 [dotnet]
 
 project/assembly_name="EditSharp GUI"
+
+[gui]
+
+theme/custom_font="uid://dynelqw1go4e8"
 
 [physics]
 

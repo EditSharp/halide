@@ -1,0 +1,23 @@
+﻿<Project Sdk="Godot.NET.Sdk/4.6.3">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>EditSharpGUI</RootNamespace>
+    <UserSecretsId>29b9d31f-ebf6-4493-9b3b-ea5f469a7e03</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EditSharp\EditSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Media\" />
+    <Folder Include="Media\Example\" />
+    <Folder Include="Media\Example\Video\" />
+    <Folder Include="Scripts\Tests\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Media\Example\Video\video3.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bc68xkyitnlxp"]
+
+[ext_resource type="Script" uid="uid://mkm2hdppeeoa" path="res://Scripts/ProjectManager.cs" id="1_80whh"]
+
+[node name="ProjectManager" type="Node" unique_id=1520242936]
+script = ExtResource("1_80whh")

@@ -1,0 +1,276 @@
+[gd_scene format=3 uid="uid://g6wy0pbq4w6j"]
+
+[ext_resource type="PackedScene" uid="uid://c3uao3qqjglxj" path="res://Scenes/Windows/Playback.tscn" id="1_0t6hi"]
+[ext_resource type="Texture2D" uid="uid://cj4xwbye0drfc" path="res://goofy-icon.png" id="1_3w7ng"]
+[ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Elements/Clip.tscn" id="2_0t6hi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7qsqj"]
+bg_color = Color(0.16078432, 0.16078432, 0.16078432, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mgnd2"]
+bg_color = Color(0.105882354, 0.105882354, 0.105882354, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
+bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mgnd2"]
+texture = ExtResource("1_3w7ng")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e7h7s"]
+bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p4i4y"]
+bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[node name="Main Window" type="Control" unique_id=359435738]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="Panel" parent="." unique_id=1167067985]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_7qsqj")
+
+[node name="VSplitContainer" type="VSplitContainer" parent="." unique_id=1206312887]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VSplitContainer" unique_id=812098013]
+layout_mode = 2
+size_flags_vertical = 3
+split_offsets = PackedInt32Array(0, 0)
+
+[node name="Sources" type="Control" parent="VSplitContainer/HSplitContainer" unique_id=875602338]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/HSplitContainer/Sources" unique_id=636012337]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Source Options" type="Control" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer" unique_id=1329792608]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Background" type="Panel" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options" unique_id=10309370]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mgnd2")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options" unique_id=597456264]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="Button" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options/HBoxContainer" unique_id=966211042]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add Source"
+
+[node name="HFlowContainer" type="HFlowContainer" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer" unique_id=1602071793]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Playback" parent="VSplitContainer/HSplitContainer" unique_id=1515650523 instance=ExtResource("1_0t6hi")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Inspector" type="Control" parent="VSplitContainer/HSplitContainer" unique_id=302617610]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Edit" type="Control" parent="VSplitContainer" unique_id=554534565]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VSplitContainer/Edit" unique_id=487809549]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/Edit/ScrollContainer" unique_id=720880865]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Channel Edits" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer" unique_id=202581254]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+
+[node name="Ruler" type="Control" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits" unique_id=375124942]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Ruler" unique_id=813067667]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+
+[node name="Panel" type="Panel" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Ruler/Panel" unique_id=1895017455]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
+
+[node name="Channels" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits" unique_id=1390631400]
+layout_mode = 2
+
+[node name="Channel Edit" type="PanelContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels" unique_id=716921371]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e7h7s")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit" unique_id=544269923]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit" unique_id=843897182]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "Channel 1"
+
+[node name="Channel Edit2" type="PanelContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels" unique_id=477923803]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e7h7s")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit2" unique_id=1278481686]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit2" unique_id=1591464568]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "Channel 2"
+
+[node name="Channel Edit3" type="PanelContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels" unique_id=1968648081]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e7h7s")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit3" unique_id=1514150062]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit3" unique_id=125293048]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "Channel 3"
+
+[node name="Channel Edit4" type="PanelContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels" unique_id=520856670]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_e7h7s")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit4" unique_id=1531174769]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Channel Edits/Channels/Channel Edit4" unique_id=2093899215]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "Channel 4"
+
+[node name="Timeline" type="ScrollContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer" unique_id=341273036]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline" unique_id=1033433535]
+layout_mode = 2
+
+[node name="Ruler" type="Control" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer" unique_id=1503934832]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Ruler" unique_id=1934967122]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+
+[node name="Panel" type="Panel" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Ruler/Panel" unique_id=1273215753]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
+
+[node name="Channels" type="VBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer" unique_id=1102640547]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="Channel" type="PanelContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels" unique_id=1678400403]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_p4i4y")
+
+[node name="Clips" type="HBoxContainer" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel" unique_id=343655918]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="Clip" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1602560751 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip2" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1953794363 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip3" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1008976609 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip4" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1677708697 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip5" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=2018534373 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip6" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1011318968 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
+
+[node name="Clip7" parent="VSplitContainer/Edit/ScrollContainer/HBoxContainer/Timeline/VBoxContainer/Channels/Channel/Clips" unique_id=1867396486 instance=ExtResource("2_0t6hi")]
+layout_mode = 2
