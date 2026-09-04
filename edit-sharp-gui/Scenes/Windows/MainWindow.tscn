@@ -52,11 +52,11 @@ layout_mode = 2
 size_flags_vertical = 3
 split_offsets = PackedInt32Array(0, 0)
 
-[node name="Sources" type="Control" parent="VSplitContainer/HSplitContainer" unique_id=875602338]
+[node name="Source Viewer" type="Control" parent="VSplitContainer/HSplitContainer" unique_id=875602338]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/HSplitContainer/Sources" unique_id=636012337]
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/HSplitContainer/Source Viewer" unique_id=636012337]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,11 +65,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
-[node name="Source Options" type="Control" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer" unique_id=1329792608]
+[node name="Source Options" type="Control" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer" unique_id=1329792608]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 
-[node name="Background" type="Panel" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options" unique_id=10309370]
+[node name="Background" type="Panel" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer/Source Options" unique_id=10309370]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -78,7 +78,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_mgnd2")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options" unique_id=597456264]
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer/Source Options" unique_id=597456264]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 1
 anchors_preset = 15
@@ -87,12 +87,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Button" type="Button" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer/Source Options/HBoxContainer" unique_id=966211042]
+[node name="Button" type="Button" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer/Source Options/HBoxContainer" unique_id=966211042]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Add Source"
 
-[node name="HFlowContainer" type="HFlowContainer" parent="VSplitContainer/HSplitContainer/Sources/VBoxContainer" unique_id=1602071793]
+[node name="Sources" type="HFlowContainer" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer" unique_id=1602071793]
 layout_mode = 2
 size_flags_vertical = 3
 

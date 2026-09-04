@@ -89,7 +89,15 @@ public partial class UIPlayback : Control
 		if (!playback.IsPaused && playback.IsPlaying) return;
 
 		Debug.WriteLine($"scrubbing to {CalculateTimestamp(playback.Timeline.Duration * value, playback.Timeline.Duration, playback.RenderSettings.Framerate)}");
-		playback.ScrubToAsync(playback.Timeline.Duration * value);
+		try
+		{
+			playback.ScrubToAsync(playback.Timeline.Duration * value);
+		}
+		catch (Exception e)
+		{
+			Debug.WriteLine(e);
+		}
+		
 	}
 
 	void Slider_DragEnded(bool valueChanged)
