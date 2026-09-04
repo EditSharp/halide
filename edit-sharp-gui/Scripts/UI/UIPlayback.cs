@@ -3,6 +3,7 @@ using Godot;
 using Godot.NativeInterop;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 public partial class UIPlayback : Control
 {
@@ -33,7 +34,7 @@ public partial class UIPlayback : Control
 		playback = new()
 		{
 			Timeline = ProjectManager.Singleton.currentProject.Timeline,
-			RenderSettings = ProjectManager.Singleton.currentProject.RenderSettings with { Resolution = new(1920, 720) }
+			RenderSettings = ProjectManager.Singleton.currentProject.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
 		};
 
 		playButton.Pressed += PlayButton_Pressed;
@@ -56,6 +57,7 @@ public partial class UIPlayback : Control
 			{
 				//pause
 				playback.Pause();
+				SetTimestamp(CalculateTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate));
 			}
 		}
 		else
@@ -77,12 +79,8 @@ public partial class UIPlayback : Control
 		_frame.SetData(e.Width, e.Height, false, Image.Format.Rgba8, e.Buffer[..e.Length]);
 
 		DrawImage(_frame, true);
+		SetTimestamp(CalculateTimestamp(e.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate));
     }
-
-	void DrawImage(Image image, bool sameResolution = false)
-	{
-		videoTexture.CallDeferred(sameResolution ? "update" : "set_image", image);
-	}
 
 	AudioStreamGeneratorPlayback _generatorPlayback;
     void OnAudioSample(object sender, AudioSampleEventArgs e)
@@ -93,6 +91,37 @@ public partial class UIPlayback : Control
 			_generatorPlayback.PushBuffer(ToVector2Buffer(e.Buffer, e.Length, e.ChannelCount));
 		}
     }
+
+	void OnEndReached(object sender, EventArgs e)
+	{
+		Debug.WriteLine("end reached");
+		SetTimestamp(CalculateTimestamp(playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate));
+	}
+
+	
+
+	void DrawImage(Image image, bool sameResolution = false)
+	{
+		videoTexture.CallDeferred(sameResolution ? "update" : "set_image", image);
+	}
+
+	void SetTimestamp(string t)
+	{
+		timestamp.SetDeferred("text", t);
+	}
+
+	static string CalculateTimestamp(TimeSpan position, TimeSpan duration, int framerate)
+	{
+		string positionString = position.ToString(@"hh\:mm\:ss");
+		string positionFrames = ((int)(position.TotalSeconds % 1d * framerate)).ToString();
+		positionFrames = positionFrames.Length == 1 ? string.Concat("0", positionFrames) : positionFrames;
+
+		string durationString = duration.ToString(@"hh\:mm\:ss");
+		string durationFrames = ((int)(duration.TotalSeconds % 1d * framerate)).ToString();
+		durationFrames = durationFrames.Length == 1 ? string.Concat("0", durationFrames) : durationFrames;
+
+		return $"{positionString}.{positionFrames} / {durationString}.{durationFrames}";
+	}
 
 	public Vector2[] samples;
 	/// <summary>
@@ -135,8 +164,5 @@ public partial class UIPlayback : Control
         return samples;
     }
 
-    void OnEndReached(object sender, EventArgs e)
-	{
-		Debug.WriteLine("end reached");
-	}
+    
 }
