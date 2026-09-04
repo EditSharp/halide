@@ -39,6 +39,9 @@ public partial class UIPlayback : Control
 
 		playButton.Pressed += PlayButton_Pressed;
 
+		slider.DragStarted += Slider_DragStarted;
+		slider.DragEnded += Slider_DragEnded;
+
 		playback.VideoFrame += OnVideoFrame;
 		playback.AudioSample += OnAudioSample;
 		playback.EndReached += OnEndReached;
@@ -52,34 +55,41 @@ public partial class UIPlayback : Control
 			{
 				//unpause
 				playback.Play();
+				SetPlayButtonText("Pause");
 			}
 			else
 			{
 				//pause
 				playback.Pause();
-				SetTimestamp(CalculateTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate));
+				SetPlayButtonText("Play");
+				SetTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
 			}
 		}
 		else
 		{
 			//setup playback
-			playback.Timeline = Tests.TestBlueprint.Timeline;
 			_frame = Image.CreateEmpty((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y, false, Image.Format.Rgba8);
 			DrawImage(_frame);
 
 			//start playback
 			playback.Play(TimeSpan.Zero);
+			SetPlayButtonText("Pause");
 		}
     }
+
+	void Slider_DragEnded(bool valueChanged)
+	{
+		
+	}
 
 	Image _frame = Image.CreateEmpty(1920, 1080, false, Image.Format.Rgba8);
 	void OnVideoFrame(object sender, VideoFrameEventArgs e)
     {
-		Debug.WriteLine($"video frame received: {e.Width}x{e.Height} {e.Width * e.Height * 4} bytes");
+		//Debug.WriteLine($"video frame received: {e.Width}x{e.Height} {e.Width * e.Height * 4} bytes");
 		_frame.SetData(e.Width, e.Height, false, Image.Format.Rgba8, e.Buffer[..e.Length]);
 
 		DrawImage(_frame, true);
-		SetTimestamp(CalculateTimestamp(e.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate));
+		SetTimestamp(e.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
     }
 
 	AudioStreamGeneratorPlayback _generatorPlayback;
@@ -95,7 +105,8 @@ public partial class UIPlayback : Control
 	void OnEndReached(object sender, EventArgs e)
 	{
 		Debug.WriteLine("end reached");
-		SetTimestamp(CalculateTimestamp(playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate));
+		SetPlayButtonText("Play");
+		SetTimestamp(playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate);
 	}
 
 	
@@ -105,9 +116,20 @@ public partial class UIPlayback : Control
 		videoTexture.CallDeferred(sameResolution ? "update" : "set_image", image);
 	}
 
-	void SetTimestamp(string t)
+	void SetPlayButtonText(string t)
 	{
-		timestamp.SetDeferred("text", t);
+		playButton.SetDeferred("text", t);
+	}
+
+	void SetSliderValue(double v)
+	{
+		slider.SetDeferred("value", v);
+	}
+
+	void SetTimestamp(TimeSpan position, TimeSpan duration, int framerate)
+	{
+		timestamp.SetDeferred("text", CalculateTimestamp(position, duration, framerate));
+		SetSliderValue(position / duration);
 	}
 
 	static string CalculateTimestamp(TimeSpan position, TimeSpan duration, int framerate)

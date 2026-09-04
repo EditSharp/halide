@@ -15,7 +15,10 @@ public partial class ProjectManager : Node
 		if (Singleton != this) return;
 	}
 
-	public Project currentProject = new();
+	public Project currentProject = new()
+	{
+		Timeline = Tests.TestBlueprint.Timeline
+	};
 }
 
 public class Project
