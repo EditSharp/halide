@@ -69,8 +69,7 @@ public partial class UIPlayback : Control
 		else
 		{
 			//setup playback
-			_frame = Image.CreateEmpty((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y, false, Image.Format.Rgba8);
-			DrawImage(_frame);
+			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
 
 			//start playback
 			playback.Play(TimeSpan.Zero);
@@ -78,15 +77,32 @@ public partial class UIPlayback : Control
 		}
     }
 
+	bool dragging = false;
+	bool restartOnDragEnd = false;
 	void Slider_DragStarted()
 	{
+		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+
+		if (playback.IsPlaying)
+		{
+			restartOnDragEnd = true;
+			Debug.WriteLine("scrub started mid-play, playback will be resumed on scrub end");
+		}
+		else
+		{
+			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+		}
+
 		playback.Pause();
+		Debug.WriteLine("starting scrub, paused playback");
 		SetPlayButtonText("Play");
+
+		dragging = true;
 	}
 
 	void Slider_ValueChanged(double value)
 	{
-		if (!playback.IsPaused && playback.IsPlaying) return;
+		if (!dragging) return;
 
 		Debug.WriteLine($"scrubbing to {CalculateTimestamp(playback.Timeline.Duration * value, playback.Timeline.Duration, playback.RenderSettings.Framerate)}");
 		try
@@ -102,16 +118,36 @@ public partial class UIPlayback : Control
 
 	void Slider_DragEnded(bool valueChanged)
 	{
-		if (valueChanged) playback.ScrubToAsync(playback.Timeline.Duration * slider.Value);
+		dragging = false;
+
+		if (restartOnDragEnd)
+		{
+			Debug.WriteLine("attempting to restart playback after scrub");
+			restartOnDragEnd = false;
+			//playback.Play();
+		}
 	}
 
-	Image _frame = Image.CreateEmpty(1920, 1080, false, Image.Format.Rgba8);
+	void InitializeFramebuffer(int width, int height)
+	{
+		if (_frame is null || _frame.GetWidth() != width || _frame.GetHeight() != height)
+		{
+			_frame = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+			videoTexture.CallDeferred("set_image", _frame);
+		}
+	}
+
+	Image _frame = null;
 	void OnVideoFrame(object sender, VideoFrameEventArgs e)
     {
-		//Debug.WriteLine($"video frame received: {e.Width}x{e.Height} {e.Width * e.Height * 4} bytes");
-		_frame.SetData(e.Width, e.Height, false, Image.Format.Rgba8, e.Buffer[..e.Length]);
+		//if frame is the wrong size, skip drawing
+		if (e.Length == (int)playback.RenderSettings.Resolution.X * (int)playback.RenderSettings.Resolution.Y * 4)
+		{
+			_frame.SetData(e.Width, e.Height, false, Image.Format.Rgba8, e.Buffer[..e.Length]);
 
-		DrawImage(_frame, true);
+			DrawImage(_frame);
+		}
+		
 		SetTimestamp(e.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
     }
 
@@ -134,9 +170,18 @@ public partial class UIPlayback : Control
 
 	
 
-	void DrawImage(Image image, bool sameResolution = false)
+	void DrawImage(Image image)
 	{
-		videoTexture.CallDeferred(sameResolution ? "update" : "set_image", image);
+		try
+		{
+			videoTexture.CallDeferred("update", image);
+		}
+		catch
+		{
+			InitializeFramebuffer(image.GetWidth(), image.GetHeight());
+			videoTexture.CallDeferred("update", image);
+		}
+		
 	}
 
 	void SetPlayButtonText(string t)

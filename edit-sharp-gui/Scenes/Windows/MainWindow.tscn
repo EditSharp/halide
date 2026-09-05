@@ -96,6 +96,15 @@ text = "Add Source"
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="Source" type="Control" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer/Sources" unique_id=986568413]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+
+[node name="Background" type="Panel" parent="VSplitContainer/HSplitContainer/Source Viewer/VBoxContainer/Sources/Source" unique_id=709669909]
+layout_mode = 0
+offset_left = -4.0
+offset_right = -4.0
+
 [node name="Playback" parent="VSplitContainer/HSplitContainer" unique_id=1515650523 instance=ExtResource("1_0t6hi")]
 layout_mode = 2
 size_flags_horizontal = 3
