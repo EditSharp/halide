@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://beu01cbn6y6ug"]
+
+[ext_resource type="Script" uid="uid://bjsbfuni82kjg" path="res://Scripts/UI/Components/UIClip.cs" id="1_fin3e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l4su8"]
+bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.046385482, 0.18149543, 0.2834634, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="Clip" type="HBoxContainer" unique_id=227284015]
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 323.0
+grow_vertical = 2
+script = ExtResource("1_fin3e")
+
+[node name="Content" type="Panel" parent="." unique_id=1654615429]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_l4su8")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content" unique_id=1199227694]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Name" type="Label" parent="Content/VBoxContainer" unique_id=1198296580]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Clip name"
+
+[node name="Thumbnail" type="Panel" parent="Content/VBoxContainer" unique_id=1880085867]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Gap" type="Control" parent="." unique_id=579099585]
+custom_minimum_size = Vector2(19.26, 0)
+layout_mode = 2

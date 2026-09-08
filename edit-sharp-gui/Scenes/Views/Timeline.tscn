@@ -1,0 +1,127 @@
+[gd_scene format=3 uid="uid://rmor8if075lh"]
+
+[ext_resource type="Texture2D" uid="uid://cj4xwbye0drfc" path="res://goofy-icon.png" id="1_12elb"]
+[ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
+[ext_resource type="PackedScene" uid="uid://8pmfu28pbs8r" path="res://Scenes/Components/ChannelTimeline.tscn" id="2_fxefp"]
+[ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
+bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mgnd2"]
+texture = ExtResource("1_12elb")
+
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("editsContainer", "edits", "timelinesContainer", "timelines", "rulerContainer", "ruler")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_douqe")
+editsContainer = NodePath("HBoxContainer/Channel Edits/Edits Container")
+edits = NodePath("HBoxContainer/Channel Edits/Edits Container/Edits")
+timelinesContainer = NodePath("HBoxContainer/Channel Timelines/Timelines Container")
+timelines = NodePath("HBoxContainer/Channel Timelines/Timelines Container/Timelines")
+rulerContainer = NodePath("HBoxContainer/Channel Timelines/Ruler Container")
+ruler = NodePath("HBoxContainer/Channel Timelines/Ruler Container/Ruler")
+channelEdit = ExtResource("3_au47u")
+channelTimeline = ExtResource("2_fxefp")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=586494631]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Channel Edits" type="VBoxContainer" parent="HBoxContainer" unique_id=1024709311]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Ruler Spacer" type="Control" parent="HBoxContainer/Channel Edits" unique_id=863421640]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="HBoxContainer/Channel Edits/Ruler Spacer" unique_id=321474229]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+
+[node name="Panel" type="Panel" parent="HBoxContainer/Channel Edits/Ruler Spacer/Panel" unique_id=1131324456]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
+
+[node name="Edits Container" type="ScrollContainer" parent="HBoxContainer/Channel Edits" unique_id=1414978845]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="Edits" type="VBoxContainer" parent="HBoxContainer/Channel Edits/Edits Container" unique_id=1355853325]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+
+[node name="Scrollbar Spacer" type="Control" parent="HBoxContainer/Channel Edits" unique_id=1503460378]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="Channel Timelines" type="VBoxContainer" parent="HBoxContainer" unique_id=2137122751]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="Ruler Container" type="ScrollContainer" parent="HBoxContainer/Channel Timelines" unique_id=1976138246]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+mouse_filter = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="Ruler" type="Control" parent="HBoxContainer/Channel Timelines/Ruler Container" unique_id=1451884380]
+custom_minimum_size = Vector2(3000, 20)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="HBoxContainer/Channel Timelines/Ruler Container/Ruler" unique_id=1627597923]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+
+[node name="Panel" type="Panel" parent="HBoxContainer/Channel Timelines/Ruler Container/Ruler/Panel" unique_id=2122241329]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
+
+[node name="Timelines Container" type="ScrollContainer" parent="HBoxContainer/Channel Timelines" unique_id=1543339615]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Timelines" type="VBoxContainer" parent="HBoxContainer/Channel Timelines/Timelines Container" unique_id=469528974]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0

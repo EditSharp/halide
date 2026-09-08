@@ -5,19 +5,25 @@ using EditSharp.Components.Clips;
 
 public partial class UIClip : Control
 {
-	[Export] Label clipName;
+	[ExportGroup("Controls")]
 
+	[Export] Control content;
+	[Export] Control gap;
+
+	[ExportGroup("Details")]
+
+	[Export] Label clipName;
 	[Export] Panel thumbnail;
 
-	Clip Clip;
+	public required Clip Clip;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 	}
 
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
+	public void SetLength(float length, float gap = 0)
 	{
+		
 	}
 }

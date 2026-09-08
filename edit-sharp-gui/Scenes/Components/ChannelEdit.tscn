@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c24hvkyrk1yim"]
+
+[ext_resource type="Script" uid="uid://cbjg1iy54ks5k" path="res://Scripts/UI/Components/UIChannelEdit.cs" id="1_vnlxm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vnlxm"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.105882354, 0.105882354, 0.105882354, 1)
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+border_blend = true
+
+[node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName")]
+custom_minimum_size = Vector2(0, 80)
+offset_right = 90.0
+offset_bottom = 80.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_vnlxm")
+script = ExtResource("1_vnlxm")
+channelName = NodePath("Options/Channel Name")
+
+[node name="Options" type="VBoxContainer" parent="." unique_id=843101200]
+layout_mode = 2
+
+[node name="Channel Name" type="LineEdit" parent="Options" unique_id=1705346188]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "Channel 1"
