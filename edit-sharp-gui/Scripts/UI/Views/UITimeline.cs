@@ -16,8 +16,8 @@ public partial class UITimeline : Control
 
 	[ExportGroup("Packed Scenes")]
 
-	[Export] PackedScene channelEdit;
-	[Export] PackedScene channelTimeline;
+	[Export] PackedScene channelEditScene;
+	[Export] PackedScene channelTimelineScene;
 
 	List<UIChannel> channels = [];
 
@@ -28,12 +28,8 @@ public partial class UITimeline : Control
 	public override void _Ready()
 	{
 		// add test channels
-		for (int i = 0; i < 10; i++)
+		foreach (var channel in Tests.TestBlueprint.Timeline.Channels)
 		{
-			VideoChannel channel = new()
-			{
-				Name = $"Channel {i}"
-			};
 			AddChannel(channel);
 		}
 	}
@@ -45,22 +41,6 @@ public partial class UITimeline : Control
 		rulerContainer.ScrollHorizontal = timelinesContainer.ScrollHorizontal;
     }
 
-	UIChannel CreateUIChannel(Channel c)
-	{
-		UIChannelTimeline timeline = channelTimeline.Instantiate() as UIChannelTimeline;
-		timeline.timeline = this;
-
-		UIChannelEdit edit = channelEdit.Instantiate() as UIChannelEdit;
-		edit.channel = c;
-
-		return new()
-		{
-			Channel = c,
-			ChannelTimeline = timeline,
-			ChannelEdit = edit
-		};
-	}
-
 	public void AddChannel(Channel c)
 	{
 		UIChannel channel = CreateUIChannel(c);
@@ -70,7 +50,22 @@ public partial class UITimeline : Control
 		channels.Add(channel);
 	}
 
-	
+	UIChannel CreateUIChannel(Channel c)
+	{
+		UIChannelTimeline timeline = channelTimelineScene.Instantiate() as UIChannelTimeline;
+		timeline.channel = c;
+		timeline.timeline = this;
+
+		UIChannelEdit edit = channelEditScene.Instantiate() as UIChannelEdit;
+		edit.channel = c;
+
+		return new()
+		{
+			Channel = c,
+			ChannelTimeline = timeline,
+			ChannelEdit = edit
+		};
+	}
 
 	public class UIChannel
 	{

@@ -27,8 +27,8 @@ timelinesContainer = NodePath("HBoxContainer/Channel Timelines/Timelines Contain
 timelines = NodePath("HBoxContainer/Channel Timelines/Timelines Container/Timelines")
 rulerContainer = NodePath("HBoxContainer/Channel Timelines/Ruler Container")
 ruler = NodePath("HBoxContainer/Channel Timelines/Ruler Container/Ruler")
-channelEdit = ExtResource("3_au47u")
-channelTimeline = ExtResource("2_fxefp")
+channelEditScene = ExtResource("3_au47u")
+channelTimelineScene = ExtResource("2_fxefp")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=586494631]
 layout_mode = 1

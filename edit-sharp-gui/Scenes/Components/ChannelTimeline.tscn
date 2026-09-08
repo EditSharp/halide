@@ -14,7 +14,7 @@ border_width_bottom = 1
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Channel Timeline" type="PanelContainer" unique_id=1050506150]
+[node name="Channel Timeline" type="PanelContainer" unique_id=1050506150 node_paths=PackedStringArray("clipsContainer")]
 custom_minimum_size = Vector2(0, 80)
 anchors_preset = 10
 anchor_right = 1.0
@@ -22,34 +22,9 @@ offset_bottom = 10.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_12elb")
 script = ExtResource("1_t6tj7")
+clipsContainer = NodePath("Clips")
+clipScene = ExtResource("2_krov7")
 
 [node name="Clips" type="HBoxContainer" parent="." unique_id=1328778926]
 layout_mode = 2
 theme_override_constants/separation = 0
-
-[node name="Clip" parent="Clips" unique_id=227284015 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip2" parent="Clips" unique_id=299448629 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip3" parent="Clips" unique_id=527325410 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip4" parent="Clips" unique_id=290441322 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip5" parent="Clips" unique_id=1980223328 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip6" parent="Clips" unique_id=564512254 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip7" parent="Clips" unique_id=1842850983 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip8" parent="Clips" unique_id=659430437 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip9" parent="Clips" unique_id=968038032 instance=ExtResource("2_krov7")]
-layout_mode = 2

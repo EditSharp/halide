@@ -9,20 +9,29 @@ public partial class UIClip : Control
 
 	[Export] Control content;
 	[Export] Control gap;
-
-	[ExportGroup("Details")]
-
 	[Export] Label clipName;
 	[Export] Panel thumbnail;
 
-	public required Clip Clip;
+
+	public Clip clip;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		// update gui based on provided clip
+		clipName.Text = clip.Name;
+
+		UpdateThumbnail();
 	}
 
 	public void SetLength(float length, float gap = 0)
+	{
+		content.Size = new(length, content.Size.Y);
+
+		UpdateThumbnail();
+	}
+
+	void UpdateThumbnail()
 	{
 		
 	}

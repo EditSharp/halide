@@ -32,8 +32,21 @@ public static class Tests
             Timeline timeline = new();
 
             //add channels to timeline
-            for (int i = 0; i < 8; i++) timeline.AddChannel(new VideoChannel());
-            timeline.AddChannel(new EditSharp.Components.AudioChannel());
+            for (int i = 0; i < 8; i++)
+            {
+                VideoChannel channel = new()
+                {
+                    Name = $"Video {i}"
+                };
+
+                timeline.AddChannel(channel);
+            }
+
+            AudioChannel audioChannel = new()
+                {
+                    Name = $"Audio"
+                };
+            timeline.AddChannel(audioChannel);
 
             //background
             VideoClip noise = VideoClip.CreateNoise(TimeSpan.Zero, TimeSpan.FromSeconds(13));
