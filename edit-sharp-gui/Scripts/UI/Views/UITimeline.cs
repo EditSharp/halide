@@ -28,14 +28,15 @@ public partial class UITimeline : Control
 	List<UIChannel> channels = [];
 
 	public float VerticalScale = 90f;
-	float pixelsPerSecond = 100f;
-	public float HorizontalScale => pixelsPerSecond;
+	double pixelsPerSecond = 100d;
+	public float HorizontalScale => (float)pixelsPerSecond;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		// add event listeners
 		heightSlider.ValueChanged += (h) => SetChannelHeight(h);
+		widthSlider.ValueChanged += (w) => SetChannelWidth(w);
 
 		// add test channels
 		foreach (var channel in ProjectManager.Singleton.currentProject.Timeline.Channels)
@@ -43,7 +44,8 @@ public partial class UITimeline : Control
 			AddChannel(channel);
 		}
 
-		ruler.Update(pixelsPerSecond, ProjectManager.Singleton.currentProject.RenderSettings.Framerate);
+		SetChannelHeight(heightSlider.Value);
+		SetChannelWidth(widthSlider.Value);
 	}
 
     public override void _Process(double delta)
@@ -66,17 +68,17 @@ public partial class UITimeline : Control
 	{
 		public required Channel Channel;
 
-		public required UIChannelEdit ChannelEdit;
+		public required UIChannelEdit Edit;
 
-		public required UIChannelTimeline ChannelTimeline;
+		public required UIChannelTimeline Timeline;
 	}
 
 	public void AddChannel(Channel c)
 	{
 		UIChannel channel = CreateUIChannel(c);
 
-		edits.AddChild(channel.ChannelEdit);
-		timelines.AddChild(channel.ChannelTimeline);
+		edits.AddChild(channel.Edit);
+		timelines.AddChild(channel.Timeline);
 		channels.Add(channel);
 	}
 
@@ -92,8 +94,8 @@ public partial class UITimeline : Control
 		return new()
 		{
 			Channel = c,
-			ChannelTimeline = timeline,
-			ChannelEdit = edit
+			Timeline = timeline,
+			Edit = edit
 		};
 	}
 
@@ -125,11 +127,15 @@ public partial class UITimeline : Control
 		}
 	}
 
-	public void SetChannelWidth(double pixelsPerSecond)
+	public void SetChannelWidth(double w)
 	{
+		pixelsPerSecond = w;
+
 		// update channel timelines
+		foreach (var channel in channels) channel.Timeline.SetWidth(pixelsPerSecond);
 
 
 		// update ruler
+		ruler.Update(pixelsPerSecond, ProjectManager.Singleton.currentProject.RenderSettings.Framerate);
 	}
 }

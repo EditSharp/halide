@@ -28,33 +28,3 @@ clipScene = ExtResource("2_krov7")
 [node name="Clips" type="HBoxContainer" parent="." unique_id=1328778926]
 layout_mode = 2
 theme_override_constants/separation = 0
-
-[node name="Clip" parent="Clips" unique_id=227284015 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip2" parent="Clips" unique_id=1458077382 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip3" parent="Clips" unique_id=1549098310 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip4" parent="Clips" unique_id=772509951 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip5" parent="Clips" unique_id=523119275 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip6" parent="Clips" unique_id=712005216 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip7" parent="Clips" unique_id=153185091 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip8" parent="Clips" unique_id=445454115 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip9" parent="Clips" unique_id=1175231728 instance=ExtResource("2_krov7")]
-layout_mode = 2
-
-[node name="Clip10" parent="Clips" unique_id=537855087 instance=ExtResource("2_krov7")]
-layout_mode = 2

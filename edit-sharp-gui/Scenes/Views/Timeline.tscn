@@ -59,6 +59,9 @@ layout_mode = 2
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_vertical = 4
+min_value = 5.0
+max_value = 500.0
+value = 100.0
 
 [node name="Label" type="Label" parent="VBoxContainer/Options/Width" unique_id=1918616512]
 layout_mode = 2

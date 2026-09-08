@@ -17,7 +17,8 @@ public partial class ProjectManager : Node
 
 	public Project currentProject = new()
 	{
-		Timeline = Tests.TestBlueprint.Timeline
+		Timeline = Tests.TestBlueprint.Timeline,
+		RenderSettings = Tests.TestBlueprint.RenderSettings
 	};
 }
 

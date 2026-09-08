@@ -32,9 +32,16 @@ public partial class UIClip : Control
 		UpdateThumbnail();
 	}
 
-	public void SetLength(float length, float gap = 0)
+	public void SetLength(float length, float gapSize = 0)
 	{
-		content.Size = new(length, content.Size.Y);
+		content.CustomMinimumSize = new(length, content.CustomMinimumSize.Y);
+
+		gap.CustomMinimumSize = new(gapSize, gap.CustomMinimumSize.Y);
+
+		CustomMinimumSize = new(
+			content.Size.X + gap.Size.X,
+			CustomMinimumSize.Y
+		);
 
 		UpdateThumbnail();
 	}

@@ -1,29 +1,26 @@
 [gd_scene format=3 uid="uid://c8qrwy2k7sxii"]
 
 [ext_resource type="Script" uid="uid://b5or6w20tdosm" path="res://Scripts/UI/Components/UIRuler.cs" id="1_5nnl7"]
-[ext_resource type="Texture2D" uid="uid://cj4xwbye0drfc" path="res://goofy-icon.png" id="1_d1v6r"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5nnl7"]
-bg_color = Color(1, 1, 1, 1)
-corner_radius_top_left = 1
-corner_radius_top_right = 1
-corner_radius_bottom_right = 1
-corner_radius_bottom_left = 1
+[sub_resource type="ImageTexture" id="ImageTexture_d1v6r"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
 bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mgnd2"]
-texture = ExtResource("1_d1v6r")
-
-[node name="Ruler" type="Control" unique_id=1594127530 node_paths=PackedStringArray("marksContainer")]
+[node name="Ruler" type="Control" unique_id=1594127530 node_paths=PackedStringArray("marksRect")]
 custom_minimum_size = Vector2(3000, 20)
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5nnl7")
 markWidth = 1.0
-marksContainer = NodePath("Marks")
-markStyleBox = SubResource("StyleBoxFlat_5nnl7")
+markMaxWidth = 1
+markAlignment = 0
+markColor = Color(1, 1, 1, 1)
+submarkColor = Color(0.5372549, 0.5372549, 0.5372549, 1)
+ratio = 0.8
+cornerRounding = 0.0
+marksRect = NodePath("Marks")
+marksTexture = SubResource("ImageTexture_d1v6r")
 
 [node name="Background" type="Panel" parent="." unique_id=1112720318]
 layout_mode = 1
@@ -34,20 +31,15 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
 
-[node name="temporary ruler size seer" type="Panel" parent="Background" unique_id=657757122]
+[node name="Marks" type="TextureRect" parent="." unique_id=990569819]
+custom_minimum_size = Vector2(50, 0)
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
+anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
-
-[node name="Marks" type="HBoxContainer" parent="." unique_id=87877293]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 0
+texture = SubResource("ImageTexture_d1v6r")
+expand_mode = 2
+stretch_mode = 1
