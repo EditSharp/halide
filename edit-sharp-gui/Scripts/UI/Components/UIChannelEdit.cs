@@ -8,6 +8,7 @@ public partial class UIChannelEdit : PanelContainer
 
 	[Export] LineEdit channelName;
 
+	// reference to actual channel data under the hood
 	public Channel channel;
 
 	// Called when the node enters the scene tree for the first time.

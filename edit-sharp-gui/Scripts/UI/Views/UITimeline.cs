@@ -5,7 +5,12 @@ using System.Collections.Generic;
 
 public partial class UITimeline : Control
 {
-	[ExportGroup("Controls")]
+	[ExportGroup("Options")]
+
+	[Export] Slider widthSlider;
+	[Export] Slider heightSlider;
+
+	[ExportGroup("Channels")]
 
 	[Export] ScrollContainer editsContainer;
 	[Export] VBoxContainer edits;
@@ -13,7 +18,7 @@ public partial class UITimeline : Control
 	[Export] ScrollContainer timelinesContainer;
 	[Export] VBoxContainer timelines;
 	[Export] ScrollContainer rulerContainer;
-	[Export] Control ruler;
+	[Export] UIRuler ruler;
 
 	[ExportGroup("Packed Scenes")]
 
@@ -22,17 +27,23 @@ public partial class UITimeline : Control
 
 	List<UIChannel> channels = [];
 
-	float verticalScale = 90f;
-	float horizontalScale = 1f;
+	public float VerticalScale = 90f;
+	float pixelsPerSecond = 100f;
+	public float HorizontalScale => pixelsPerSecond;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		// add event listeners
+		heightSlider.ValueChanged += (h) => SetChannelHeight(h);
+
 		// add test channels
-		foreach (var channel in Tests.TestBlueprint.Timeline.Channels)
+		foreach (var channel in ProjectManager.Singleton.currentProject.Timeline.Channels)
 		{
 			AddChannel(channel);
 		}
+
+		ruler.Update(pixelsPerSecond, ProjectManager.Singleton.currentProject.RenderSettings.Framerate);
 	}
 
     public override void _Process(double delta)
@@ -41,9 +52,24 @@ public partial class UITimeline : Control
         editsContainer.ScrollVertical = timelinesContainer.ScrollVertical;
 		rulerContainer.ScrollHorizontal = timelinesContainer.ScrollHorizontal;
 
-		//show scrollbar spacer if timeline is scrollable
+		//stretch ruler to length of channels
+		ruler.CustomMinimumSize = new(
+			timelines.Size.X + timelinesContainer.GetVScrollBar().Size.X,
+			ruler.CustomMinimumSize.Y
+		);
+
+		// show scrollbar spacer if timeline is scrollable
 		editsScrollSpacer.Visible = timelinesContainer.GetHScrollBar().Visible;
     }
+
+	public class UIChannel
+	{
+		public required Channel Channel;
+
+		public required UIChannelEdit ChannelEdit;
+
+		public required UIChannelTimeline ChannelTimeline;
+	}
 
 	public void AddChannel(Channel c)
 	{
@@ -71,12 +97,39 @@ public partial class UITimeline : Control
 		};
 	}
 
-	public class UIChannel
+	// set channel height in pixels
+	public void SetChannelHeight(double h)
 	{
-		public required Channel Channel;
+		// update channel edits
+		foreach (var child in edits.GetChildren())
+		{
+			if (child is UIChannelEdit edit)
+			{
+				edit.CustomMinimumSize = new(
+					edit.CustomMinimumSize.X,
+					(float)h
+				);
+			}
+		}
 
-		public required UIChannelEdit ChannelEdit;
+		// update channel timelines
+		foreach (var child in timelines.GetChildren())
+		{
+			if (child is UIChannelTimeline timeline)
+			{
+				timeline.CustomMinimumSize = new(
+					timeline.CustomMinimumSize.X,
+					(float)h
+				);
+			}
+		}
+	}
 
-		public required UIChannelTimeline ChannelTimeline;
+	public void SetChannelWidth(double pixelsPerSecond)
+	{
+		// update channel timelines
+
+
+		// update ruler
 	}
 }

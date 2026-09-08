@@ -14,7 +14,9 @@ public partial class UIChannelTimeline : PanelContainer
 
 	[Export] PackedScene clipScene;
 
+	// reference to parent timeline
 	public UITimeline timeline;
+	// reference to actual channel data under the hood
 	public Channel channel;
 
 	List<UIClip> UIClips = [];
