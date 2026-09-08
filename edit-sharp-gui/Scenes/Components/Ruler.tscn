@@ -13,12 +13,12 @@ layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5nnl7")
 markWidth = 1.0
-markMaxWidth = 1
+markMaxWidth = 2
 markAlignment = 0
 markColor = Color(1, 1, 1, 1)
 submarkColor = Color(0.5372549, 0.5372549, 0.5372549, 1)
-ratio = 0.8
-cornerRounding = 0.0
+ratio = 0.6
+cornerRounding = 1.0
 marksRect = NodePath("Marks")
 marksTexture = SubResource("ImageTexture_d1v6r")
 

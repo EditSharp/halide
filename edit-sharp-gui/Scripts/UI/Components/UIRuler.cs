@@ -168,7 +168,7 @@ public partial class UIRuler : Control
 			{
 				MarkCount = 1,
 				MarkWidth = 1,
-				MarkMaxWidth = 1,
+				MarkMaxWidth = markMaxWidth,
 				MarkAlignment = markAlignment,
 				MarkColor = submarkColor,
 				CornerRounding = cornerRounding

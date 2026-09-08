@@ -120,6 +120,10 @@ public static class Tests
 
                 timeline.Channels[i].AddClip(video);
             }
+
+            // clip further out so i can test my gui
+            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(7));
+            timeline.Channels[7].AddClip(extraVideo);
             
             //sound
             AudioClip audio = AudioClip.CreateFromSource(audioSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));

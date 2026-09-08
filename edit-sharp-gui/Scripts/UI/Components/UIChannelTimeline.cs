@@ -10,6 +10,7 @@ public partial class UIChannelTimeline : PanelContainer
 	[ExportGroup("Controls")]
 
 	[Export] BoxContainer clipsContainer;
+	[Export] Control firstGap;
 
 	[ExportGroup("Packed Scenes")]
 
@@ -42,6 +43,15 @@ public partial class UIChannelTimeline : PanelContainer
 			float gap = 0f;
 
 			int clipIndex = clips.IndexOf(clip);
+			//first clip
+			if (clipIndex == 0)
+			{
+				firstGap.CustomMinimumSize = new(
+					(float)(clip.clip.Start.TotalSeconds * pixelsPerSecond),
+					firstGap.CustomMinimumSize.Y
+				);
+			}
+			// any clips besides the last
 			if (clipIndex != clips.Count - 1)
 			{
 				gap = (float)(clip.clip.DistanceFrom(clips[clipIndex + 1].clip).TotalSeconds * pixelsPerSecond);
