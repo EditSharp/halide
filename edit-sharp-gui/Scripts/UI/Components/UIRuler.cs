@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public partial class UIRuler : Control
 {
@@ -21,22 +23,156 @@ public partial class UIRuler : Control
 	
 	public void Update(double pixelsPerSecond, int framerate)
 	{
-		bool normalScale = pixelsPerSecond > framerate * 1.5f;
-		MarksOptions options = new()
-		{
-			MarkCount = normalScale ? framerate : 2,
-			MarkWidth = normalScale ? markWidth : 0.1f,
-			MarkMaxWidth = markMaxWidth,
-			MarkAlignment = markAlignment,
-			MarkColor = markColor,
-			SubmarkColor = submarkColor,
-			Ratio = ratio,
-			CornerRounding = cornerRounding
-		};
-
-		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), options))
+		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, framerate)))
 		{
 			marksTexture.SetImage(marksImage);
+		}
+	}
+
+	MarksOptions GetScaledMarksOptions(double pixelsPerSecond, int framerate)
+	{
+		// Normal scale
+		// zoomed in enough to see individual frames
+		if (pixelsPerSecond > framerate * 3f)
+		{
+			GD.Print("normal scale");
+			return new()
+			{
+				MarkCount = framerate,
+				MarkWidth = markWidth,
+				MarkMaxWidth = markMaxWidth,
+				MarkAlignment = markAlignment,
+				MarkColor = markColor,
+				SubmarkColor = submarkColor,
+				Ratio = ratio,
+				CornerRounding = cornerRounding
+			};
+		}
+		// Small scale
+		// zoomed out too far to see individual frames, but still pretty close up
+		else if (pixelsPerSecond > framerate * 1.5f)
+		{
+			// find the smallest number that framerate is divisible by
+			// if the user is a freak and has a framerate of 7 or something, just use 1
+			int smallestDivisor = 1;
+			for (int i = 2; i < 100; i++)
+			{
+				if (framerate % i == 0)
+				{
+					smallestDivisor = i;
+					break;
+				}
+			}
+
+			GD.Print($"small scale: {framerate / smallestDivisor}");
+
+			return new()
+			{
+				MarkCount = framerate / smallestDivisor,
+				MarkWidth = markWidth,
+				MarkMaxWidth = markMaxWidth,
+				MarkAlignment = markAlignment,
+				MarkColor = markColor,
+				SubmarkColor = submarkColor,
+				Ratio = ratio,
+				CornerRounding = cornerRounding
+			};
+		}
+		// Very small scale
+		// zoomed out to see well over a minute on screen
+		else if (pixelsPerSecond > framerate / 2f)
+		{
+			// find all numbers the framerate is divisible by 
+			// except for the framerate itself obviously
+			List<int> divisors = [];
+			for (int i = 2; i < framerate; i++)
+			{
+				if (framerate % i == 0)
+				{
+					divisors.Add(i);
+				}
+			}
+
+			int divisor = framerate;
+			if (divisors.Count > 2)
+			{
+				// set divisor to median
+				divisor = divisors[(divisors.Count - 1) / 2];
+			}
+			else if (divisors.Count > 0)
+			{
+				divisor = divisors.Last();
+			}
+
+			GD.Print($"very small scale: {framerate / divisor}");
+
+			return new()
+			{
+				MarkCount = framerate / divisor,
+				MarkWidth = markWidth,
+				MarkMaxWidth = markMaxWidth,
+				MarkAlignment = markAlignment,
+				MarkColor = markColor,
+				SubmarkColor = submarkColor,
+				Ratio = ratio,
+				CornerRounding = cornerRounding
+			};
+		}
+		// Miniscule scale
+		// pixels per minute scale
+		else if (pixelsPerSecond > framerate / 3f)
+		{
+			// find all numbers the framerate is divisible by 
+			// except for the framerate itself obviously
+			List<int> divisors = [];
+			for (int i = 2; i < framerate; i++)
+			{
+				if (framerate % i == 0)
+				{
+					divisors.Add(i);
+				}
+			}
+
+			int divisor = framerate;
+			if (divisors.Count > 2)
+			{
+				// set divisor to second largest found
+				divisor = divisors[^2];
+			}
+			else if (divisors.Count > 0)
+			{
+				divisor = divisors.Last();
+			}
+
+			GD.Print($"miniscule scale: {framerate / divisor}");
+
+			return new()
+			{
+				MarkCount = framerate / divisor,
+				MarkWidth = markWidth,
+				MarkMaxWidth = markMaxWidth,
+				MarkAlignment = markAlignment,
+				MarkColor = markColor,
+				SubmarkColor = submarkColor,
+				Ratio = ratio,
+				CornerRounding = cornerRounding
+			};
+		}
+		// Micro scale
+		// pixels per hour type scale
+		else
+		{
+			GD.Print("micro scale");
+
+			return new()
+			{
+				MarkCount = 1,
+				MarkWidth = 1,
+				MarkMaxWidth = 1,
+				MarkAlignment = markAlignment,
+				MarkColor = submarkColor,
+				CornerRounding = cornerRounding
+			};
 		}
 	}
 

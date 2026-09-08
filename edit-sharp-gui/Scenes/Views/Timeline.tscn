@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://rmor8if075lh"]
 
-[ext_resource type="Texture2D" uid="uid://cj4xwbye0drfc" path="res://goofy-icon.png" id="1_12elb"]
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
 [ext_resource type="PackedScene" uid="uid://8pmfu28pbs8r" path="res://Scenes/Components/ChannelTimeline.tscn" id="2_fxefp"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
@@ -8,9 +7,10 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
 bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mgnd2"]
-texture = ExtResource("1_12elb")
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+border_blend = true
 
 [node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "timelinesContainer", "timelines", "rulerContainer", "ruler")]
 layout_mode = 3
@@ -92,27 +92,10 @@ custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Ruler Spacer" type="Control" parent="VBoxContainer/Channels/Channel Edits" unique_id=863421640]
-custom_minimum_size = Vector2(0, 20)
+[node name="Ruler Spacer" type="Panel" parent="VBoxContainer/Channels/Channel Edits" unique_id=321474229]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-
-[node name="Panel" type="Panel" parent="VBoxContainer/Channels/Channel Edits/Ruler Spacer" unique_id=321474229]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
-
-[node name="Panel" type="Panel" parent="VBoxContainer/Channels/Channel Edits/Ruler Spacer/Panel" unique_id=1131324456]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_mgnd2")
 
 [node name="Edits Container" type="ScrollContainer" parent="VBoxContainer/Channels/Channel Edits" unique_id=1414978845]
 layout_mode = 2

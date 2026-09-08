@@ -8,7 +8,7 @@
 bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
 
 [node name="Ruler" type="Control" unique_id=1594127530 node_paths=PackedStringArray("marksRect")]
-custom_minimum_size = Vector2(3000, 20)
+custom_minimum_size = Vector2(3000, 30)
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_5nnl7")

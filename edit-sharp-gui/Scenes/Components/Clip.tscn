@@ -16,12 +16,12 @@ corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ohxe2"]
-bg_color = Color(0.077999994, 0.39, 0.11440003, 1)
+bg_color = Color(0.17680001, 0.39, 0.077999994, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.044800006, 0.28, 0.048720006, 1)
+border_color = Color(0.15455998, 0.28, 0.044800006, 1)
 border_blend = true
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -77,6 +77,8 @@ grow_vertical = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Clip name"
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="Thumbnail" type="Panel" parent="Content/VBoxContainer" unique_id=1880085867]
 layout_mode = 2
