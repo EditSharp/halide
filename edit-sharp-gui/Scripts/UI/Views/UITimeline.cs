@@ -9,6 +9,7 @@ public partial class UITimeline : Control
 
 	[Export] ScrollContainer editsContainer;
 	[Export] VBoxContainer edits;
+	[Export] Control editsScrollSpacer;
 	[Export] ScrollContainer timelinesContainer;
 	[Export] VBoxContainer timelines;
 	[Export] ScrollContainer rulerContainer;
@@ -39,6 +40,9 @@ public partial class UITimeline : Control
 		// match scrolls to timeline
         editsContainer.ScrollVertical = timelinesContainer.ScrollVertical;
 		rulerContainer.ScrollHorizontal = timelinesContainer.ScrollHorizontal;
+
+		//show scrollbar spacer if timeline is scrollable
+		editsScrollSpacer.Visible = timelinesContainer.GetHScrollBar().Visible;
     }
 
 	public void AddChannel(Channel c)

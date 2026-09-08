@@ -12,6 +12,11 @@ public partial class UIClip : Control
 	[Export] Label clipName;
 	[Export] Panel thumbnail;
 
+	[ExportGroup("Styles")]
+
+	[Export] StyleBox videoStyleBox;
+	[Export] StyleBox audioStyleBox;
+
 
 	public Clip clip;
 
@@ -20,6 +25,9 @@ public partial class UIClip : Control
 	{
 		// update gui based on provided clip
 		clipName.Text = clip.Name;
+
+		if (clip is VideoClip) content.AddThemeStyleboxOverride("panel", videoStyleBox);
+		else content.AddThemeStyleboxOverride("panel", audioStyleBox);
 
 		UpdateThumbnail();
 	}

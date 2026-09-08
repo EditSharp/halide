@@ -11,7 +11,7 @@ bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_mgnd2"]
 texture = ExtResource("1_12elb")
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("editsContainer", "edits", "timelinesContainer", "timelines", "rulerContainer", "ruler")]
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("editsContainer", "edits", "editsScrollSpacer", "timelinesContainer", "timelines", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,6 +23,7 @@ size_flags_vertical = 3
 script = ExtResource("1_douqe")
 editsContainer = NodePath("HBoxContainer/Channel Edits/Edits Container")
 edits = NodePath("HBoxContainer/Channel Edits/Edits Container/Edits")
+editsScrollSpacer = NodePath("HBoxContainer/Channel Edits/Scrollbar Spacer")
 timelinesContainer = NodePath("HBoxContainer/Channel Timelines/Timelines Container")
 timelines = NodePath("HBoxContainer/Channel Timelines/Timelines Container/Timelines")
 rulerContainer = NodePath("HBoxContainer/Channel Timelines/Ruler Container")

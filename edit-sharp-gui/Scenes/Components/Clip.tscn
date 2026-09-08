@@ -2,6 +2,32 @@
 
 [ext_resource type="Script" uid="uid://bjsbfuni82kjg" path="res://Scripts/UI/Components/UIClip.cs" id="1_fin3e"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w627v"]
+bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.046385482, 0.18149543, 0.2834634, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ohxe2"]
+bg_color = Color(0.077999994, 0.39, 0.11440003, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.044800006, 0.28, 0.048720006, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l4su8"]
 bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
 border_width_left = 2
@@ -25,6 +51,8 @@ content = NodePath("Content")
 gap = NodePath("Gap")
 clipName = NodePath("Content/VBoxContainer/Name")
 thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
+videoStyleBox = SubResource("StyleBoxFlat_w627v")
+audioStyleBox = SubResource("StyleBoxFlat_ohxe2")
 
 [node name="Content" type="Panel" parent="." unique_id=1654615429]
 custom_minimum_size = Vector2(300, 0)

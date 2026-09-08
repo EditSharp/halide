@@ -50,6 +50,7 @@ public static class Tests
 
             //background
             VideoClip noise = VideoClip.CreateNoise(TimeSpan.Zero, TimeSpan.FromSeconds(13));
+            noise.Name = $"Background Noise";
             timeline.Channels[0].AddClip(noise);
 
             //start blue
@@ -76,6 +77,8 @@ public static class Tests
             for (int i = 1; i < 7; i++)
             {
                 VideoClip video = VideoClip.CreateFromSource(videoSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
+
+                video.Name = $"Video {i}";
 
                 //video.Start += TimeSpan.FromSeconds(0.1f * i);
 
@@ -120,6 +123,7 @@ public static class Tests
             
             //sound
             AudioClip audio = AudioClip.CreateFromSource(audioSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
+            audio.Name = $"Source Audio";
             timeline.Channels[8].AddClip(audio);
 
             Blueprint blueprint = new()
