@@ -197,7 +197,7 @@ public partial class UIPlayback : Control
 	void SetTimestamp(TimeSpan position, TimeSpan duration, int framerate)
 	{
 		timestamp.SetDeferred("text", CalculateTimestamp(position, duration, framerate));
-		SetSliderValue(position / duration);
+		if (playback.IsPlaying && !playback.IsPaused) SetSliderValue(position / duration);
 	}
 
 	static string CalculateTimestamp(TimeSpan position, TimeSpan duration, int framerate)
