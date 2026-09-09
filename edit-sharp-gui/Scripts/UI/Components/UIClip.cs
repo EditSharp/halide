@@ -65,7 +65,12 @@ public partial class UIClip : Control
 					}
 					else
 					{
-						GD.Print($"{Clip.Name}: I've been released D:");
+						if (mouseState == MouseState.Dragging)
+						{
+							Modulate = Colors.White;
+							GD.Print($"{Clip.Name}: I've been released from a drag D:");
+						}
+						
 						mouseState = MouseState.Released;
 					}
 				}
@@ -75,9 +80,11 @@ public partial class UIClip : Control
 				if (mouseState == MouseState.Clicking)
 				{
 					mouseState = MouseState.Dragging;
+					Modulate = Color.FromString("#FFFFFF80", Colors.Red);
 					GD.Print($"{Clip.Name}: I just started being dragged D:");
 				}
 
+				// luckily, controls still get mouse motion events as long as they are being held down
 				/*
 				if (mouseState == MouseState.Dragging) GD.Print($"{Clip.Name}: I'm being dragged D:");
 				else GD.Print($"{Clip.Name}: I'm being hovered over D:");
