@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bjsbfuni82kjg" path="res://Scripts/UI/Components/UIClip.cs" id="1_fin3e"]
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_reb2i"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w627v"]
 bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
 border_width_left = 2
@@ -46,6 +48,7 @@ anchors_preset = 9
 anchor_bottom = 1.0
 offset_right = 300.0
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_reb2i")
 script = ExtResource("1_fin3e")
 content = NodePath("HBoxContainer/Content")
 clipName = NodePath("HBoxContainer/Content/VBoxContainer/HBoxContainer/Name")
