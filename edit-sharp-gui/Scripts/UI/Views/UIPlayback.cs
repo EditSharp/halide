@@ -50,9 +50,18 @@ public partial class UIPlayback : Control
 
 	void PlayButton_Pressed()
     {
-        if (playback.IsPlaying)
+        if (playback.State == PlaybackState.Inactive)
 		{
-			if (playback.IsPaused)
+			//setup playback
+			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+
+			//start playback
+			playback.Play(TimeSpan.Zero);
+			SetPlayButtonText("Pause");
+		}
+		else
+		{
+			if (playback.State == PlaybackState.Paused || playback.State == PlaybackState.Scrubbing)
 			{
 				//unpause
 				playback.Play();
@@ -66,15 +75,6 @@ public partial class UIPlayback : Control
 				SetTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
 			}
 		}
-		else
-		{
-			//setup playback
-			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
-
-			//start playback
-			playback.Play(TimeSpan.Zero);
-			SetPlayButtonText("Pause");
-		}
     }
 
 	bool dragging = false;
@@ -83,7 +83,7 @@ public partial class UIPlayback : Control
 	{
 		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
 
-		if (playback.IsPlaying)
+		if (playback.State == PlaybackState.Playing)
 		{
 			restartOnDragEnd = true;
 			Debug.WriteLine("scrub started mid-play, playback will be resumed on scrub end");
@@ -104,7 +104,6 @@ public partial class UIPlayback : Control
 	{
 		if (!dragging) return;
 
-		Debug.WriteLine($"scrubbing to {CalculateTimestamp(playback.Timeline.Duration * value, playback.Timeline.Duration, playback.RenderSettings.Framerate)}");
 		try
 		{
 			playback.ScrubToAsync(playback.Timeline.Duration * value);
@@ -124,7 +123,7 @@ public partial class UIPlayback : Control
 		{
 			Debug.WriteLine("attempting to restart playback after scrub");
 			restartOnDragEnd = false;
-			//playback.Play();
+			playback.Play();
 		}
 	}
 
@@ -197,7 +196,7 @@ public partial class UIPlayback : Control
 	void SetTimestamp(TimeSpan position, TimeSpan duration, int framerate)
 	{
 		timestamp.SetDeferred("text", CalculateTimestamp(position, duration, framerate));
-		if (playback.IsPlaying && !playback.IsPaused) SetSliderValue(position / duration);
+		if (playback.State == PlaybackState.Playing) SetSliderValue(position / duration);
 	}
 
 	static string CalculateTimestamp(TimeSpan position, TimeSpan duration, int framerate)

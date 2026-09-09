@@ -17,6 +17,7 @@ public partial class UIClip : Control
 	[Export] StyleBox audioStyleBox;
 
 
+	public UIChannelTimeline Channel;
 	public Clip Clip;
 
 	// Called when the node enters the scene tree for the first time.
@@ -48,15 +49,49 @@ public partial class UIClip : Control
 		
 	}
 
+	MouseState mouseState = MouseState.Released;
     public override void _GuiInput(InputEvent @event)
 	{
-		if (@event is InputEventMouseButton mb)
+		if (@event is InputEventMouse m)
 		{
-			if (mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+			if (m is InputEventMouseButton mb)
 			{
-				GD.Print($"{Clip.Name}: I've been clicked D:");
+				if (mb.ButtonIndex == MouseButton.Left)
+				{
+					if (mb.Pressed)
+					{
+						GD.Print($"{Clip.Name}: I've been clicked D:");
+						mouseState = MouseState.Clicking;
+					}
+					else
+					{
+						GD.Print($"{Clip.Name}: I've been released D:");
+						mouseState = MouseState.Released;
+					}
+				}
 			}
+			else if (m is InputEventMouseMotion mm)
+			{
+				if (mouseState == MouseState.Clicking)
+				{
+					mouseState = MouseState.Dragging;
+					GD.Print($"{Clip.Name}: I just started being dragged D:");
+				}
+
+				/*
+				if (mouseState == MouseState.Dragging) GD.Print($"{Clip.Name}: I'm being dragged D:");
+				else GD.Print($"{Clip.Name}: I'm being hovered over D:");
+				*/
+			}
+			
+
 		}
 	}
-
+	
+	enum MouseState
+	{
+		Released,
+		Clicking,
+		Dragging
+	}
 }

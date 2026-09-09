@@ -122,7 +122,7 @@ public static class Tests
             }
 
             // clip further out so i can test my gui
-            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13), TimeSpan.FromSeconds(7));
+            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
             timeline.Channels[7].AddClip(extraVideo);
             
             //sound
