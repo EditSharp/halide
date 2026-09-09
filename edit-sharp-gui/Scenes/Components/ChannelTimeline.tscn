@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dqvpqjstcchln" path="res://Scripts/UI/Components/UIChannelTimeline.cs" id="1_t6tj7"]
 [ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="2_krov7"]
+[ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="3_reb2i"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_12elb"]
 content_margin_left = 0.0
@@ -14,7 +15,7 @@ border_width_bottom = 1
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Channel Timeline" type="PanelContainer" unique_id=1050506150 node_paths=PackedStringArray("clipsContainer", "firstGap")]
+[node name="Channel Timeline" type="PanelContainer" unique_id=1050506150 node_paths=PackedStringArray("clipsContainer")]
 custom_minimum_size = Vector2(0, 80)
 anchors_preset = 10
 anchor_right = 1.0
@@ -23,12 +24,9 @@ grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_12elb")
 script = ExtResource("1_t6tj7")
 clipsContainer = NodePath("Clips")
-firstGap = NodePath("Clips/First Gap")
 clipScene = ExtResource("2_krov7")
 
-[node name="Clips" type="HBoxContainer" parent="." unique_id=1328778926]
+[node name="Clips" type="Control" parent="." unique_id=365963652]
 layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="First Gap" type="Control" parent="Clips" unique_id=726011380]
-layout_mode = 2
+size_flags_horizontal = 0
+script = ExtResource("3_reb2i")

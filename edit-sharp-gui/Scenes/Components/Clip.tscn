@@ -41,27 +41,31 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="Clip" type="HBoxContainer" unique_id=227284015 node_paths=PackedStringArray("content", "gap", "clipName", "thumbnail")]
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail")]
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_right = 323.0
+offset_right = 300.0
 grow_vertical = 2
 script = ExtResource("1_fin3e")
-content = NodePath("Content")
-gap = NodePath("Gap")
-clipName = NodePath("Content/VBoxContainer/Name")
-thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
+content = NodePath("HBoxContainer/Content")
+clipName = NodePath("HBoxContainer/Content/VBoxContainer/Name")
+thumbnail = NodePath("HBoxContainer/Content/VBoxContainer/Thumbnail")
 videoStyleBox = SubResource("StyleBoxFlat_w627v")
 audioStyleBox = SubResource("StyleBoxFlat_ohxe2")
 
-[node name="Content" type="Panel" parent="." unique_id=1654615429]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=227284015]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Content" type="Panel" parent="HBoxContainer" unique_id=1654615429]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 3
+mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxFlat_l4su8")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Content" unique_id=1199227694]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/Content" unique_id=1199227694]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -73,17 +77,14 @@ offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Name" type="Label" parent="Content/VBoxContainer" unique_id=1198296580]
+[node name="Name" type="Label" parent="HBoxContainer/Content/VBoxContainer" unique_id=1198296580]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Clip name"
 clip_text = true
 text_overrun_behavior = 3
 
-[node name="Thumbnail" type="Panel" parent="Content/VBoxContainer" unique_id=1880085867]
+[node name="Thumbnail" type="Panel" parent="HBoxContainer/Content/VBoxContainer" unique_id=1880085867]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="Gap" type="Control" parent="." unique_id=579099585]
-custom_minimum_size = Vector2(19.26, 0)
-layout_mode = 2
+mouse_filter = 1

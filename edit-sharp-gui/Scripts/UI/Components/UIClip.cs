@@ -8,7 +8,6 @@ public partial class UIClip : Control
 	[ExportGroup("Controls")]
 
 	[Export] Control content;
-	[Export] Control gap;
 	[Export] Label clipName;
 	[Export] Panel thumbnail;
 
@@ -18,28 +17,26 @@ public partial class UIClip : Control
 	[Export] StyleBox audioStyleBox;
 
 
-	public Clip clip;
+	public Clip Clip;
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		// update gui based on provided clip
-		clipName.Text = clip.Name;
+		clipName.Text = Clip.Name;
 
-		if (clip is VideoClip) content.AddThemeStyleboxOverride("panel", videoStyleBox);
+		if (Clip is VideoClip) content.AddThemeStyleboxOverride("panel", videoStyleBox);
 		else content.AddThemeStyleboxOverride("panel", audioStyleBox);
 
 		UpdateThumbnail();
 	}
 
-	public void SetLength(float length, float gapSize = 0)
+	public void SetLength(float length)
 	{
 		content.CustomMinimumSize = new(length, content.CustomMinimumSize.Y);
 
-		gap.CustomMinimumSize = new(gapSize, gap.CustomMinimumSize.Y);
-
 		CustomMinimumSize = new(
-			content.Size.X + gap.Size.X,
+			content.Size.X,
 			CustomMinimumSize.Y
 		);
 
@@ -50,4 +47,16 @@ public partial class UIClip : Control
 	{
 		
 	}
+
+    public override void _GuiInput(InputEvent @event)
+	{
+		if (@event is InputEventMouseButton mb)
+		{
+			if (mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+			{
+				GD.Print($"{Clip.Name}: I've been clicked D:");
+			}
+		}
+	}
+
 }
