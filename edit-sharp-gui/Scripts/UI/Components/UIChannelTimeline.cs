@@ -16,17 +16,17 @@ public partial class UIChannelTimeline : PanelContainer
 	[Export] PackedScene clipScene;
 
 	// reference to parent timeline
-	public UITimeline timeline;
+	public UITimeline Timeline;
 	// reference to actual channel data under the hood
-	public Channel channel;
+	public Channel Channel;
 
-	List<UIClip> clips = [];
+	public List<UIClip> UIClips = [];
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		// check for existing clips in the provided channel and create the gui for them
-		foreach (var clip in channel.Clips)
+		foreach (var clip in Channel.Clips)
 		{
 			AddClip(clip);
 		}
@@ -34,7 +34,7 @@ public partial class UIChannelTimeline : PanelContainer
 
 	public void SetWidth(double pixelsPerSecond)
 	{
-		foreach (var clip in clips)
+		foreach (var clip in UIClips)
 		{
 
 			float offset = (float)(clip.Clip.Start.TotalSeconds * pixelsPerSecond);
@@ -54,10 +54,11 @@ public partial class UIChannelTimeline : PanelContainer
 		UIClip ui = clipScene.Instantiate() as UIClip;
 
 		ui.Clip = c;
+		ui.Channel = this;
 
 		clipsContainer.AddChild(ui);
 
-		clips.Add(ui);
+		UIClips.Add(ui);
 	}
 
 	public void EditClip()

@@ -2,7 +2,19 @@
 
 [ext_resource type="Script" uid="uid://bjsbfuni82kjg" path="res://Scripts/UI/Components/UIClip.cs" id="1_fin3e"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_reb2i"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7dmxs"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0to43"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6917556, 0.2192756, 0.12965634, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w627v"]
 bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
@@ -43,16 +55,21 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail")]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_sri2u"]
+
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail", "outline")]
+oversampling_with_scale = 1
 anchors_preset = 9
 anchor_bottom = 1.0
 offset_right = 300.0
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxEmpty_reb2i")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_7dmxs")
 script = ExtResource("1_fin3e")
 content = NodePath("HBoxContainer/Content")
 clipName = NodePath("HBoxContainer/Content/VBoxContainer/HBoxContainer/Name")
 thumbnail = NodePath("HBoxContainer/Content/VBoxContainer/Thumbnail")
+outline = NodePath("HBoxContainer/Content/Outline")
+outlinedStyleBox = SubResource("StyleBoxFlat_0to43")
 videoStyleBox = SubResource("StyleBoxFlat_w627v")
 audioStyleBox = SubResource("StyleBoxFlat_ohxe2")
 
@@ -110,3 +127,13 @@ text = "Options"
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 1
+
+[node name="Outline" type="Panel" parent="HBoxContainer/Content" unique_id=961551818]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_sri2u")

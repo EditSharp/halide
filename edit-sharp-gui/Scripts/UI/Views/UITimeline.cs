@@ -2,6 +2,7 @@ using EditSharp.Components;
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class UITimeline : Control
 {
@@ -76,6 +77,7 @@ public partial class UITimeline : Control
 	public void AddChannel(Channel c)
 	{
 		UIChannel channel = CreateUIChannel(c);
+		channel.Timeline.Timeline = this;
 
 		edits.AddChild(channel.Edit);
 		timelines.AddChild(channel.Timeline);
@@ -85,8 +87,8 @@ public partial class UITimeline : Control
 	UIChannel CreateUIChannel(Channel c)
 	{
 		UIChannelTimeline timeline = channelTimelineScene.Instantiate() as UIChannelTimeline;
-		timeline.channel = c;
-		timeline.timeline = this;
+		timeline.Channel = c;
+		timeline.Timeline = this;
 
 		UIChannelEdit edit = channelEditScene.Instantiate() as UIChannelEdit;
 		edit.channel = c;
@@ -137,5 +139,81 @@ public partial class UITimeline : Control
 
 		// update ruler
 		ruler.Update(pixelsPerSecond, ProjectManager.Singleton.currentProject.RenderSettings.Framerate);
+	}
+
+	// all selected clips
+	List<UIClip> selection = [];
+
+	// when a clip gets clicked on
+	public enum SelectionMode
+	{
+		// add this item to existing selection
+		// if it is not already part of it
+		Inclusive,
+		// if this item is part of the current selection, do nothing
+		// otherwise act exclusive
+		ExclusiveIfUnselected,
+		// make this item the only one in the selection
+		Exclusive
+	}
+
+	public void SelectClip(UIClip uiClip, SelectionMode mode = SelectionMode.ExclusiveIfUnselected, bool invert = false)
+	{
+		if (mode == SelectionMode.ExclusiveIfUnselected)
+		{
+			if (!selection.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
+			return;
+		}
+		else if (mode == SelectionMode.Exclusive)
+		{
+			// clear current selection
+			selection.Clear();
+		}
+		
+        // select clip and all clips linked to it
+		if (uiClip.Clip.LinkGroupId.HasValue)
+		{
+			foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId)))
+			{
+				selection.Add(c);
+			}
+		}
+		else selection.Add(uiClip);
+		
+		UpdateSelection();
+	}
+
+	// when a clip gets control clicked on
+	public void DeselectClip(UIClip uiClip)
+	{
+		if (!selection.Contains(uiClip)) return;
+
+		 // deselect clip and all clips linked to it
+		if (uiClip.Clip.LinkGroupId.HasValue)
+		{
+			foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId)))
+			{
+				selection.Remove(c);
+			}
+		}
+		else selection.Remove(uiClip);
+		
+		UpdateSelection();
+	}
+
+	void UpdateSelection()
+	{
+		// highlight current selection, unhighlight any other clips
+		foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips))
+		{
+			c.Selected = selection.Contains(c);
+			c.SetOutlined(c.Selected);
+		}
+	}
+
+	// dr
+	public void DragClip()
+	{
+		
 	}
 }
