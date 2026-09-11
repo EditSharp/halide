@@ -86,7 +86,6 @@ public partial class UIChannelClipsView : PanelContainer
 			// skip existing clips
 			if (UIClips.Any(u => ReferenceEquals(u.Clip, c)))
 			{
-				GD.PushWarning($"{c.Name}: clip gui already exists, skipped");
 				continue;
 			}
 
