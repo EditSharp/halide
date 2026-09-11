@@ -1,4 +1,5 @@
 using EditSharp.Components;
+using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using Godot;
 using System;

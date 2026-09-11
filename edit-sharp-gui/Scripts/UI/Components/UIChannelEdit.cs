@@ -1,4 +1,5 @@
 using EditSharp.Components;
+using EditSharp.Components.Channels;
 using Godot;
 using System;
 

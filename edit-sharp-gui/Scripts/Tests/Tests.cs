@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using EditSharp.Components;
+using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes;
 using EditSharp.Components.Nodes.Effects;
-using EditSharp.Composite;
-using EditSharp.Render;
+using EditSharp.Rendering;
+using EditSharp.Video;
 using SkiaSharp;
 
 public static class Tests
