@@ -1,4 +1,5 @@
 using EditSharp.Components;
+using EditSharp.Components.Clips;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -26,21 +27,40 @@ public partial class UITimeline : Control
 	[Export] PackedScene channelEditScene;
 	[Export] PackedScene channelTimelineScene;
 
-	List<UIChannel> channels = [];
+	public Timeline Timeline;
 
-	public float VerticalScale = 90f;
-	double pixelsPerSecond = 100d;
-	public float HorizontalScale => (float)pixelsPerSecond;
+	public List<UIChannel> UIChannels = [];
+	public List<UIClip> UIClips => [.. UIChannels.SelectMany(c => c.ClipsView.UIClips)];
+
+	public double VerticalScale { 
+		get; 
+		set => field = value > 0d 
+			? value
+			: throw new ArgumentOutOfRangeException(nameof(value), "Vertical scale must be greater than zero");
+	} = 90d;
+
+	public double PixelsPerSecond { 
+		get; 
+		set => field = value > 0d 
+			? value
+			: throw new ArgumentOutOfRangeException(nameof(value), "Pixels per second must be greater than zero");
+	} = 100d;
+
+	public double TimeSpanToPixels(TimeSpan t) => t.TotalSeconds * PixelsPerSecond;
+	public TimeSpan PixelsToTimeSpan(double p) => TimeSpan.FromSeconds(p / PixelsPerSecond);
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		// TEMPORARILY GET TIMELINE AUTOMATICALLY INSTEAD OF MANUAL ASSIGNMENT
+		Timeline = ProjectManager.Singleton.CurrentProject.Timeline;
+
 		// add event listeners
-		heightSlider.ValueChanged += (h) => SetChannelHeight(h);
-		widthSlider.ValueChanged += (w) => SetChannelWidth(w);
+		heightSlider.ValueChanged += SetChannelHeight;
+		widthSlider.ValueChanged += SetChannelWidth;
 
 		// add test channels
-		foreach (var channel in ProjectManager.Singleton.currentProject.Timeline.Channels)
+		foreach (var channel in ProjectManager.Singleton.CurrentProject.Timeline.Channels)
 		{
 			AddChannel(channel);
 		}
@@ -71,24 +91,24 @@ public partial class UITimeline : Control
 
 		public required UIChannelEdit Edit;
 
-		public required UIChannelTimeline Timeline;
+		public required UIChannelClipsView ClipsView;
 	}
 
 	public void AddChannel(Channel c)
 	{
 		UIChannel channel = CreateUIChannel(c);
-		channel.Timeline.Timeline = this;
+		channel.ClipsView.UITimeline = this;
 
 		edits.AddChild(channel.Edit);
-		timelines.AddChild(channel.Timeline);
-		channels.Add(channel);
+		timelines.AddChild(channel.ClipsView);
+		UIChannels.Add(channel);
 	}
 
 	UIChannel CreateUIChannel(Channel c)
 	{
-		UIChannelTimeline timeline = channelTimelineScene.Instantiate() as UIChannelTimeline;
+		UIChannelClipsView timeline = channelTimelineScene.Instantiate() as UIChannelClipsView;
 		timeline.Channel = c;
-		timeline.Timeline = this;
+		timeline.UITimeline = this;
 
 		UIChannelEdit edit = channelEditScene.Instantiate() as UIChannelEdit;
 		edit.channel = c;
@@ -96,7 +116,7 @@ public partial class UITimeline : Control
 		return new()
 		{
 			Channel = c,
-			Timeline = timeline,
+			ClipsView = timeline,
 			Edit = edit
 		};
 	}
@@ -119,7 +139,7 @@ public partial class UITimeline : Control
 		// update channel timelines
 		foreach (var child in timelines.GetChildren())
 		{
-			if (child is UIChannelTimeline timeline)
+			if (child is UIChannelClipsView timeline)
 			{
 				timeline.CustomMinimumSize = new(
 					timeline.CustomMinimumSize.X,
@@ -131,18 +151,18 @@ public partial class UITimeline : Control
 
 	public void SetChannelWidth(double w)
 	{
-		pixelsPerSecond = w;
+		PixelsPerSecond = w;
 
 		// update channel timelines
-		foreach (var channel in channels) channel.Timeline.SetWidth(pixelsPerSecond);
+		foreach (var channel in UIChannels) channel.ClipsView.SetWidth(PixelsPerSecond);
 
 
 		// update ruler
-		ruler.Update(pixelsPerSecond, ProjectManager.Singleton.currentProject.RenderSettings.Framerate);
+		ruler.Update(PixelsPerSecond, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
 	}
 
 	// all selected clips
-	List<UIClip> selection = [];
+	List<UIClip> Selection = [];
 
 	// when a clip gets clicked on
 	public enum SelectionMode
@@ -161,24 +181,24 @@ public partial class UITimeline : Control
 	{
 		if (mode == SelectionMode.ExclusiveIfUnselected)
 		{
-			if (!selection.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
+			if (!Selection.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
 			return;
 		}
 		else if (mode == SelectionMode.Exclusive)
 		{
 			// clear current selection
-			selection.Clear();
+			Selection.Clear();
 		}
 		
         // select clip and all clips linked to it
 		if (uiClip.Clip.LinkGroupId.HasValue)
 		{
-			foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId)))
+			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
 			{
-				selection.Add(c);
+				Selection.Add(c);
 			}
 		}
-		else selection.Add(uiClip);
+		else Selection.Add(uiClip);
 		
 		UpdateSelection();
 	}
@@ -186,34 +206,78 @@ public partial class UITimeline : Control
 	// when a clip gets control clicked on
 	public void DeselectClip(UIClip uiClip)
 	{
-		if (!selection.Contains(uiClip)) return;
+		if (!Selection.Contains(uiClip)) return;
 
 		 // deselect clip and all clips linked to it
 		if (uiClip.Clip.LinkGroupId.HasValue)
 		{
-			foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId)))
+			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
 			{
-				selection.Remove(c);
+				Selection.Remove(c);
 			}
 		}
-		else selection.Remove(uiClip);
+		else Selection.Remove(uiClip);
 		
 		UpdateSelection();
+	}
+
+	// drag selection with context provided from the dragged clip
+	public void DragSelection(Vector2 delta)
+	{
+		// make selection translucent
+		foreach (UIClip c in UIClips)
+		{
+			c.SetTransparency(Selection.Contains(c) ? 0.5f : 1f);
+		}
+
+		// move clips visually
+		// account for any scrolling
+		foreach (UIClip s in Selection)
+		{
+			s.Position = new(
+				(float)TimeSpanToPixels(s.Clip.Start) - delta.X,
+				s.Position.Y
+			);
+		}
+		//timelinesContainer.ScrollHorizontal
+	}
+
+	// when the user lets go of the selection they were dragging
+	public void FinishDrag(Vector2 delta)
+	{
+		// set all clips back to opaque
+		foreach (UIClip c in UIClips) c.SetTransparency(1f);
+
+		// edit underlying clip data
+		foreach (UIClip s in Selection)
+		{
+			s.Clip.Move(PixelsToTimeSpan(TimeSpanToPixels(s.Clip.Start) - delta.X));
+		}
+
+		
+		foreach (UIClip c in UIClips)
+		{
+			foreach (UIClip s in Selection)
+			{
+				// do not delete clips in selection
+				if (ReferenceEquals(s, c)) continue;
+
+				// delete this clip's gui if it intersects selection
+				if (c.GetRect().Intersects(s.GetRect())) c.ClipsView.RemoveUIClip(c);
+			}
+		}
+
+		// refresh all channel clip views
+		foreach (UIChannel ch in UIChannels) ch.ClipsView.Refresh();
 	}
 
 	void UpdateSelection()
 	{
 		// highlight current selection, unhighlight any other clips
-		foreach (UIClip c in channels.SelectMany(ch => ch.Timeline.UIClips))
+		foreach (UIClip c in UIClips)
 		{
-			c.Selected = selection.Contains(c);
+			c.Selected = Selection.Contains(c);
 			c.SetOutlined(c.Selected);
 		}
-	}
-
-	// dr
-	public void DragClip()
-	{
-		
 	}
 }

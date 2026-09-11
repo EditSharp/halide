@@ -19,9 +19,9 @@ public partial class UIClip : PanelContainer
 	[Export] StyleBox videoStyleBox;
 	[Export] StyleBox audioStyleBox;
 
-
-	public UIChannelTimeline Channel;
 	public Clip Clip;
+
+	public UIChannelClipsView ClipsView;
 
 	// whether this clip is selected
 	// updated by timeline
@@ -43,6 +43,13 @@ public partial class UIClip : PanelContainer
 	{
 		if (outlined) outline.AddThemeStyleboxOverride("panel", outlinedStyleBox);
 		else outline.AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
+	}
+
+	public void SetTransparency(float alpha)
+	{
+		Color transparency = Modulate;
+		transparency.A = alpha;
+		Modulate = transparency;
 	}
 
 	public void SetLength(float length)
@@ -83,17 +90,17 @@ public partial class UIClip : PanelContainer
 						{
 							if (mb.IsCommandOrControlPressed())
 							{
-								Channel.Timeline.DeselectClip(this);
+								ClipsView.UITimeline.DeselectClip(this);
 								GD.Print($"{Clip.Name}: ctrl clicked");
 							}
 							else if (mb.ShiftPressed)
 							{
-								Channel.Timeline.SelectClip(this, UITimeline.SelectionMode.Inclusive);
+								ClipsView.UITimeline.SelectClip(this, UITimeline.SelectionMode.Inclusive);
 								GD.Print($"{Clip.Name}: shift clicked");
 							}
 							else
 							{
-								Channel.Timeline.SelectClip(this, UITimeline.SelectionMode.ExclusiveIfUnselected);
+								ClipsView.UITimeline.SelectClip(this, UITimeline.SelectionMode.ExclusiveIfUnselected);
 								GD.Print($"{Clip.Name}: click started");
 							}
 						}
@@ -104,7 +111,7 @@ public partial class UIClip : PanelContainer
 					{
 						if (mouse.State == MouseState.Dragging)
 						{
-							Modulate = Colors.White;
+							ClipsView.UITimeline.FinishDrag(mouse.DragDelta);
 							GD.Print($"{Clip.Name}: drag finished");
 						}
 						else
@@ -119,7 +126,7 @@ public partial class UIClip : PanelContainer
 							}
 							else
 							{
-								Channel.Timeline.SelectClip(this, UITimeline.SelectionMode.Exclusive);
+								ClipsView.UITimeline.SelectClip(this, UITimeline.SelectionMode.Exclusive);
 								GD.Print($"{Clip.Name}: click finished");
 							}
 						}
@@ -137,7 +144,7 @@ public partial class UIClip : PanelContainer
 					if (mouse.IsDragging)
 					{
 						mouse.State = MouseState.Dragging;
-						Modulate = Color.FromString("#FFFFFF80", Colors.Red);
+						ClipsView.UITimeline.DragSelection(mouse.DragDelta);
 						GD.Print($"{Clip.Name}: drag started (original pos: {mouse.LastClickPosition}, current pos: {mouse.CurrentPosition}, diff: {mouse.DragDelta}, min: {Mouse.MIN_DRAG_PIXELS})");
 					}
 					
@@ -145,9 +152,9 @@ public partial class UIClip : PanelContainer
 
 				// luckily, controls still get mouse motion events as long as they are being held down
 				// no matter where the mouse is
-				
 				if (mouse.State == MouseState.Dragging)
 				{
+					ClipsView.UITimeline.DragSelection(mouse.DragDelta);
 					GD.Print($"{Clip.Name}: dragging");
 				} 
 				else

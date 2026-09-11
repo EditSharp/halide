@@ -11,10 +11,10 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.6917556, 0.2192756, 0.12965634, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w627v"]
 bg_color = Color(0.077350296, 0.25348938, 0.3896695, 1)
@@ -61,7 +61,8 @@ corner_radius_bottom_left = 5
 oversampling_with_scale = 1
 anchors_preset = 9
 anchor_bottom = 1.0
-offset_right = 300.0
+offset_left = 1.0
+offset_right = 301.0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_7dmxs")
 script = ExtResource("1_fin3e")

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using EditSharp.Components;
@@ -74,6 +75,7 @@ public static class Tests
                 .AddKeyframe(TimeSpan.FromSeconds(13), SKColors.White.WithGreen(128).WithBlue(128));
 
             //videos
+            List<VideoClip> videos = [];
             for (int i = 1; i < 7; i++)
             {
                 VideoClip video = VideoClip.CreateFromSource(videoSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
@@ -119,7 +121,11 @@ public static class Tests
                     video.Graph.OutputNode.Id, video.Graph.OutputNode.Ports.First().Name);
 
                 timeline.Channels[i].AddClip(video);
+
+                videos.Add(video);
             }
+
+            timeline.Link(videos);
 
             // clip further out so i can test my gui
             VideoClip extraVideo = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));

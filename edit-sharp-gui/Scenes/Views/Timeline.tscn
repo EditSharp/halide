@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://rmor8if075lh"]
 
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
-[ext_resource type="PackedScene" uid="uid://8pmfu28pbs8r" path="res://Scenes/Components/ChannelTimeline.tscn" id="2_fxefp"]
+[ext_resource type="PackedScene" uid="uid://8pmfu28pbs8r" path="res://Scenes/Components/ChannelClipsView.tscn" id="2_fxefp"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
 [ext_resource type="PackedScene" uid="uid://c8qrwy2k7sxii" path="res://Scenes/Components/Ruler.tscn" id="5_1s8ef"]
 

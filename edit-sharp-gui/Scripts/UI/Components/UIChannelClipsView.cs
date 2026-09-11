@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public partial class UIChannelTimeline : PanelContainer
+public partial class UIChannelClipsView : PanelContainer
 {
 	[ExportGroup("Controls")]
 
@@ -15,21 +15,18 @@ public partial class UIChannelTimeline : PanelContainer
 
 	[Export] PackedScene clipScene;
 
-	// reference to parent timeline
-	public UITimeline Timeline;
 	// reference to actual channel data under the hood
 	public Channel Channel;
 
+	public UITimeline UITimeline;
 	public List<UIClip> UIClips = [];
+	
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		// check for existing clips in the provided channel and create the gui for them
-		foreach (var clip in Channel.Clips)
-		{
-			AddClip(clip);
-		}
+		Refresh();
 	}
 
 	public void SetWidth(double pixelsPerSecond)
@@ -47,22 +44,55 @@ public partial class UIChannelTimeline : PanelContainer
 
 			clip.SetLength(length);
 		}
+
+		GD.Print($"width set to {pixelsPerSecond}");
 	}
 
-	public void AddClip(Clip c)
+	public UIClip CreateUIClip(Clip c)
 	{
 		UIClip ui = clipScene.Instantiate() as UIClip;
 
 		ui.Clip = c;
-		ui.Channel = this;
+		ui.ClipsView = this;
 
 		clipsContainer.AddChild(ui);
 
 		UIClips.Add(ui);
+
+		return ui;
 	}
 
-	public void EditClip()
+	public void RemoveUIClip(UIClip c)
 	{
+		// return if clip is not a part of this channel
+		UIClips.Remove(c);
+		c.QueueFree();
+	}
+
+	// refresh clip guis
+	// only refreshes missing guis by default
+	public void Refresh(bool all = false)
+	{
+		if (all)
+		{
+			//delete all clips
+			foreach (UIClip c in UIClips) c.QueueFree();
+			UIClips.Clear();
+		}
 		
+		// find all missing clips and generate their guis
+		foreach (Clip c in Channel.Clips)
+		{
+			// skip existing clips
+			if (UIClips.Any(u => ReferenceEquals(u.Clip, c)))
+			{
+				GD.PushWarning($"{c.Name}: clip gui already exists, skipped");
+				continue;
+			}
+
+			CreateUIClip(c);
+		}
+
+		SetWidth(UITimeline.PixelsPerSecond);
 	}
 }

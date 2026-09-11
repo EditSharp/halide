@@ -33,8 +33,8 @@ public partial class UIPlayback : Control
 
 		playback = new()
 		{
-			Timeline = ProjectManager.Singleton.currentProject.Timeline,
-			RenderSettings = ProjectManager.Singleton.currentProject.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
+			Timeline = ProjectManager.Singleton.CurrentProject.Timeline,
+			RenderSettings = ProjectManager.Singleton.CurrentProject.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
 		};
 
 		playButton.Pressed += PlayButton_Pressed;

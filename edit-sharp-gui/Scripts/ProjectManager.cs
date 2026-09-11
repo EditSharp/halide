@@ -18,7 +18,7 @@ public partial class ProjectManager : Node
 		EditSharpConfig.Logger = new ConsoleLogger();
 	}
 
-	public Project currentProject = new()
+	public Project CurrentProject = new()
 	{
 		Timeline = Tests.TestBlueprint.Timeline,
 		RenderSettings = Tests.TestBlueprint.RenderSettings

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://8pmfu28pbs8r"]
 
-[ext_resource type="Script" uid="uid://dqvpqjstcchln" path="res://Scripts/UI/Components/UIChannelTimeline.cs" id="1_t6tj7"]
+[ext_resource type="Script" uid="uid://dqvpqjstcchln" path="res://Scripts/UI/Components/UIChannelClipsView.cs" id="1_t6tj7"]
 [ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="2_krov7"]
 [ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="3_reb2i"]
 
@@ -15,7 +15,7 @@ border_width_bottom = 1
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Channel Timeline" type="PanelContainer" unique_id=1050506150 node_paths=PackedStringArray("clipsContainer")]
+[node name="Channel Clips View" type="PanelContainer" unique_id=1050506150 node_paths=PackedStringArray("clipsContainer")]
 custom_minimum_size = Vector2(0, 80)
 anchors_preset = 10
 anchor_right = 1.0
