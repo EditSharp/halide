@@ -162,7 +162,13 @@ public partial class UITimeline : Control
 	}
 
 	// all selected clips
-	List<UIClip> Selection = [];
+	public class Selection
+	{
+		public List<UIClip> Clips = [];
+
+		public TimeSpan EarliestPosition => Clips.Min(c => c.Clip.Start);
+		public TimeSpan LatestPosition => Clips.Max(c => c.Clip.End);
+	}
 
 	// when a clip gets clicked on
 	public enum SelectionMode
@@ -177,17 +183,19 @@ public partial class UITimeline : Control
 		Exclusive
 	}
 
+	Selection CurrentSelection = new();
+
 	public void SelectClip(UIClip uiClip, SelectionMode mode = SelectionMode.ExclusiveIfUnselected, bool invert = false)
 	{
 		if (mode == SelectionMode.ExclusiveIfUnselected)
 		{
-			if (!Selection.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
+			if (!CurrentSelection.Clips.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
 			return;
 		}
 		else if (mode == SelectionMode.Exclusive)
 		{
 			// clear current selection
-			Selection.Clear();
+			CurrentSelection.Clips.Clear();
 		}
 		
         // select clip and all clips linked to it
@@ -195,10 +203,10 @@ public partial class UITimeline : Control
 		{
 			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
 			{
-				Selection.Add(c);
+				CurrentSelection.Clips.Add(c);
 			}
 		}
-		else Selection.Add(uiClip);
+		else CurrentSelection.Clips.Add(uiClip);
 		
 		UpdateSelection();
 	}
@@ -206,17 +214,17 @@ public partial class UITimeline : Control
 	// when a clip gets control clicked on
 	public void DeselectClip(UIClip uiClip)
 	{
-		if (!Selection.Contains(uiClip)) return;
+		if (!CurrentSelection.Clips.Contains(uiClip)) return;
 
 		 // deselect clip and all clips linked to it
 		if (uiClip.Clip.LinkGroupId.HasValue)
 		{
 			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
 			{
-				Selection.Remove(c);
+				CurrentSelection.Clips.Remove(c);
 			}
 		}
-		else Selection.Remove(uiClip);
+		else CurrentSelection.Clips.Remove(uiClip);
 		
 		UpdateSelection();
 	}
@@ -227,19 +235,27 @@ public partial class UITimeline : Control
 		// make selection translucent
 		foreach (UIClip c in UIClips)
 		{
-			c.SetTransparency(Selection.Contains(c) ? 0.5f : 1f);
+			c.SetTransparency(CurrentSelection.Clips.Contains(c) ? 0.5f : 1f);
 		}
 
 		// move clips visually
 		// account for any scrolling
-		foreach (UIClip s in Selection)
+		foreach (UIClip s in CurrentSelection.Clips)
 		{
+			Vector2 offset = delta;
+
+			// don't let offset move selection past zero
+			if (!(CurrentSelection.EarliestPosition - PixelsToTimeSpan(delta.X) >= TimeSpan.Zero))
+			{
+				// reign offset back in
+				offset = new((float)TimeSpanToPixels(CurrentSelection.EarliestPosition), delta.Y);
+			}
+
 			s.Position = new(
-				(float)TimeSpanToPixels(s.Clip.Start) - delta.X,
+				(float)TimeSpanToPixels(s.Clip.Start) - offset.X,
 				s.Position.Y
 			);
 		}
-		//timelinesContainer.ScrollHorizontal
 	}
 
 	// when the user lets go of the selection they were dragging
@@ -248,16 +264,26 @@ public partial class UITimeline : Control
 		// set all clips back to opaque
 		foreach (UIClip c in UIClips) c.SetTransparency(1f);
 
-		// edit underlying clip data
-		foreach (UIClip s in Selection)
+		Vector2 offset = delta;
+
+		// don't let offset move selection past zero
+		if (!(CurrentSelection.EarliestPosition - PixelsToTimeSpan(delta.X) >= TimeSpan.Zero))
 		{
-			s.Clip.Move(PixelsToTimeSpan(TimeSpanToPixels(s.Clip.Start) - delta.X));
+			// reign offset back in
+			offset = new((float)TimeSpanToPixels(CurrentSelection.EarliestPosition), delta.Y);
+		}
+			
+
+		// edit underlying clip data
+		foreach (UIClip s in CurrentSelection.Clips)
+		{
+			s.Clip.Move(PixelsToTimeSpan(TimeSpanToPixels(s.Clip.Start) - offset.X));
 		}
 
 		
 		foreach (UIClip c in UIClips)
 		{
-			foreach (UIClip s in Selection)
+			foreach (UIClip s in CurrentSelection.Clips)
 			{
 				// do not delete clips in selection
 				if (ReferenceEquals(s, c)) continue;
@@ -276,7 +302,7 @@ public partial class UITimeline : Control
 		// highlight current selection, unhighlight any other clips
 		foreach (UIClip c in UIClips)
 		{
-			c.Selected = Selection.Contains(c);
+			c.Selected = CurrentSelection.Clips.Contains(c);
 			c.SetOutlined(c.Selected);
 		}
 	}

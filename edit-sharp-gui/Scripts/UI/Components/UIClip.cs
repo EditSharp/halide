@@ -155,11 +155,11 @@ public partial class UIClip : PanelContainer
 				if (mouse.State == MouseState.Dragging)
 				{
 					ClipsView.UITimeline.DragSelection(mouse.DragDelta);
-					GD.Print($"{Clip.Name}: dragging");
+					//GD.Print($"{Clip.Name}: dragging");
 				} 
 				else
 				{
-					GD.Print($"{Clip.Name}: being hovered over");
+					//GD.Print($"{Clip.Name}: being hovered over");
 				} 
 				
 			}
