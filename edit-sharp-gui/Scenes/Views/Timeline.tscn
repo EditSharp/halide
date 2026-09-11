@@ -12,7 +12,7 @@ border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "timelinesContainer", "timelines", "rulerContainer", "ruler")]
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewsContainer", "clipsViews", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,10 +27,10 @@ heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
 editsContainer = NodePath("VBoxContainer/Channels/Channel Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Channel Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Channel Edits/Scrollbar Spacer")
-timelinesContainer = NodePath("VBoxContainer/Channels/Channel Timelines/Timelines Container")
-timelines = NodePath("VBoxContainer/Channels/Channel Timelines/Timelines Container/Timelines")
-rulerContainer = NodePath("VBoxContainer/Channels/Channel Timelines/Ruler Container")
-ruler = NodePath("VBoxContainer/Channels/Channel Timelines/Ruler Container/Ruler")
+clipsViewsContainer = NodePath("VBoxContainer/Channels/Channel Clips Views/Clips Views Container")
+clipsViews = NodePath("VBoxContainer/Channels/Channel Clips Views/Clips Views Container/Clips Views")
+rulerContainer = NodePath("VBoxContainer/Channels/Channel Clips Views/Ruler Container")
+ruler = NodePath("VBoxContainer/Channels/Channel Clips Views/Ruler Container/Ruler")
 channelEditScene = ExtResource("3_au47u")
 channelTimelineScene = ExtResource("2_fxefp")
 
@@ -114,26 +114,26 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="Channel Timelines" type="VBoxContainer" parent="VBoxContainer/Channels" unique_id=2137122751]
+[node name="Channel Clips Views" type="VBoxContainer" parent="VBoxContainer/Channels" unique_id=2137122751]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Channel Timelines" unique_id=1976138246]
+[node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Channel Clips Views" unique_id=1976138246]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 mouse_filter = 2
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 0
 
-[node name="Ruler" parent="VBoxContainer/Channels/Channel Timelines/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
+[node name="Ruler" parent="VBoxContainer/Channels/Channel Clips Views/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
 layout_mode = 2
 
-[node name="Timelines Container" type="ScrollContainer" parent="VBoxContainer/Channels/Channel Timelines" unique_id=1543339615]
+[node name="Clips Views Container" type="ScrollContainer" parent="VBoxContainer/Channels/Channel Clips Views" unique_id=1543339615]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Timelines" type="VBoxContainer" parent="VBoxContainer/Channels/Channel Timelines/Timelines Container" unique_id=469528974]
+[node name="Clips Views" type="VBoxContainer" parent="VBoxContainer/Channels/Channel Clips Views/Clips Views Container" unique_id=469528974]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0

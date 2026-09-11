@@ -18,8 +18,8 @@ public partial class UITimeline : Control
 	[Export] ScrollContainer editsContainer;
 	[Export] VBoxContainer edits;
 	[Export] Control editsScrollSpacer;
-	[Export] ScrollContainer timelinesContainer;
-	[Export] VBoxContainer timelines;
+	[Export] ScrollContainer clipsViewsContainer;
+	[Export] VBoxContainer clipsViews;
 	[Export] ScrollContainer rulerContainer;
 	[Export] UIRuler ruler;
 
@@ -30,8 +30,10 @@ public partial class UITimeline : Control
 
 	public Timeline Timeline;
 
-	public List<UIChannel> UIChannels = [];
-	public List<UIClip> UIClips => [.. UIChannels.SelectMany(c => c.ClipsView.UIClips)];
+	public List<UIChannel> UIVideoChannels = [];
+	public List<UIChannel> UIAudioChannels = [];
+	public List<UIChannel> UIChannels => [.. UIVideoChannels, .. UIAudioChannels];
+	public List<UIClip> UIClips => [.. UIVideoChannels.SelectMany(c => c.ClipsView.UIClips), .. UIAudioChannels.SelectMany(c => c.ClipsView.UIClips)];
 
 	public double VerticalScale { 
 		get; 
@@ -73,17 +75,17 @@ public partial class UITimeline : Control
     public override void _Process(double delta)
     {
 		// match scrolls to timeline
-        editsContainer.ScrollVertical = timelinesContainer.ScrollVertical;
-		rulerContainer.ScrollHorizontal = timelinesContainer.ScrollHorizontal;
+        editsContainer.ScrollVertical = clipsViewsContainer.ScrollVertical;
+		rulerContainer.ScrollHorizontal = clipsViewsContainer.ScrollHorizontal;
 
 		//stretch ruler to length of channels
 		ruler.CustomMinimumSize = new(
-			timelines.Size.X + timelinesContainer.GetVScrollBar().Size.X,
+			clipsViews.Size.X + clipsViewsContainer.GetVScrollBar().Size.X,
 			ruler.CustomMinimumSize.Y
 		);
 
 		// show scrollbar spacer if timeline is scrollable
-		editsScrollSpacer.Visible = timelinesContainer.GetHScrollBar().Visible;
+		editsScrollSpacer.Visible = clipsViewsContainer.GetHScrollBar().Visible;
     }
 
 	public class UIChannel
@@ -99,10 +101,32 @@ public partial class UITimeline : Control
 	{
 		UIChannel channel = CreateUIChannel(c);
 		channel.ClipsView.UITimeline = this;
-
-		edits.AddChild(channel.Edit);
-		timelines.AddChild(channel.ClipsView);
 		UIChannels.Add(channel);
+
+		if (c is VideoChannel v)
+		{
+			// add edit gui to tree
+			edits.AddChild(channel.Edit);
+			edits.MoveChild(channel.Edit, 0);
+
+			// add clips view gui to tree
+			clipsViews.AddChild(channel.ClipsView);
+			clipsViews.MoveChild(channel.ClipsView, 0);
+
+			UIVideoChannels.Add(channel);
+		}
+		else if (c is AudioChannel a)
+		{
+			// add edit gui to tree
+			edits.AddChild(channel.Edit);
+			edits.MoveChild(channel.Edit, edits.GetChildCount() - 1);
+
+			// add clips view gui to tree
+			clipsViews.AddChild(channel.ClipsView);
+			clipsViews.MoveChild(channel.ClipsView, edits.GetChildCount() - 1);
+
+			UIAudioChannels.Add(channel);
+		}
 	}
 
 	UIChannel CreateUIChannel(Channel c)
@@ -138,7 +162,7 @@ public partial class UITimeline : Control
 		}
 
 		// update channel timelines
-		foreach (var child in timelines.GetChildren())
+		foreach (var child in clipsViews.GetChildren())
 		{
 			if (child is UIChannelClipsView timeline)
 			{
