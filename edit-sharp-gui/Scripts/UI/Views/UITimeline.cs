@@ -193,6 +193,20 @@ public partial class UITimeline : Control
 
 		public TimeSpan EarliestPosition => Clips.Min(c => c.Clip.Start);
 		public TimeSpan LatestPosition => Clips.Max(c => c.Clip.End);
+
+		public int ZIndex 
+		{ 
+			get
+			{
+				return Clips.Min(c => c.ZIndex);
+			}
+			set
+			{
+				int offset = value - ZIndex;
+
+				foreach (UIClip clip in Clips) clip.ZIndex += offset;
+			}
+		}
 	}
 
 	// when a clip gets clicked on
@@ -263,6 +277,9 @@ public partial class UITimeline : Control
 			c.SetTransparency(CurrentSelection.Clips.Contains(c) ? 0.5f : 1f);
 		}
 
+		// move selection z index above other clips
+		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
+
 		// move clips visually
 		// account for any scrolling
 		foreach (UIClip s in CurrentSelection.Clips)
@@ -287,7 +304,13 @@ public partial class UITimeline : Control
 	public void FinishDrag(Vector2 delta)
 	{
 		// set all clips back to opaque
-		foreach (UIClip c in UIClips) c.SetTransparency(1f);
+		foreach (UIClip c in UIClips)
+		{
+			c.SetTransparency(1f);
+		}
+
+		// move selection z index back down to other clips
+		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
 
 		Vector2 offset = delta;
 
