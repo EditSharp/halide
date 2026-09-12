@@ -45,8 +45,6 @@ public partial class UIChannelClipsView : PanelContainer
 
 			clip.SetLength(length);
 		}
-
-		GD.Print($"width set to {pixelsPerSecond}");
 	}
 
 	public UIClip CreateUIClip(Clip c)
@@ -72,7 +70,8 @@ public partial class UIChannelClipsView : PanelContainer
 
 	// refresh clip guis
 	// only refreshes missing guis by default
-	public void Refresh(bool all = false)
+	// returns number of clips refreshed
+	public int Refresh(bool all = false)
 	{
 		if (all)
 		{
@@ -82,17 +81,17 @@ public partial class UIChannelClipsView : PanelContainer
 		}
 		
 		// find all missing clips and generate their guis
+		int clips = 0;
 		foreach (Clip c in Channel.Clips)
 		{
 			// skip existing clips
-			if (UIClips.Any(u => ReferenceEquals(u.Clip, c)))
-			{
-				continue;
-			}
+			if (UIClips.Any(u => ReferenceEquals(u.Clip, c))) continue;
 
 			CreateUIClip(c);
+			clips++;
 		}
 
 		SetWidth(UITimeline.PixelsPerSecond);
+		return clips;
 	}
 }

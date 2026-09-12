@@ -308,18 +308,21 @@ public partial class UITimeline : Control
 		
 		foreach (UIClip c in UIClips)
 		{
-			foreach (UIClip s in CurrentSelection.Clips)
-			{
-				// do not delete clips in selection
-				if (ReferenceEquals(s, c)) continue;
+			// do not delete clips in selection
+				if (CurrentSelection.Clips.Any(s => ReferenceEquals(c, s))) continue;
 
 				// delete this clip's gui if it intersects selection
-				if (c.GetRect().Intersects(s.GetRect())) c.ClipsView.RemoveUIClip(c);
-			}
+				if (CurrentSelection.Clips.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
+				{
+					GD.Print($"{c.Clip.Name} ({c.GetGlobalRect()}) intersects selection. regenerating");
+					c.ClipsView.RemoveUIClip(c);
+				} 
 		}
 
 		// refresh all channel clip views
-		foreach (UIChannel ch in UIChannels) ch.ClipsView.Refresh();
+		int clips = 0;
+		foreach (UIChannel ch in UIChannels) clips += ch.ClipsView.Refresh();
+		GD.Print($"refreshed {clips} clips");
 	}
 
 	void UpdateSelection()
