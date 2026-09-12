@@ -31,7 +31,37 @@ public partial class UITimeline : Control
 	public Timeline Timeline;
 
 	public List<UIChannel> UIVideoChannels = [];
+	// takes in global position
+	// returns the video channel if any at position
+	public UIChannel UIVideoChannelAtPoint(Vector2 p)
+	{
+		foreach (UIChannel u in UIVideoChannels)
+		{
+			if (u.ClipsView.GetGlobalRect().HasPoint(p))
+			{
+				return u;
+			}
+		}
+
+		return null;
+	}
+
 	public List<UIChannel> UIAudioChannels = [];
+	// takes in global position
+	// returns the video channel if any at position
+	public UIChannel UIAudioChannelAtPoint(Vector2 p)
+	{
+		foreach (UIChannel u in UIAudioChannels)
+		{
+			if (u.ClipsView.GetGlobalRect().HasPoint(p))
+			{
+				return u;
+			}
+		}
+
+		return null;
+	}
+
 	public List<UIChannel> UIChannels => [.. UIVideoChannels, .. UIAudioChannels];
 	public List<UIClip> UIClips => [.. UIVideoChannels.SelectMany(c => c.ClipsView.UIClips), .. UIAudioChannels.SelectMany(c => c.ClipsView.UIClips)];
 
@@ -51,6 +81,7 @@ public partial class UITimeline : Control
 
 	public double TimeSpanToPixels(TimeSpan t) => t.TotalSeconds * PixelsPerSecond;
 	public TimeSpan PixelsToTimeSpan(double p) => TimeSpan.FromSeconds(p / PixelsPerSecond);
+
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -207,6 +238,9 @@ public partial class UITimeline : Control
 				foreach (UIClip clip in Clips) clip.ZIndex += offset;
 			}
 		}
+
+		// the lowest channel the selection occupies
+		public int LowestChannelIndex => Clips.Min(c => c.Clip.Channel.Index);
 	}
 
 	// when a clip gets clicked on
@@ -269,7 +303,7 @@ public partial class UITimeline : Control
 	}
 
 	// drag selection with context provided from the dragged clip
-	public void DragSelection(Vector2 delta)
+	public void DragSelection(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
 		// make selection translucent
 		foreach (UIClip c in UIClips)
@@ -281,27 +315,47 @@ public partial class UITimeline : Control
 		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
 
 		// move clips visually
-		// account for any scrolling
+		// does not yet account for any scrolling
+
+		int channelDragDelta = GetChannelDragDelta(uiClip, drag);
 		foreach (UIClip s in CurrentSelection.Clips)
 		{
-			Vector2 offset = delta;
+			// VERTICAL
+
+			if (channelDragDelta != 0)
+			{
+				if (s.Clip is VideoClip vi)
+				{
+					s.ClipsView.RemoveUIClip(s);
+					UIVideoChannels[s.Clip.Channel.Index + channelDragDelta].ClipsView.AddUIClip(s);
+				}
+				else if (s.Clip is AudioClip a)
+				{
+					s.ClipsView.RemoveUIClip(s);
+					UIAudioChannels[s.Clip.Channel.Index + channelDragDelta].ClipsView.AddUIClip(s);
+				}
+			}
+
+			// HORIZONTAL
+
+			float offset = drag.delta.X;
 
 			// don't let offset move selection past zero
-			if (!(CurrentSelection.EarliestPosition - PixelsToTimeSpan(delta.X) >= TimeSpan.Zero))
+			if (!(CurrentSelection.EarliestPosition - PixelsToTimeSpan(offset) >= TimeSpan.Zero))
 			{
 				// reign offset back in
-				offset = new((float)TimeSpanToPixels(CurrentSelection.EarliestPosition), delta.Y);
+				offset = (float)TimeSpanToPixels(CurrentSelection.EarliestPosition);
 			}
 
 			s.Position = new(
-				(float)TimeSpanToPixels(s.Clip.Start) - offset.X,
+				(float)TimeSpanToPixels(s.Clip.Start) - offset,
 				s.Position.Y
 			);
 		}
 	}
 
 	// when the user lets go of the selection they were dragging
-	public void FinishDrag(Vector2 delta)
+	public void FinishDrag(UIClip uiClip, Vector2 delta)
 	{
 		// set all clips back to opaque
 		foreach (UIClip c in UIClips)
@@ -332,20 +386,44 @@ public partial class UITimeline : Control
 		foreach (UIClip c in UIClips)
 		{
 			// do not delete clips in selection
-				if (CurrentSelection.Clips.Any(s => ReferenceEquals(c, s))) continue;
+			if (CurrentSelection.Clips.Any(s => ReferenceEquals(c, s))) continue;
 
-				// delete this clip's gui if it intersects selection
-				if (CurrentSelection.Clips.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
-				{
-					GD.Print($"{c.Clip.Name} ({c.GetGlobalRect()}) intersects selection. regenerating");
-					c.ClipsView.RemoveUIClip(c);
-				} 
+			// delete this clip's gui if it intersects selection
+			if (CurrentSelection.Clips.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
+			{
+				GD.Print($"{c.Clip.Name} ({c.GetGlobalRect()}) intersects selection. regenerating");
+				c.ClipsView.RemoveUIClip(c);
+				c.QueueFree();
+			} 
 		}
 
 		// refresh all channel clip views
 		int clips = 0;
 		foreach (UIChannel ch in UIChannels) clips += ch.ClipsView.Refresh();
 		GD.Print($"refreshed {clips} clips");
+	}
+
+	int GetChannelDragDelta(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
+	{
+		UIChannel dragChannel = null;
+		int channelDelta = 0;
+
+		if (uiClip.Clip is VideoClip v)
+		{
+			dragChannel= UIVideoChannelAtPoint(drag.start - drag.delta);
+		}
+		else if (uiClip.Clip is AudioClip a)
+		{
+			dragChannel= UIAudioChannelAtPoint(drag.start - drag.delta);
+		}
+
+		if (dragChannel is not null)
+		{
+			channelDelta = dragChannel.Channel.Index - uiClip.Clip.Channel.Index;
+			channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+		}
+
+		return channelDelta;
 	}
 
 	void UpdateSelection()

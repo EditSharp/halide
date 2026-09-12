@@ -111,7 +111,7 @@ public partial class UIClip : PanelContainer
 					{
 						if (mouse.State == MouseState.Dragging)
 						{
-							ClipsView.UITimeline.FinishDrag(mouse.DragDelta);
+							ClipsView.UITimeline.FinishDrag(this, mouse.DragDelta);
 							GD.Print($"{Clip.Name}: drag finished");
 						}
 						else
@@ -144,7 +144,7 @@ public partial class UIClip : PanelContainer
 					if (mouse.IsDragging)
 					{
 						mouse.State = MouseState.Dragging;
-						ClipsView.UITimeline.DragSelection(mouse.DragDelta);
+						ClipsView.UITimeline.DragSelection(this, (mouse.LastClickPosition, mouse.DragDelta));
 						GD.Print($"{Clip.Name}: drag started (original pos: {mouse.LastClickPosition}, current pos: {mouse.CurrentPosition}, diff: {mouse.DragDelta}, min: {Mouse.MIN_DRAG_PIXELS})");
 					}
 					
@@ -154,7 +154,7 @@ public partial class UIClip : PanelContainer
 				// no matter where the mouse is
 				if (mouse.State == MouseState.Dragging)
 				{
-					ClipsView.UITimeline.DragSelection(mouse.DragDelta);
+					ClipsView.UITimeline.DragSelection(this, (mouse.LastClickPosition, mouse.DragDelta));
 					//GD.Print($"{Clip.Name}: dragging");
 				} 
 				else
