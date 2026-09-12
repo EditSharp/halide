@@ -32,6 +32,9 @@ project/assembly_name="EditSharp GUI"
 
 [gui]
 
+theme/default_font_hinting=2
+theme/default_font_multichannel_signed_distance_field=true
+theme/default_font_generate_mipmaps=true
 theme/custom_font="uid://dynelqw1go4e8"
 
 [physics]
