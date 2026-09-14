@@ -63,14 +63,16 @@ public partial class UIChannelClipsView : PanelContainer
 
 	public void AddUIClip(UIClip c)
 	{
+		c.ClipsView = this;
 		UIClips.Add(c);
 		clipsContainer.AddChild(c);
 	}
 
 	public void RemoveUIClip(UIClip c)
 	{
+		c.ClipsView = null;
 		UIClips.Remove(c);
-		clipsContainer.RemoveChild(c);
+		//clipsContainer.RemoveChild(c);
 	}
 
 	// refresh clip guis

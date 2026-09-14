@@ -3,21 +3,26 @@ using System;
 
 public partial class FitToChildren : Control
 {
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
+	[Export] bool Horizontal;
+	[Export] bool Vertical;
+
+
 	public override void _Process(double delta)
 	{
-		float furthestPoint = 0f;
+		float width = 0f;
+		float height = 0f;
 		foreach (var child in GetChildren())
 		{
 			if (child is Control c)
 			{
-				furthestPoint = c.GetRect().End.X > furthestPoint ? c.GetRect().End.X : furthestPoint;
+				width = c.GetRect().End.X > width ? c.GetRect().End.X : width;
+				height = c.GetRect().End.Y > height ? c.GetRect().End.Y : height;
 			}
 		}
 
 		CustomMinimumSize = new(
-			furthestPoint,
-			CustomMinimumSize.Y
+			Horizontal ? width : CustomMinimumSize.X,
+			Vertical ? height : CustomMinimumSize.Y
 		);
 	}
 }
