@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://rmor8if075lh"]
 
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
-[ext_resource type="Script" uid="uid://dqvpqjstcchln" path="res://Scripts/UI/Components/UIChannelClipsView.cs" id="3_76ryr"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
 [ext_resource type="PackedScene" uid="uid://c8qrwy2k7sxii" path="res://Scenes/Components/Ruler.tscn" id="5_1s8ef"]
 [ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="6_300s3"]
@@ -19,21 +18,6 @@ border_width_bottom = 1
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[sub_resource type="PackedScene" id="PackedScene_hyqco"]
-_bundled = {
-"conn_count": 0,
-"conns": PackedInt32Array(),
-"editable_instances": [],
-"id_paths": [PackedInt32Array()],
-"names": PackedStringArray("Channel Clips View", "PanelContainer", "custom_minimum_size", "anchors_preset", "anchor_right", "offset_bottom", "grow_horizontal", "theme_override_styles/panel", "script", "clipsContainer", "clipScene", "Clips", "Control", "layout_mode", "size_flags_horizontal", "script", "Horizontal"),
-"node_count": 2,
-"node_ids": PackedInt32Array(1050506150, 365963652),
-"node_paths": [NodePath(".")],
-"nodes": PackedInt32Array(-1, -1, 1, 0, -1, 9, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 1073741833, 7, 10, 8, 0, 1073741824, 0, 12, 11, -1, 4, 13, 9, 14, 10, 15, 11, 16, 12, 0),
-"variants": [Vector2(0, 80), 10, 1.0, 10.0, 2, SubResource("StyleBoxFlat_12elb"), ExtResource("3_76ryr"), NodePath("Clips"), ExtResource("7_hyqco"), 2, 0, ExtResource("6_300s3"), true],
-"version": 3
-}
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
 bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
 border_width_right = 2
@@ -41,7 +25,7 @@ border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewsContainer", "rulerContainer", "ruler")]
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,11 +40,11 @@ heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
 editsContainer = NodePath("VBoxContainer/Channels/Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Edits/Scrollbar Spacer")
-clipsViewsContainer = NodePath("VBoxContainer/Channels/Clips/Clips Container")
+clipsViewContainer = NodePath("VBoxContainer/Channels/Clips/Clips View Container")
+clipsView = NodePath("VBoxContainer/Channels/Clips/Clips View Container/Clips View")
 rulerContainer = NodePath("VBoxContainer/Channels/Clips/Ruler Container")
 ruler = NodePath("VBoxContainer/Channels/Clips/Ruler Container/Ruler")
 channelEditScene = ExtResource("3_au47u")
-channelTimelineScene = SubResource("PackedScene_hyqco")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1431695054]
 layout_mode = 1
@@ -157,9 +141,9 @@ vertical_scroll_mode = 0
 [node name="Ruler" parent="VBoxContainer/Channels/Clips/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
 layout_mode = 2
 
-[node name="Clips Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1543339615]
+[node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1543339615]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Clips View" parent="VBoxContainer/Channels/Clips/Clips Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
+[node name="Clips View" parent="VBoxContainer/Channels/Clips/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
 layout_mode = 2

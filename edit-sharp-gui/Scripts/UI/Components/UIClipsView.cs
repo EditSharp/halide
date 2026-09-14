@@ -19,12 +19,6 @@ public partial class UIClipsView : PanelContainer
 	public UITimeline UITimeline;
 	public List<UIClip> UIClips { get; private set; } = [];
 
-	// Called when the node enters the scene tree for the first time.
-	public override void _Ready()
-	{
-        Refresh();
-    }
-
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
@@ -57,23 +51,27 @@ public partial class UIClipsView : PanelContainer
 		// channel is a new video channel
 		if (channelsDown < 0)
 		{
+			GD.Print("new video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, false);
 		}
 		// if channels down is greater than highest channel index
 		// channel is a new audio channel
 		else if (channelsDown > UITimeline.Timeline.Channels.Count - 1)
 		{
+			GD.Print("new audio channel");
 			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count - 1, false);
 		}
 		// if channels down is greater than the highest video channel index
 		// channel is an existing audio channel
 		else if (channelsDown > UITimeline.Timeline.VideoChannels.Count - 1)
 		{
-			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count - 1, true);
+			GD.Print("existing audio channel");
+			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, true);
 		}
 		// otherwise, channel is an existing a video channel
 		else
 		{
+			GD.Print("existing video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, true);
 		}
 	}
@@ -113,6 +111,8 @@ public partial class UIClipsView : PanelContainer
 		clip.ClipsView = this;
 
 		UIClips.Add(clip);
+
+		clipsControl.AddChild(clip);
 
 		return clip;
 	}

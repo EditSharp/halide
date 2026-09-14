@@ -4,21 +4,13 @@
 [ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="2_4clo1"]
 [ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="3_nspqo"]
 
-[node name="Clips View" type="PanelContainer" unique_id=1508855282]
+[node name="Clips View" type="PanelContainer" unique_id=1508855282 node_paths=PackedStringArray("clipsControl")]
 script = ExtResource("1_htyfg")
+clipsControl = NodePath("Clips")
+clipScene = ExtResource("3_nspqo")
 
 [node name="Clips" type="Control" parent="." unique_id=361613671]
 layout_mode = 2
 script = ExtResource("2_4clo1")
 Horizontal = true
 Vertical = true
-
-[node name="Clip" parent="Clips" unique_id=1527009326 instance=ExtResource("3_nspqo")]
-layout_mode = 0
-
-[node name="Clip2" parent="Clips" unique_id=2045306897 instance=ExtResource("3_nspqo")]
-layout_mode = 0
-offset_left = 368.0
-offset_top = 33.0
-offset_right = 668.0
-offset_bottom = 113.0

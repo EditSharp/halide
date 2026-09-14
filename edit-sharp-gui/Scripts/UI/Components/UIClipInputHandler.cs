@@ -1,6 +1,7 @@
 using System;
 using EditSharp.Components.Clips;
 using Godot;
+using static UIClipsView;
 
 namespace EditSharpGUI.Scripts.UI.Components;
 
@@ -50,17 +51,17 @@ public class UIClipInputHandler
 						{
 							if (mb.IsCommandOrControlPressed())
 							{
-								ClipsView.UITimeline.DeselectClip(UIClip);
+								ClipsView.DeselectClip(UIClip);
 								GD.Print($"{Clip.Name}: ctrl clicked");
 							}
 							else if (mb.ShiftPressed)
 							{
-								ClipsView.UITimeline.SelectClip(UIClip, UITimeline.SelectionMode.Inclusive);
+								ClipsView.SelectClip(UIClip, SelectionMode.Inclusive);
 								GD.Print($"{Clip.Name}: shift clicked");
 							}
 							else
 							{
-								ClipsView.UITimeline.SelectClip(UIClip, UITimeline.SelectionMode.ExclusiveIfUnselected);
+								ClipsView.SelectClip(UIClip, SelectionMode.ExclusiveIfUnselected);
 								GD.Print($"{Clip.Name}: click started");
 							}
 						}
@@ -71,7 +72,7 @@ public class UIClipInputHandler
 					{
 						if (mouse.State == MouseState.Dragging)
 						{
-							ClipsView.UITimeline.FinishDrag(UIClip, mouse.DragDelta);
+							ClipsView.FinishDrag(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
 							GD.Print($"{Clip.Name}: drag finished");
 						}
 						else
@@ -86,7 +87,7 @@ public class UIClipInputHandler
 							}
 							else
 							{
-								ClipsView.UITimeline.SelectClip(UIClip, UITimeline.SelectionMode.Exclusive);
+								ClipsView.SelectClip(UIClip, SelectionMode.Exclusive);
 								GD.Print($"{Clip.Name}: click finished");
 							}
 						}
@@ -104,7 +105,7 @@ public class UIClipInputHandler
 					if (mouse.IsDragging)
 					{
 						mouse.State = MouseState.Dragging;
-						ClipsView.UITimeline.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
+						ClipsView.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
 						GD.Print($"{Clip.Name}: drag started (original pos: {mouse.LastClickPosition}, current pos: {mouse.CurrentPosition}, diff: {mouse.DragDelta}, min: {Mouse.MIN_DRAG_PIXELS})");
 					}
 					
@@ -114,7 +115,7 @@ public class UIClipInputHandler
 				// no matter where the mouse is
 				if (mouse.State == MouseState.Dragging)
 				{
-					ClipsView.UITimeline.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
+					ClipsView.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
 					GD.Print($"{Clip.Name}: dragging");
 				} 
 				else
