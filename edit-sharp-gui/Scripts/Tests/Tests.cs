@@ -50,6 +50,12 @@ public static class Tests
                 };
             timeline.AddChannel(audioChannel);
 
+            AudioChannel audioChannel2 = new()
+                {
+                    Name = $"Audio Jungle"
+                };
+            timeline.AddChannel(audioChannel2);
+
             //background
             VideoClip noise = VideoClip.CreateNoise(TimeSpan.Zero, TimeSpan.FromSeconds(13));
             noise.Name = $"Background Noise";

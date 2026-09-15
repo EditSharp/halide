@@ -16,8 +16,10 @@ border_blend = true
 
 [node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName")]
 custom_minimum_size = Vector2(0, 80)
-offset_right = 90.0
+anchors_preset = 10
+anchor_right = 1.0
 offset_bottom = 80.0
+grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_vnlxm")
 script = ExtResource("1_vnlxm")
 channelName = NodePath("Options/Channel Name")

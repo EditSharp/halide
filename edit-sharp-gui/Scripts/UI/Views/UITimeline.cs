@@ -29,12 +29,17 @@ public partial class UITimeline : Control
 
 	public Timeline Timeline;
 
+	List<UIChannelEdit> ChannelEdits = [];
+
 	public double VerticalScale { 
 		get; 
 		set
 		{
 			if (value > 0d)
 			{
+				// update channel edits
+				RefreshChannelEdits();
+
 				// update clips view
 				clipsView.Refresh();
 
@@ -76,6 +81,8 @@ public partial class UITimeline : Control
 		heightSlider.ValueChanged += h => VerticalScale = h;
 		widthSlider.ValueChanged += w => PixelsPerSecond = w;
 
+		RefreshChannelEdits();
+
 		clipsView.UITimeline = this;
 		clipsView.Refresh();
 	}
@@ -95,4 +102,38 @@ public partial class UITimeline : Control
 		// show scrollbar spacer if timeline is scrollable
 		editsScrollSpacer.Visible = clipsViewContainer.GetHScrollBar().Visible;
     }
+
+	int RefreshChannelEdits(bool all = false)
+	{
+		if (all)
+		{
+			//delete all channel edits
+			foreach (UIChannelEdit c in ChannelEdits) c.QueueFree();
+			ChannelEdits.Clear();
+		}
+		
+		// find all missing channel edits and generate their guis
+		int channels = 0;
+		foreach (Channel c in Timeline.Channels)
+		{
+			// existing channel edit
+			if (ChannelEdits.Any(ch => ReferenceEquals(ch.Channel, c)))
+			{
+				ChannelEdits.First(ch => ReferenceEquals(ch.Channel, c)).Refresh();
+				continue;
+			}
+
+			// new channel edit
+			UIChannelEdit edit = channelEditScene.Instantiate() as UIChannelEdit;
+			edit.Channel = c;
+			edit.UITimeline = this;
+			edits.AddChild(edit);
+			if (c is VideoChannel) edits.MoveChild(edit, 0);
+			ChannelEdits.Add(edit);
+
+			channels++;
+		}
+
+		return channels;
+	}
 }

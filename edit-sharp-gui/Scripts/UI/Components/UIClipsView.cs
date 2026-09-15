@@ -62,14 +62,14 @@ public partial class UIClipsView : PanelContainer
 		else if (channelsDown > UITimeline.Timeline.Channels.Count - 1)
 		{
 			//GD.Print("new audio channel");
-			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count - 1, false);
+			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.AudioChannels.Count - 1, false);
 		}
 		// if channels down is greater than the highest video channel index
 		// channel is an existing audio channel
 		else if (channelsDown > UITimeline.Timeline.VideoChannels.Count - 1)
 		{
 			//GD.Print("existing audio channel");
-			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, true);
+			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.AudioChannels.Count, true);
 		}
 		// otherwise, channel is an existing a video channel
 		else
@@ -332,9 +332,17 @@ public partial class UIClipsView : PanelContainer
 
 		GD.Print(
 			$"global mouse position: {GetGlobalMousePosition()}\n" +
-			$"drag start: {drag.start}, drag delta: {drag.delta}, derived  global: {drag.start + drag.delta}\n" +
-			$"mouse hovering over {dragChannel.type} channel {(dragChannel.exists ? UITimeline.Timeline.VideoChannels[dragChannel.index].Name : $"new {dragChannel.index}")}"
+			$"drag start: {drag.start}, drag delta: {drag.delta}, derived  global: {drag.start + drag.delta}\n"
 		);
+
+		if (dragChannel.type == ChannelType.Video)
+		{
+			
+		}
+		else if (dragChannel.type == ChannelType.Audio)
+		{
+			
+		}
 
 		if (uiClip.Clip is VideoClip v)
 		{
@@ -360,6 +368,15 @@ public partial class UIClipsView : PanelContainer
 				}
 			}
 			else return -CurrentSelection.LowestChannelIndex;
+		}
+
+		if (dragChannel.type == ChannelType.Video)
+		{
+			GD.Print($"decided channel: {(dragChannel.exists ? UITimeline.Timeline.VideoChannels[uiClip.Clip.Channel.Index + channelDelta].Name : $"new {uiClip.Clip.Channel.Index + channelDelta}")}");
+		}
+		else
+		{
+			GD.Print($"decided channel: {(dragChannel.exists ? UITimeline.Timeline.AudioChannels[uiClip.Clip.Channel.Index + channelDelta].Name : $"new {uiClip.Clip.Channel.Index + channelDelta}")}");
 		}
 
 		return channelDelta;

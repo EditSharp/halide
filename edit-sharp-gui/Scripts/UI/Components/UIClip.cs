@@ -69,7 +69,7 @@ public partial class UIClip : PanelContainer
 	{
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start + timeDelta),
-			(float)ClipsView.UITimeline.VerticalScale * (GetChannelsDown() + channelDelta)
+			(float)(ClipsView.UITimeline.VerticalScale * (double)(GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta)))
 		);
 	}
 

@@ -3,20 +3,7 @@
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
 [ext_resource type="PackedScene" uid="uid://c8qrwy2k7sxii" path="res://Scenes/Components/Ruler.tscn" id="5_1s8ef"]
-[ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="6_300s3"]
 [ext_resource type="PackedScene" uid="uid://0o67lwveiecr" path="res://Scenes/Components/ClipsView.tscn" id="7_300s3"]
-[ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="7_hyqco"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_12elb"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(0.105882354, 0.105882354, 0.105882354, 1)
-border_width_top = 1
-border_width_bottom = 1
-border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
-border_blend = true
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
 bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
