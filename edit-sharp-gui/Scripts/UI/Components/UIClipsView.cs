@@ -22,6 +22,7 @@ public partial class UIClipsView : PanelContainer
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
+		/*
 		var channel = GetChannelAtPoint(GetGlobalMousePosition());
 		string name = string.Empty;
 		if (channel.exists)
@@ -35,8 +36,9 @@ public partial class UIClipsView : PanelContainer
 				name = UITimeline.Timeline.AudioChannels[channel.index].Name;
 			}
 		}
+		*/
 		
-		GD.Print($"mouse ({GetLocalMousePosition()}) is over {channel.type} channel {(name == string.Empty ? $"New {channel.index}" : name)}");
+		//GD.Print($"mouse ({GetLocalMousePosition()}) is over {channel.type} channel {(name == string.Empty ? $"New {channel.index}" : name)}");
 	}
 
 	enum ChannelType { Video, Audio }
@@ -44,6 +46,7 @@ public partial class UIClipsView : PanelContainer
 	{
 		// convert global position to local position
 		Vector2 localPosition = globalPosition - GlobalPosition;
+		//GD.Print($"local position is {localPosition}");
 
 		int channelsDown = (int)(localPosition.Y / UITimeline.VerticalScale);
 
@@ -93,6 +96,7 @@ public partial class UIClipsView : PanelContainer
 			if (UIClips.Any(u => ReferenceEquals(u.Clip, c)))
 			{
 				UIClips.First(u => ReferenceEquals(u.Clip, c)).Refresh();
+				continue;
 			}
 
 			// new clips
@@ -259,15 +263,16 @@ public partial class UIClipsView : PanelContainer
 		foreach (UIClip s in CurrentSelection.Clips)
 		{	
 			Channel targetChannel = null;
-			if (s is VideoClip)
+			if (s.Clip is VideoClip)
 			{
 				try
 				{
 					targetChannel = UITimeline.Timeline.VideoChannels[s.Clip.Channel.Index + move.channelDelta];
 				}
-				catch
+				catch (Exception e)
 				{
-					GD.Print("tried to finalize a drag to a channel that doesn't exist");
+					GD.Print($"tried to finalize a drag to a video channel that doesn't exist ({s.Clip.Channel.Index + move.channelDelta})");
+					GD.Print(e.Message);
 				}
 			}
 			else
@@ -278,14 +283,14 @@ public partial class UIClipsView : PanelContainer
 				}
 				catch
 				{
-					GD.Print("tried to finalize a drag to a channel that doesn't exist");
+					GD.Print($"tried to finalize a drag to an audio channel that doesn't exist ({s.Clip.Channel.Index + move.channelDelta})");
 				}
 			}
 
 			s.Clip.Move(s.Clip.Start + move.timeDelta, targetChannel is not null ? targetChannel : null);
 		}
 
-		
+		List<UIClip> remove = [];
 		foreach (UIClip c in UIClips)
 		{
 			// do not delete clips in selection
@@ -295,10 +300,11 @@ public partial class UIClipsView : PanelContainer
 			if (CurrentSelection.Clips.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
 			{
 				GD.Print($"{c.Clip.Name} ({c.GetGlobalRect()}) intersects selection. regenerating");
-				RemoveUIClip(c);
-				c.QueueFree();
+				remove.Add(c);
 			} 
 		}
+
+		for (int i = 0; i < remove.Count; i++) RemoveUIClip(remove[i]);
 
 		// refresh all clips
 		GD.Print($"refreshed {Refresh()} clips");
@@ -310,13 +316,13 @@ public partial class UIClipsView : PanelContainer
 
 		float offset = drag.delta.X;
 		// don't let offset move selection past zero
-		if (!(CurrentSelection.EarliestPosition - UITimeline.PixelsToTimeSpan(offset) >= TimeSpan.Zero))
+		if (!(CurrentSelection.EarliestPosition + UITimeline.PixelsToTimeSpan(offset) >= TimeSpan.Zero))
 		{
 			// reign offset back in
-			offset = (float)UITimeline.TimeSpanToPixels(CurrentSelection.EarliestPosition);
+			offset = -(float)UITimeline.TimeSpanToPixels(CurrentSelection.EarliestPosition);
 		}
 
-		return (-UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
+		return (UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
 	}
 
 	int GetChannelDragDelta(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
@@ -324,20 +330,36 @@ public partial class UIClipsView : PanelContainer
 		var dragChannel = GetChannelAtPoint(drag.start + drag.delta);
 		int channelDelta = 0;
 
+		GD.Print(
+			$"global mouse position: {GetGlobalMousePosition()}\n" +
+			$"drag start: {drag.start}, drag delta: {drag.delta}, derived  global: {drag.start + drag.delta}\n" +
+			$"mouse hovering over {dragChannel.type} channel {(dragChannel.exists ? UITimeline.Timeline.VideoChannels[dragChannel.index].Name : $"new {dragChannel.index}")}"
+		);
+
 		if (uiClip.Clip is VideoClip v)
 		{
-			GD.Print($"mouse hovering over video channel {(dragChannel.exists ? UITimeline.Timeline.VideoChannels[dragChannel.index].Name : $"new {dragChannel.index}")}");
+			if (dragChannel.type == ChannelType.Video)
+			{
+				if (dragChannel.exists)
+				{
+					channelDelta = dragChannel.index - v.Channel.Index;
+					channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+				}
+			}
+			else return -CurrentSelection.LowestChannelIndex;
 		}
 		else if (uiClip.Clip is AudioClip a)
 		{
 
-			GD.Print($"mouse hovering over audio channel {(dragChannel.exists ? UITimeline.Timeline.AudioChannels[dragChannel.index].Name : $"new {dragChannel.index}")}");
-		}
-
-		if (dragChannel.exists)
-		{
-			channelDelta = dragChannel.index - uiClip.Clip.Channel.Index;
-			channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+			if (dragChannel.type == ChannelType.Audio)
+			{
+				if (dragChannel.exists)
+				{
+					channelDelta = dragChannel.index - a.Channel.Index;
+					channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+				}
+			}
+			else return -CurrentSelection.LowestChannelIndex;
 		}
 
 		return channelDelta;

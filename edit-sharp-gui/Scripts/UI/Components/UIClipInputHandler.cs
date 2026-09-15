@@ -14,7 +14,7 @@ public class UIClipInputHandler
 		public Vector2 CurrentPosition, LastClickPosition;
 
 		public const int MIN_DRAG_PIXELS = 2;
-		public Vector2 DragDelta => LastClickPosition - CurrentPosition;
+		public Vector2 DragDelta => -(LastClickPosition - CurrentPosition);
 		public bool IsDragging => Mathf.Abs(DragDelta.X) > MIN_DRAG_PIXELS || Mathf.Abs(DragDelta.Y) > MIN_DRAG_PIXELS;
 	}
 	
