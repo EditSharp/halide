@@ -36,7 +36,7 @@ public partial class UIClipsView : PanelContainer
 			}
 		}
 		
-		GD.Print($"mouse is over {channel.type} channel {(name == string.Empty ? $"New {channel.index}" : name)}");
+		GD.Print($"mouse ({GetLocalMousePosition()}) is over {channel.type} channel {(name == string.Empty ? $"New {channel.index}" : name)}");
 	}
 
 	enum ChannelType { Video, Audio }
@@ -45,33 +45,33 @@ public partial class UIClipsView : PanelContainer
 		// convert global position to local position
 		Vector2 localPosition = globalPosition - GlobalPosition;
 
-		int channelsDown = (int)(localPosition.Y / UITimeline.PixelsPerSecond);
+		int channelsDown = (int)(localPosition.Y / UITimeline.VerticalScale);
 
 		// if channels down is negative 
 		// channel is a new video channel
 		if (channelsDown < 0)
 		{
-			GD.Print("new video channel");
+			//GD.Print("new video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, false);
 		}
 		// if channels down is greater than highest channel index
 		// channel is a new audio channel
 		else if (channelsDown > UITimeline.Timeline.Channels.Count - 1)
 		{
-			GD.Print("new audio channel");
+			//GD.Print("new audio channel");
 			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count - 1, false);
 		}
 		// if channels down is greater than the highest video channel index
 		// channel is an existing audio channel
 		else if (channelsDown > UITimeline.Timeline.VideoChannels.Count - 1)
 		{
-			GD.Print("existing audio channel");
+			//GD.Print("existing audio channel");
 			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, true);
 		}
 		// otherwise, channel is an existing a video channel
 		else
 		{
-			GD.Print("existing video channel");
+			//GD.Print("existing video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, true);
 		}
 	}
@@ -233,8 +233,6 @@ public partial class UIClipsView : PanelContainer
 		// move selection z index above other clips
 		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
 
-		
-
 		var move = GetClipMove(uiClip, drag);
 
 		// move clips visually
@@ -318,7 +316,7 @@ public partial class UIClipsView : PanelContainer
 			offset = (float)UITimeline.TimeSpanToPixels(CurrentSelection.EarliestPosition);
 		}
 
-		return (UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
+		return (-UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
 	}
 
 	int GetChannelDragDelta(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
