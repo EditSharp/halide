@@ -71,6 +71,8 @@ public partial class UIClip : PanelContainer
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start + timeDelta),
 			(float)(ClipsView.UITimeline.VerticalScale * (double)(GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta)))
 		);
+
+		//GD.Print($"moved clip {Clip.Name} to {new Vector2((float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start + timeDelta), (float)(ClipsView.UITimeline.VerticalScale * (double)(GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta))))}");
 	}
 
 	int GetChannelsDown()
@@ -83,7 +85,7 @@ public partial class UIClip : PanelContainer
 		// audio clip
 		else
 		{
-			return Clip.Channel.Timeline.Channels.Count - 1 + Clip.Channel.Index;
+			return Clip.Channel.Timeline.VideoChannels.Count + Clip.Channel.Index;
 		}
 	}
 

@@ -103,7 +103,7 @@ public partial class UITimeline : Control
 		editsScrollSpacer.Visible = clipsViewContainer.GetHScrollBar().Visible;
     }
 
-	int RefreshChannelEdits(bool all = false)
+	public int RefreshChannelEdits(bool all = false)
 	{
 		if (all)
 		{

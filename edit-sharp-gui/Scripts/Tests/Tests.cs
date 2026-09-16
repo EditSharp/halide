@@ -145,7 +145,7 @@ public static class Tests
             //sound
             AudioClip audio = AudioClip.CreateFromSource(audioSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
             audio.Name = $"Source Audio";
-            timeline.Channels[8].AddClip(audio);
+            timeline.AudioChannels[0].AddClip(audio);
 
             Blueprint blueprint = new()
             {

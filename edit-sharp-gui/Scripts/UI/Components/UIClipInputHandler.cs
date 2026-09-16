@@ -70,7 +70,12 @@ public class UIClipInputHandler
 					}
 					else
 					{
-						if (mouse.State == MouseState.Dragging)
+						// release the mouse before handling it - a handler that throws
+						// must not leave this clip stuck in a drag it can never end
+						bool wasDragging = mouse.State == MouseState.Dragging;
+						mouse.State = MouseState.Released;
+
+						if (wasDragging)
 						{
 							ClipsView.FinishDrag(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
 							GD.Print($"{Clip.Name}: drag finished");
@@ -91,8 +96,6 @@ public class UIClipInputHandler
 								GD.Print($"{Clip.Name}: click finished");
 							}
 						}
-						
-						mouse.State = MouseState.Released;
 					}
 				}
 			}
@@ -116,7 +119,7 @@ public class UIClipInputHandler
 				if (mouse.State == MouseState.Dragging)
 				{
 					ClipsView.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
-					GD.Print($"{Clip.Name}: dragging");
+					//GD.Print($"{Clip.Name}: dragging");
 				} 
 				else
 				{

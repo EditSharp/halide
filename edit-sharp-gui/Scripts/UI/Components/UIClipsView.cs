@@ -62,14 +62,14 @@ public partial class UIClipsView : PanelContainer
 		else if (channelsDown > UITimeline.Timeline.Channels.Count - 1)
 		{
 			//GD.Print("new audio channel");
-			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.AudioChannels.Count - 1, false);
+			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, false);
 		}
 		// if channels down is greater than the highest video channel index
 		// channel is an existing audio channel
 		else if (channelsDown > UITimeline.Timeline.VideoChannels.Count - 1)
 		{
 			//GD.Print("existing audio channel");
-			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.AudioChannels.Count, true);
+			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, true);
 		}
 		// otherwise, channel is an existing a video channel
 		else
@@ -154,6 +154,9 @@ public partial class UIClipsView : PanelContainer
 
 		// the lowest channel the selection occupies
 		public int LowestChannelIndex => Clips.Min(c => c.Clip.Channel.Index);
+
+		// the lowest channel the selection occupies
+		public int HighestChannelIndex => Clips.Max(c => c.Clip.Channel.Index);
 	}
 
 	// when a clip gets clicked on
@@ -189,10 +192,10 @@ public partial class UIClipsView : PanelContainer
 		{
 			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
 			{
-				CurrentSelection.Clips.Add(c);
+				if (!CurrentSelection.Clips.Contains(c)) CurrentSelection.Clips.Add(c);
 			}
 		}
-		else CurrentSelection.Clips.Add(uiClip);
+		else if (!CurrentSelection.Clips.Contains(uiClip)) CurrentSelection.Clips.Add(uiClip);
 		
 		UpdateSelection();
 	}
@@ -257,38 +260,36 @@ public partial class UIClipsView : PanelContainer
 		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
 
 		var move = GetClipMove(uiClip, drag);
-			
+
+		// create any new channels needed so every clip in the selection has a valid target channel
+		EnsureChannelsExist(move.channelDelta);
+
+		// a clip landing on a channel overwrites whatever is already there, so walk the
+		// selection front-first along the direction of travel - that way each clip only
+		// ever lands on space another selected clip has already vacated
+		int channelOrder = move.channelDelta >= 0 ? -1 : 1;
+		long timeOrder = move.timeDelta >= TimeSpan.Zero ? -1 : 1;
+
+		List<UIClip> ordered = [.. CurrentSelection.Clips
+			.OrderBy(c => channelOrder * c.Clip.Channel.Index)
+			.ThenBy(c => timeOrder * c.Clip.Start.Ticks)];
+
+		// resolve every target before moving anything, so relocating one clip
+		// can never perturb another clip's own target
+		List<(Clip clip, TimeSpan start, Channel channel)> moves = [];
+		foreach (UIClip s in ordered)
+		{
+			int targetIndex = s.Clip.Channel.Index + move.channelDelta;
+
+			Channel targetChannel = s.Clip is VideoClip
+				? UITimeline.Timeline.VideoChannels[targetIndex]
+				: UITimeline.Timeline.AudioChannels[targetIndex];
+
+			moves.Add((s.Clip, s.Clip.Start + move.timeDelta, targetChannel));
+		}
 
 		// edit underlying clip data
-		foreach (UIClip s in CurrentSelection.Clips)
-		{	
-			Channel targetChannel = null;
-			if (s.Clip is VideoClip)
-			{
-				try
-				{
-					targetChannel = UITimeline.Timeline.VideoChannels[s.Clip.Channel.Index + move.channelDelta];
-				}
-				catch (Exception e)
-				{
-					GD.Print($"tried to finalize a drag to a video channel that doesn't exist ({s.Clip.Channel.Index + move.channelDelta})");
-					GD.Print(e.Message);
-				}
-			}
-			else
-			{
-				try
-				{
-					targetChannel = UITimeline.Timeline.AudioChannels[s.Clip.Channel.Index + move.channelDelta];
-				}
-				catch
-				{
-					GD.Print($"tried to finalize a drag to an audio channel that doesn't exist ({s.Clip.Channel.Index + move.channelDelta})");
-				}
-			}
-
-			s.Clip.Move(s.Clip.Start + move.timeDelta, targetChannel is not null ? targetChannel : null);
-		}
+		foreach ((Clip clip, TimeSpan start, Channel channel) in moves) clip.Move(start, channel);
 
 		List<UIClip> remove = [];
 		foreach (UIClip c in UIClips)
@@ -308,6 +309,36 @@ public partial class UIClipsView : PanelContainer
 
 		// refresh all clips
 		GD.Print($"refreshed {Refresh()} clips");
+	}
+
+	// create as many new video/audio channels as needed so every clip in the
+	// current selection has a valid target channel at (its own channel index + channelDelta)
+	void EnsureChannelsExist(int channelDelta)
+	{
+		if (channelDelta <= 0) return;
+
+		if (CurrentSelection.Clips.Any(c => c.Clip is VideoClip))
+		{
+			int highestVideoTarget = CurrentSelection.Clips
+				.Where(c => c.Clip is VideoClip)
+				.Max(c => c.Clip.Channel.Index) + channelDelta;
+
+			while (highestVideoTarget > UITimeline.Timeline.VideoChannels.Count - 1)
+				UITimeline.Timeline.AddChannel(new VideoChannel());
+		}
+
+		if (CurrentSelection.Clips.Any(c => c.Clip is AudioClip))
+		{
+			int highestAudioTarget = CurrentSelection.Clips
+				.Where(c => c.Clip is AudioClip)
+				.Max(c => c.Clip.Channel.Index) + channelDelta;
+
+			while (highestAudioTarget > UITimeline.Timeline.AudioChannels.Count - 1)
+				UITimeline.Timeline.AddChannel(new AudioChannel());
+		}
+
+		// let the channel headers pick up any newly created channels
+		UITimeline.RefreshChannelEdits();
 	}
 
 	(TimeSpan timeDelta, int channelDelta) GetClipMove(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
@@ -330,53 +361,27 @@ public partial class UIClipsView : PanelContainer
 		var dragChannel = GetChannelAtPoint(drag.start + drag.delta);
 		int channelDelta = 0;
 
-		GD.Print(
-			$"global mouse position: {GetGlobalMousePosition()}\n" +
-			$"drag start: {drag.start}, drag delta: {drag.delta}, derived  global: {drag.start + drag.delta}\n"
-		);
-
-		if (dragChannel.type == ChannelType.Video)
-		{
-			
-		}
-		else if (dragChannel.type == ChannelType.Audio)
-		{
-			
-		}
-
+		// dragChannel.index is a meaningful target even when dragChannel.exists is
+		// false (it points one past the last channel of its kind) - that's how a
+		// drag into the empty space above the top channel produces a positive
+		// delta, which EnsureChannelsExist then uses to create new channels
 		if (uiClip.Clip is VideoClip v)
 		{
 			if (dragChannel.type == ChannelType.Video)
 			{
-				if (dragChannel.exists)
-				{
-					channelDelta = dragChannel.index - v.Channel.Index;
-					channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
-				}
+				channelDelta = dragChannel.index - v.Channel.Index;
+				channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
 			}
 			else return -CurrentSelection.LowestChannelIndex;
 		}
 		else if (uiClip.Clip is AudioClip a)
 		{
-
 			if (dragChannel.type == ChannelType.Audio)
 			{
-				if (dragChannel.exists)
-				{
-					channelDelta = dragChannel.index - a.Channel.Index;
-					channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
-				}
+				channelDelta = dragChannel.index - a.Channel.Index;
+				channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
 			}
 			else return -CurrentSelection.LowestChannelIndex;
-		}
-
-		if (dragChannel.type == ChannelType.Video)
-		{
-			GD.Print($"decided channel: {(dragChannel.exists ? UITimeline.Timeline.VideoChannels[uiClip.Clip.Channel.Index + channelDelta].Name : $"new {uiClip.Clip.Channel.Index + channelDelta}")}");
-		}
-		else
-		{
-			GD.Print($"decided channel: {(dragChannel.exists ? UITimeline.Timeline.AudioChannels[uiClip.Clip.Channel.Index + channelDelta].Name : $"new {uiClip.Clip.Channel.Index + channelDelta}")}");
 		}
 
 		return channelDelta;
