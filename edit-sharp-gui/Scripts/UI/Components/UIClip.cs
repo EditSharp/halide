@@ -2,7 +2,6 @@ using Godot;
 using System;
 using EditSharp;
 using EditSharp.Components.Clips;
-using System.Net.Sockets;
 using EditSharpGUI.Scripts.UI.Components;
 
 public partial class UIClip : PanelContainer
@@ -16,16 +15,35 @@ public partial class UIClip : PanelContainer
 
 	[ExportGroup("Styles")]
 
-	[Export] StyleBox outlinedStyleBox;
-	[Export] StyleBox videoStyleBox;
-	[Export] StyleBox audioStyleBox;
+	[Export] StyleBoxFlat contentStyleBox;
+	[Export] Color videoColor;
+	[Export] Color audioColor;
 
 	public Clip Clip;
 	public UIClipsView ClipsView;
 
-	// whether this clip is selected
-	// updated by timeline
-	public bool Selected = false;
+	public Color Color
+	{
+        get;
+        set
+		{
+			StyleBoxFlat style = contentStyleBox.DuplicateDeep() as StyleBoxFlat;
+			style.BgColor = value;
+			content.AddThemeStyleboxOverride("panel", style);
+			field = value;
+		}
+	}
+	public bool Selected 
+	{
+		get
+		{
+			return outline.Visible;
+		}
+		set
+		{
+			outline.Visible = value;
+		}
+	}
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -40,8 +58,8 @@ public partial class UIClip : PanelContainer
 		// update gui based on provided clip
 		clipName.Text = Clip.Name;
 
-		if (Clip is VideoClip) content.AddThemeStyleboxOverride("panel", videoStyleBox);
-		else content.AddThemeStyleboxOverride("panel", audioStyleBox);
+		if (Clip is VideoClip) Color = videoColor;
+		else Color = audioColor;
 
 		Refresh();
 		UpdateThumbnail();
@@ -87,12 +105,6 @@ public partial class UIClip : PanelContainer
 		{
 			return Clip.Channel.Timeline.VideoChannels.Count + Clip.Channel.Index;
 		}
-	}
-
-	public void SetOutlined(bool outlined)
-	{
-		if (outlined) outline.AddThemeStyleboxOverride("panel", outlinedStyleBox);
-		else outline.AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
 	}
 
 	public void SetTransparency(float alpha)

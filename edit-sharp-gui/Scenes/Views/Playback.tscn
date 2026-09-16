@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c3uao3qqjglxj"]
 
 [ext_resource type="Script" uid="uid://4olbjd2lld4e" path="res://Scripts/UI/Views/UIPlayback.cs" id="1_rvpaf"]
-[ext_resource type="FontFile" uid="uid://ds4olxxuqwbwa" path="res://Fonts/JetBrainsMono[wght].ttf" id="2_vyrgd"]
+[ext_resource type="FontFile" uid="uid://ba7hs46686des" path="res://Fonts/JetBrainsMonoNoOverlap.ttf" id="2_cedpd"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_vyrgd"]
 
@@ -48,7 +48,7 @@ step = 0.0
 
 [node name="Timestamp" type="Label" parent="VBoxContainer" unique_id=530082834]
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_vyrgd")
+theme_override_fonts/font = ExtResource("2_cedpd")
 text = "00:00:00.00 / 00:00:00.00"
 horizontal_alignment = 1
 

@@ -224,7 +224,6 @@ public partial class UIClipsView : PanelContainer
 		foreach (UIClip c in UIClips)
 		{
 			c.Selected = CurrentSelection.Clips.Contains(c);
-			c.SetOutlined(c.Selected);
 		}
 	}
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
+[ext_resource type="Texture2D" uid="uid://c3w2vbjiw62bi" path="res://icon.svg" id="4_1s8ef"]
 [ext_resource type="PackedScene" uid="uid://c8qrwy2k7sxii" path="res://Scenes/Components/Ruler.tscn" id="5_1s8ef"]
 [ext_resource type="PackedScene" uid="uid://0o67lwveiecr" path="res://Scenes/Components/ClipsView.tscn" id="7_300s3"]
 
@@ -11,6 +12,9 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0dpan"]
+texture = ExtResource("4_1s8ef")
 
 [node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
@@ -119,14 +123,26 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
 [node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1976138246]
-custom_minimum_size = Vector2(0, 20)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 mouse_filter = 2
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 0
 
 [node name="Ruler" parent="VBoxContainer/Channels/Clips/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
+custom_minimum_size = Vector2(3000, 0)
 layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Panel" type="Panel" parent="VBoxContainer/Channels/Clips/Ruler Container/Ruler" unique_id=2032768200]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -30.0
+offset_right = 30.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_0dpan")
 
 [node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1543339615]
 layout_mode = 2
@@ -134,3 +150,5 @@ size_flags_vertical = 3
 
 [node name="Clips View" parent="VBoxContainer/Channels/Clips/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

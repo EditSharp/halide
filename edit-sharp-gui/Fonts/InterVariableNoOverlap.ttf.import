@@ -2,27 +2,27 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://dynelqw1go4e8"
-path="res://.godot/imported/InterVariable.ttf-ec4945583c68aa639a772e09e31ff539.fontdata"
+uid="uid://bupdexllo43at"
+path="res://.godot/imported/InterVariableNoOverlap.ttf-281c251cb2d14f65672ff83e3d2e737b.fontdata"
 
 [deps]
 
-source_file="res://Fonts/InterVariable.ttf"
-dest_files=["res://.godot/imported/InterVariable.ttf-ec4945583c68aa639a772e09e31ff539.fontdata"]
+source_file="res://Fonts/InterVariableNoOverlap.ttf"
+dest_files=["res://.godot/imported/InterVariableNoOverlap.ttf-281c251cb2d14f65672ff83e3d2e737b.fontdata"]
 
 [params]
 
 Rendering=null
 antialiasing=1
-generate_mipmaps=false
+generate_mipmaps=true
 disable_embedded_bitmaps=true
-multichannel_signed_distance_field=false
+multichannel_signed_distance_field=true
 msdf_pixel_range=8
 msdf_size=48
 allow_system_fallback=true
 force_autohinter=false
 modulate_color_glyphs=false
-hinting=1
+hinting=3
 subpixel_positioning=4
 keep_rounding_remainders=true
 oversampling=0.0
