@@ -37,13 +37,14 @@ public partial class UITimeline : Control
 		{
 			if (value > 0d)
 			{
+				// store before refreshing - both refreshes lay out against this property
+				field = value;
+
 				// update channel edits
 				RefreshChannelEdits();
 
 				// update clips view
 				clipsView.Refresh();
-
-				field = value;
 			}
 			else throw new ArgumentOutOfRangeException(nameof(value), "Vertical scale must be greater than zero");
 		}
@@ -55,13 +56,14 @@ public partial class UITimeline : Control
 		{
 			if (value > 0d)
 			{
+				// store before refreshing - the clips view lays out against this property
+				field = value;
+
 				// update clips view
 				clipsView.Refresh();
 
 				// update ruler
 				ruler.Update(value, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
-
-				field = value;
 			}
 			else throw new ArgumentOutOfRangeException(nameof(value), "Pixels per second must be greater than zero");
 		}

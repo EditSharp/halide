@@ -5,7 +5,7 @@ using static UIClipsView;
 
 namespace EditSharpGUI.Scripts.UI.Components;
 
-public class UIClipInputHandler
+public class UIClipsViewInputHandler
 {
     class Mouse
 	{
@@ -45,24 +45,24 @@ public class UIClipInputHandler
 
 						if (mb.DoubleClick)
 						{
-							GD.Print($"{Clip.Name}: double clicked");
+							GD.Print($"clips view: double clicked");
 						}
 						else
 						{
 							if (mb.IsCommandOrControlPressed())
 							{
 								ClipsView.DeselectClip(UIClip);
-								GD.Print($"{Clip.Name}: ctrl clicked");
+								GD.Print($"clips view: ctrl clicked");
 							}
 							else if (mb.ShiftPressed)
 							{
 								ClipsView.SelectClip(UIClip, SelectionMode.Inclusive);
-								GD.Print($"{Clip.Name}: shift clicked");
+								GD.Print($"clips view: shift clicked");
 							}
 							else
 							{
 								ClipsView.SelectClip(UIClip, SelectionMode.ExclusiveIfUnselected);
-								GD.Print($"{Clip.Name}: click started");
+								GD.Print($"clips view: click started");
 							}
 						}
 						
@@ -70,7 +70,7 @@ public class UIClipInputHandler
 					}
 					else
 					{
-						// release the mouse before handling it. a handler that throws
+						// release the mouse before handling it - a handler that throws
 						// must not leave this clip stuck in a drag it can never end
 						bool wasDragging = mouse.State == MouseState.Dragging;
 						mouse.State = MouseState.Released;
@@ -78,22 +78,22 @@ public class UIClipInputHandler
 						if (wasDragging)
 						{
 							ClipsView.FinishDrag(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
-							GD.Print($"{Clip.Name}: drag finished");
+							GD.Print($"clips view: drag finished");
 						}
 						else
 						{
 							if (mb.IsCommandOrControlPressed())
 							{
-								GD.Print($"{Clip.Name}: ctrl click finished");
+								GD.Print($"clips view: ctrl click finished");
 							}
 							else if (mb.ShiftPressed)
 							{
-								GD.Print($"{Clip.Name}: shift click finished");
+								GD.Print($"clips view: shift click finished");
 							}
 							else
 							{
 								ClipsView.SelectClip(UIClip, SelectionMode.Exclusive);
-								GD.Print($"{Clip.Name}: click finished");
+								GD.Print($"clips view: click finished");
 							}
 						}
 					}
@@ -109,7 +109,7 @@ public class UIClipInputHandler
 					{
 						mouse.State = MouseState.Dragging;
 						ClipsView.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
-						GD.Print($"{Clip.Name}: drag started (original pos: {mouse.LastClickPosition}, current pos: {mouse.CurrentPosition}, diff: {mouse.DragDelta}, min: {Mouse.MIN_DRAG_PIXELS})");
+						GD.Print($"clips view: drag started (original pos: {mouse.LastClickPosition}, current pos: {mouse.CurrentPosition}, diff: {mouse.DragDelta}, min: {Mouse.MIN_DRAG_PIXELS})");
 					}
 					
 				}
@@ -119,11 +119,11 @@ public class UIClipInputHandler
 				if (mouse.State == MouseState.Dragging)
 				{
 					ClipsView.DragSelection(UIClip, (mouse.LastClickPosition, mouse.DragDelta));
-					//GD.Print($"{Clip.Name}: dragging");
+					//GD.Print($"clips view: dragging");
 				} 
 				else
 				{
-					//GD.Print($"{Clip.Name}: being hovered over");
+					//GD.Print($"clips view: being hovered over");
 				} 
 				
 			}
