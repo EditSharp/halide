@@ -1,0 +1,68 @@
+[gd_scene format=3 uid="uid://cswj3vpn8yv71"]
+
+[node name="Graph Editor" type="Control" unique_id=847875658]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GraphEdit" type="GraphEdit" parent="." unique_id=1024440012]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scroll_offset = Vector2(-40, -40)
+type_names = {
+0: "Video",
+1: "Audio"
+}
+
+[node name="GraphNode" type="GraphNode" parent="GraphEdit" unique_id=385846584]
+layout_mode = 0
+offset_left = 187.0
+offset_top = 272.0
+offset_right = 392.0
+offset_bottom = 558.0
+mouse_filter = 1
+position_offset = Vector2(147, 232)
+title = "Video Source"
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = true
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+
+[node name="Label" type="Label" parent="GraphEdit/GraphNode" unique_id=688525048]
+layout_mode = 2
+text = "Input"
+
+[node name="GraphNode2" type="GraphNode" parent="GraphEdit" unique_id=616792277]
+layout_mode = 0
+offset_left = 711.0
+offset_top = 279.0
+offset_right = 916.0
+offset_bottom = 565.0
+mouse_filter = 1
+position_offset = Vector2(671, 239)
+title = "Output"
+slot/0/left_enabled = true
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+
+[node name="Label" type="Label" parent="GraphEdit/GraphNode2" unique_id=1343098737]
+layout_mode = 2
+text = "Output"

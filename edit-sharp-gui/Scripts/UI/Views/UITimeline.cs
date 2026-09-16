@@ -87,6 +87,9 @@ public partial class UITimeline : Control
 
 		clipsView.UITimeline = this;
 		clipsView.Refresh();
+
+		// update ruler
+		ruler.Update(PixelsPerSecond, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
 	}
 
     public override void _Process(double delta)
