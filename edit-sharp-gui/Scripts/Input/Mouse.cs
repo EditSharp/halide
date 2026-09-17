@@ -25,6 +25,13 @@ public enum MouseAction
     DragEnd
 }
 
+// implemented by anything that captures a drag and has visual state to undo if
+// that drag never gets a release of its own - see Mouse.ForceRelease
+public interface IDragCancellable
+{
+    void CancelDrag(MouseButtonState button);
+}
+
 public class Mouse
 {
     // bumped once per input event. an action is only valid for the event that
@@ -44,6 +51,23 @@ public class Mouse
 
     public const int MIN_DRAG_PIXELS = 2;
 
+    Vector2 pendingMotionDelta;
+    ulong motionEventId;
+
+    // how far the cursor moved during the event being dispatched, in screen
+    // pixels. zero on any event that was not motion
+    public Vector2 MotionDelta => motionEventId == EventId ? pendingMotionDelta : Vector2.Zero;
+
+    Vector2 pendingScroll;
+    ulong scrollEventId;
+
+    // wheel movement for the event being dispatched, in the same screen-space
+    // sense as everything else here: +Y scrolls down, +X scrolls right. zero on
+    // any event that was not a wheel event. trackpads report fractional amounts
+    public Vector2 Scroll => scrollEventId == EventId ? pendingScroll : Vector2.Zero;
+
+    public bool IsScrolling => Scroll != Vector2.Zero;
+
     // wheel and extra buttons have no press/drag state worth tracking,
     // so they map to null and get ignored
     public MouseButtonState Get(MouseButton button) => button switch
@@ -54,7 +78,14 @@ public class Mouse
         _ => null
     };
 
+    // the whole distance travelled since the button went down
     public Vector2 GetDragDelta(MouseButtonState button) => CurrentPosition - button.ClickStartPosition;
+
+    // just this one event worth of movement. this is what anything that
+    // accumulates wants - panning a view by the total drag on every event would
+    // re-apply the entire distance each time and fly off
+    public Vector2 GetDragStepDelta(MouseButtonState button)
+        => button.ClickState == MouseButtonClickState.Dragging ? MotionDelta : Vector2.Zero;
 
     public bool IsDragging(MouseButtonState button)
     {
@@ -71,6 +102,15 @@ public class Mouse
     void HandleButton(InputEventMouseButton mb, Modifiers modifiers)
     {
         CurrentPosition = mb.GlobalPosition;
+
+        // the wheel arrives as a button pressed and released in the same breath.
+        // it has no press/drag life of its own, only a direction and an amount
+        if (IsWheel(mb.ButtonIndex))
+        {
+            // Factor is the scroll amount, but not every platform fills it in
+            if (mb.Pressed) SetScroll(WheelDirection(mb.ButtonIndex) * (mb.Factor != 0f ? mb.Factor : 1f));
+            return;
+        }
 
         MouseButtonState button = Get(mb.ButtonIndex);
         if (button is null) return;
@@ -99,6 +139,9 @@ public class Mouse
     void HandleMotion(InputEventMouseMotion mm)
     {
         CurrentPosition = mm.GlobalPosition;
+        SetMotionDelta(mm.Relative);
+
+        Reconcile(mm.ButtonMask);
 
         // controls keep receiving motion while a button is held no matter where
         // the cursor goes, so a drag can run past the edge of the element
@@ -120,6 +163,69 @@ public class Mouse
                 button.SetAction(MouseAction.DragMove);
             }
         }
+    }
+
+    // a release can go missing - alt-tab, a modal grabbing the pointer, another
+    // node swallowing the event. every motion event carries which buttons the os
+    // thinks are really down, so believe that over what we think
+    void Reconcile(MouseButtonMask mask)
+    {
+        Check(LeftButton, MouseButtonMask.Left);
+        Check(MiddleButton, MouseButtonMask.Middle);
+        Check(RightButton, MouseButtonMask.Right);
+
+        void Check(MouseButtonState button, MouseButtonMask flag)
+        {
+            if (button.ClickState == MouseButtonClickState.Released) return;
+            if ((mask & flag) != 0) return;
+
+            ForceRelease(button);
+        }
+    }
+
+    // end a gesture that will never get a release of its own. deliberately sets
+    // no action: the captor is told directly, and emitting DragEnd as well would
+    // have it both finish and cancel the same drag
+    internal void ForceRelease(MouseButtonState button)
+    {
+        if (button.ClickState == MouseButtonClickState.Released) return;
+
+        bool wasDragging = button.ClickState == MouseButtonClickState.Dragging;
+        button.ClickState = MouseButtonClickState.Released;
+
+        if (wasDragging && button.Captor is IDragCancellable captor) captor.CancelDrag(button);
+    }
+
+    internal void ForceReleaseAll()
+    {
+        ForceRelease(LeftButton);
+        ForceRelease(MiddleButton);
+        ForceRelease(RightButton);
+    }
+
+    static bool IsWheel(MouseButton button) => button
+        is MouseButton.WheelUp or MouseButton.WheelDown
+        or MouseButton.WheelLeft or MouseButton.WheelRight;
+
+    static Vector2 WheelDirection(MouseButton button) => button switch
+    {
+        MouseButton.WheelUp => Vector2.Up,
+        MouseButton.WheelDown => Vector2.Down,
+        MouseButton.WheelLeft => Vector2.Left,
+        MouseButton.WheelRight => Vector2.Right,
+        _ => Vector2.Zero
+    };
+
+    void SetMotionDelta(Vector2 delta)
+    {
+        pendingMotionDelta = delta;
+        motionEventId = EventId;
+    }
+
+    void SetScroll(Vector2 scroll)
+    {
+        pendingScroll = scroll;
+        scrollEventId = EventId;
     }
 }
 

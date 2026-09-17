@@ -2,12 +2,13 @@ using EditSharp.Components;
 using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI;
 using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public partial class UIClipsView : PanelContainer
+public partial class UIClipsView : PanelContainer, IDragCancellable
 {
 	[ExportGroup("Controls")]
 
@@ -20,9 +21,15 @@ public partial class UIClipsView : PanelContainer
 	public UITimeline UITimeline;
 	public List<UIClip> UIClips { get; private set; } = [];
 
+
+	// a captured drag can end without a release - the window lost focus, or the
+	// os swallowed the button. the pan cursor would otherwise stay stuck on
+	public void CancelDrag(MouseButtonState button) => MouseDefaultCursorShape = CursorShape.Arrow;
+
     public override void _GuiInput(InputEvent _)
 	{
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+		MouseButtonState middle = InputManager.Singleton.Mouse.MiddleButton;
 
         switch (left.Action)
         {
@@ -37,17 +44,73 @@ public partial class UIClipsView : PanelContainer
                 break;
         }
 
-        // rubber-band selection goes on DragStart/DragMove here.
-        // middle-button panning is the same switch over Mouse.MiddleButton
+		switch (middle.Action)
+		{
+			case MouseAction.Press:
+				middle.Capture(this);
+				break;
+
+			case MouseAction.DragStart:
+				if (!middle.HasCapture(this)) break;
+				UITimeline.BeginViewScroll();
+				goto case MouseAction.DragMove;
+
+			case MouseAction.DragMove:
+				if (!middle.HasCapture(this)) break;
+				MouseDefaultCursorShape = CursorShape.Drag;
+				// the step delta, not the whole drag: DragView accumulates into
+				// ScrollHorizontal, so the total would re-apply the distance every
+				// event and the view would fly off
+				UITimeline.DragView(InputManager.Singleton.Mouse.GetDragStepDelta(middle));
+				break;
+
+			case MouseAction.DragEnd:
+				MouseDefaultCursorShape = CursorShape.Arrow;
+				break;
+		}
+
+		if (InputManager.Singleton.Mouse.IsScrolling)
+		{
+			Modifiers mods = InputManager.Singleton.Modifiers;
+			float steps = InputManager.Singleton.Mouse.Scroll.Y;
+
+			// AcceptEvent is what stops the wheel here. without it the parent
+			// ScrollContainer scrolls as well, because Control defaults to
+			// mouse_force_pass_scroll_events - wheel events are sent past a Stop
+			// filter on purpose so nested views still scroll. an unmodified wheel
+			// is deliberately left alone so it still reaches the container
+			Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
+
+			if (mods.Control)
+			{
+				UITimeline.ZoomTime(steps, cursor.X);
+				AcceptEvent();
+			}
+			else if (mods.Alt)
+			{
+				UITimeline.ZoomChannelHeight(steps, cursor.Y);
+				AcceptEvent();
+			}
+		}
+
+		// rubber-band selection goes on left DragStart/DragMove here
 	}
+
+	
 
 	enum ChannelType { Video, Audio }
 	(ChannelType type, int index, bool exists) GetChannelAtPoint(Vector2 globalPosition)
 	{
-		// convert global position to local position
-		Vector2 localPosition = globalPosition - GlobalPosition;
+		// convert global position to local position.
+		// deliberately not measured against GlobalPosition - creating a channel
+		// moves the scroll, and this node does not follow until the container
+		// lays out, so for that frame it would read a whole channel out
+		Vector2 localPosition = UITimeline.ToViewContent(globalPosition);
 
-		int channelsDown = (int)(localPosition.Y / UITimeline.VerticalScale);
+		// floor, not truncate: above the top row this goes negative, and (int)
+		// rounds -0.5 to 0, so the drag never noticed it had left the timeline
+		// the offset takes off the phantom rows, which are not channels yet
+		int channelsDown = Mathf.FloorToInt((float)(localPosition.Y / UITimeline.VerticalScale)) - ChannelOffset;
 
 		// if channels down is negative 
 		// channel is a new video channel
@@ -240,11 +303,250 @@ public partial class UIClipsView : PanelContainer
 		}
 	}
 
+	// abandon a drag that will never get a release of its own - the window lost
+	// focus, or the os swallowed the button up. put back everything BeginDrag
+	// changed and leave the clip data alone
+	public void CancelDrag()
+	{
+		ClearDragState();
+
+		// still settle on the way out: SettleAfterDrag is what releases the
+		// content, and skipping it here would hold the timeline open for good
+		if (CurrentSelection.Clips.Count == 0) { SettleAfterDrag(); return; }
+
+		// set all clips back to opaque
+		foreach (UIClip c in UIClips) c.SetTransparency(1f);
+
+		// move selection z index back down to other clips
+		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
+
+		// the drag only ever moved the gui, so the data is still right and
+		// Refresh puts every clip back on top of where it actually belongs
+		Refresh();
+
+		SettleAfterDrag();
+	}
+
 	// one-time setup when a drag begins: lift the selection clear of the other
 	// clips and make it translucent so the user can see what is underneath
-	public void BeginDrag()
+	// the clip drag in progress, if any. held so the view can keep scrolling and
+	// keep the selection under the cursor on frames where the mouse never moved
+	UIClip dragClip;
+	Vector2 dragScrollAtStart;
+
+	public override void _Process(double delta)
+	{
+		if (dragClip is null) return;
+
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+		// belt and braces: if the gesture ended by any route that did not come
+		// back through FinishDrag or CancelDrag, stop driving it
+		if (!left.HasCapture(dragClip))
+		{
+			CancelDrag();
+			return;
+		}
+
+		// scroll while the cursor is pushing against an edge of the visible area
+		Vector2 push = UITimeline.GetEdgePush(InputManager.Singleton.Mouse.CurrentPosition);
+		if (push != Vector2.Zero) UITimeline.ScrollView(push * (float)delta);
+
+		// re-apply the move every frame, not just on motion. the view can slide
+		// out from under a stationary cursor - from the edge scroll above, or
+		// from the user scrolling mid-drag - and the selection has to follow it
+		DragSelection(dragClip, (left.ClickStartPosition, InputManager.Singleton.Mouse.GetDragDelta(left)));
+	}
+
+	// the selection follows the cursor in content space, so any scrolling that
+	// happened since the drag began counts as extra travel. only the horizontal
+	// half: GetChannelAtPoint works off this control GlobalPosition, which the
+	// scroll container has already moved, so vertical is accounted for there
+	(Vector2 start, Vector2 delta) WithViewScroll((Vector2 start, Vector2 delta) drag)
+		=> (drag.start, drag.delta + new Vector2(UITimeline.ViewScroll.X - dragScrollAtStart.X, 0f));
+
+	// the content sizes itself to the clips inside it, so a clip being dragged
+	// changes it every frame
+	FitToChildren ClipsBounds => clipsControl as FitToChildren;
+
+	// channels a drag is reaching for that do not exist yet. these are ui only -
+	// placeholder rows in the channel list, plus the space they take up here -
+	// so a drag never touches the project until it is actually dropped
+	int phantomVideoChannels;
+	int phantomAudioChannels;
+
+	// how far every clip is laid out below its real row, to leave the phantom
+	// video channels their room above it
+	public int ChannelOffset => phantomVideoChannels;
+
+	// grow the phantom rows to cover wherever this move is reaching. grow only
+	// for the life of the drag, so crossing the boundary back and forth does not
+	// make the timeline shuffle
+	void EnsurePhantomChannels(int channelDelta)
+	{
+		int video = phantomVideoChannels;
+		int audio = phantomAudioChannels;
+
+		// a video clip aiming above the top channel lands on a negative row
+		int topRow = CurrentSelection.Clips
+			.Where(c => c.Clip is VideoClip)
+			.Select(c => c.GetChannelsDownAfter(channelDelta))
+			.DefaultIfEmpty(0)
+			.Min();
+
+		if (topRow < 0) video = Mathf.Max(video, -topRow);
+
+		// and an audio clip aiming below the bottom one lands past the last row
+		int bottomRow = CurrentSelection.Clips
+			.Where(c => c.Clip is AudioClip)
+			.Select(c => c.GetChannelsDownAfter(channelDelta))
+			.DefaultIfEmpty(0)
+			.Max();
+
+		int lastRow = UITimeline.Timeline.Channels.Count - 1;
+		if (bottomRow > lastRow) audio = Mathf.Max(audio, bottomRow - lastRow);
+
+		if (video == phantomVideoChannels && audio == phantomAudioChannels) return;
+
+		int added = video - phantomVideoChannels;
+
+		phantomVideoChannels = video;
+		phantomAudioChannels = audio;
+
+		// the offset moved, so every clip placed from data moves with it. the
+		// selection is about to be placed by the MoveGUI calls that follow
+		foreach (UIClip c in UIClips.Where(c => !CurrentSelection.Clips.Contains(c))) c.Refresh();
+
+		UITimeline.SetPhantomChannels(phantomVideoChannels, phantomAudioChannels);
+
+		// phantom video rows sit above everything else, so they push it all down
+		ShiftViewForNewChannels(added);
+	}
+
+	// hand the phantom rows back, and report how many rows of video went with
+	// them - every one of those lifts the whole content by a row
+	int ClearPhantomChannels()
+	{
+		int video = phantomVideoChannels;
+
+		phantomVideoChannels = 0;
+		phantomAudioChannels = 0;
+
+		UITimeline.SetPhantomChannels(0, 0);
+
+		return video;
+	}
+
+	// the clips have just been re-placed without the phantom rows under them, so
+	// they all sit that many rows higher. the view comes with them, in this same
+	// frame - easing it instead means the content jumps first and the ease spends
+	// its time undoing that, which is not a rebound, just a lurch and a recovery
+	void ReleaseViewRows(int rows)
+	{
+		if (rows == 0) return;
+
+		UITimeline.ScrollViewNow(new Vector2(0f, (float)(-rows * UITimeline.VerticalScale)));
+	}
+
+	// every route out of a drag goes through here. miss one and _Process keeps
+	// edge-scrolling a finished drag, or the content stays held open forever.
+	// GrowOnly is deliberately left on - SettleAfterDrag releases it once the
+	// view has eased to wherever the shrinking content is going to put it
+	void ClearDragState()
+	{
+		dragClip = null;
+	}
+
+	// video channels stack upwards but content coordinates only grow downwards,
+	// so a row opened above pushes every existing one down. the view goes with
+	// them, or the timeline appears to lurch and - worse - the cursor ends up
+	// over a different channel than it was, which asks for another row, and
+	// another, and never stops
+	void ShiftViewForNewChannels(int rows)
+	{
+		if (rows <= 0) return;
+
+		float height = (float)(rows * UITimeline.VerticalScale);
+
+		// grow the content by hand, in the same breath. the container works its
+		// scroll maximum out from the content minimum size on its next sort, and
+		// moving the scroll queues one, so a maximum raised on its own is undone
+		// before anything gets to use it - which is what made the view jolt by
+		// exactly the amount it was supposed to be compensating for
+		if (ClipsBounds is not null) ClipsBounds.CustomMinimumSize += new Vector2(0f, height);
+
+		UITimeline.ReserveViewTop(height);
+	}
+
+
+	// the content has been held open for the whole drag. dropping that now would
+	// snap the scroll to the new maximum in a single frame and read as the view
+	// teleporting. work out where it is going to land, slide there, and only
+	// then let it shrink
+	// the phantom rows are still standing at this point, and so is the content
+	// the drag held open. the view slides to where it will sit once both are
+	// given back, and only then are they actually given back - killing them up
+	// front is what made the channel list jump a row ahead of the clips
+	void SettleAfterDrag()
+	{
+		if (ClipsBounds is null) return;
+
+		int releaseRows = phantomVideoChannels;
+
+		// what the content actually needs now, against what it is being held at
+		Vector2 natural = Vector2.Zero;
+		foreach (UIClip c in UIClips)
+		{
+			natural = new(Mathf.Max(natural.X, c.GetRect().End.X), Mathf.Max(natural.Y, c.GetRect().End.Y));
+		}
+
+		Vector2 held = ClipsBounds.CustomMinimumSize;
+		Vector2 shrink = new(Mathf.Max(0f, held.X - natural.X), Mathf.Max(0f, held.Y - natural.Y));
+
+		Vector2 target = UITimeline.GetSettledScroll(shrink, (float)(releaseRows * UITimeline.VerticalScale));
+
+		UITimeline.EaseScrollTo(target, () => ReleasePhantomsAndContent(releaseRows));
+	}
+
+	// run once the view has finished sliding. the phantom rows come out, the
+	// clips re-place without them, and the scroll drops the same distance in the
+	// same frame - so none of the three shows on its own
+	void ReleasePhantomsAndContent(int releaseRows)
+	{
+		ClearPhantomChannels();
+		Refresh();
+		ReleaseViewRows(releaseRows);
+
+		if (ClipsBounds is not null) ClipsBounds.GrowOnly = false;
+	}
+
+	// the drag is committing, so the phantom rows it actually used become real
+	// channels and their placeholders step aside. the total number of rows above
+	// the timeline is unchanged, which is why nothing moves as it happens
+	void RealisePhantomChannels(int video, int audio)
+	{
+		if (video <= 0 && audio <= 0) return;
+
+		phantomVideoChannels = Mathf.Max(0, phantomVideoChannels - video);
+		phantomAudioChannels = Mathf.Max(0, phantomAudioChannels - audio);
+
+		UITimeline.SetPhantomChannels(phantomVideoChannels, phantomAudioChannels);
+	}
+
+	public void BeginDrag(UIClip uiClip)
 	{
 		if (CurrentSelection.Clips.Count == 0) return;
+
+		dragClip = uiClip;
+		UITimeline.BeginViewScroll();
+		UITimeline.FlushScrollEase();
+
+		// hold the content open for the duration. letting it shrink while the
+		// selection moves feeds the clamped scroll back into the clip positions
+		// and the view bolts to the start - see FitToChildren.GrowOnly
+		if (ClipsBounds is not null) ClipsBounds.GrowOnly = true;
+
+		dragScrollAtStart = UITimeline.ViewScroll;
 
 		// make selection translucent
 		foreach (UIClip c in UIClips)
@@ -262,17 +564,36 @@ public partial class UIClipsView : PanelContainer
 	{
 		if (CurrentSelection.Clips.Count == 0) return;
 
-		var move = GetClipMove(uiClip, drag);
+		var move = GetClipMove(uiClip, WithViewScroll(drag));
+
+		// open placeholder rows for wherever this move is reaching, so the
+		// preview has somewhere to sit and a header to line up against
+		EnsurePhantomChannels(move.channelDelta);
 
 		// move clips visually
-		// does not yet account for any scrolling
 		foreach (UIClip s in CurrentSelection.Clips) s.MoveGUI(move.timeDelta, move.channelDelta);
 	}
 
 	// when the user lets go of the selection they were dragging
 	public void FinishDrag(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
-		if (CurrentSelection.Clips.Count == 0) return;
+		// clear before the guard below - leaving these set would keep _Process
+		// edge-scrolling for a drag that is already over, and hold the content
+		// open at whatever width the drag stretched it to
+		drag = WithViewScroll(drag);
+
+		// still settle on the way out: SettleAfterDrag is what releases the
+		// content, and skipping it here would hold the timeline open for good
+		if (CurrentSelection.Clips.Count == 0) { ClearDragState(); SettleAfterDrag(); return; }
+
+		// resolve the move while the phantom rows are still in place, since
+		// GetChannelAtPoint measures against them
+		var move = GetClipMove(uiClip, drag);
+
+		int videoBefore = UITimeline.Timeline.VideoChannels.Count;
+		int audioBefore = UITimeline.Timeline.AudioChannels.Count;
+
+		ClearDragState();
 
 		// set all clips back to opaque
 		foreach (UIClip c in UIClips)
@@ -284,10 +605,15 @@ public partial class UIClipsView : PanelContainer
 		// everything may be selected, in which case there is nothing to drop below
 		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
 
-		var move = GetClipMove(uiClip, drag);
-
 		// create any new channels needed so every clip in the selection has a valid target channel
 		EnsureChannelsExist(move.channelDelta);
+
+		// the placeholders for the ones that just became real step aside, so the
+		// rows above the timeline come to the same total as before
+		RealisePhantomChannels(
+			UITimeline.Timeline.VideoChannels.Count - videoBefore,
+			UITimeline.Timeline.AudioChannels.Count - audioBefore
+		);
 
 		// a clip landing on a channel overwrites whatever is already there, so walk the
 		// selection front-first along the direction of travel - that way each clip only
@@ -332,8 +658,9 @@ public partial class UIClipsView : PanelContainer
 
 		for (int i = 0; i < remove.Count; i++) RemoveUIClip(remove[i]);
 
-		// refresh all clips
 		GD.Print($"refreshed {Refresh()} clips");
+
+		SettleAfterDrag();
 	}
 
 	// create as many new video/audio channels as needed so every clip in the
@@ -411,4 +738,5 @@ public partial class UIClipsView : PanelContainer
 
 		return channelDelta;
 	}
+
 }

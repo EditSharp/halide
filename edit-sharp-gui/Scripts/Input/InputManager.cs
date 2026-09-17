@@ -26,6 +26,15 @@ public partial class InputManager : Node
         ProcessMode = ProcessModeEnum.Always;
     }
 
+    public override void _Notification(int what)
+    {
+        // the window can lose focus mid-gesture - alt-tab, a modal, the os taking
+        // over. the matching release will never arrive, so end every gesture now
+        // rather than leave a button stuck in Dragging for the rest of the session
+        if (what == NotificationApplicationFocusOut || what == NotificationWMWindowFocusOut)
+            Mouse.ForceReleaseAll();
+    }
+
     public override void _Input(InputEvent @event)
     {
         Mouse.EventId++;

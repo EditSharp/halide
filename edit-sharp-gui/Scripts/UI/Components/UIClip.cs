@@ -5,7 +5,7 @@ using EditSharp.Components.Clips;
 using EditSharpGUI.Scripts.Input;
 using static UIClipsView;
 
-public partial class UIClip : PanelContainer
+public partial class UIClip : PanelContainer, IDragCancellable
 {
 	[ExportGroup("Controls")]
 
@@ -59,6 +59,11 @@ public partial class UIClip : PanelContainer
 		UpdateThumbnail();
 	}
 
+
+	// our captured drag will never get a release. hand it to the view to undo -
+	// Mouse calls this directly because no input event is coming to route it
+	public void CancelDrag(MouseButtonState button) => ClipsView.CancelDrag();
+
     public override void _GuiInput(InputEvent _)
 	{
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
@@ -74,7 +79,7 @@ public partial class UIClip : PanelContainer
 
             case MouseAction.DragStart:
                 if (!left.HasCapture(this)) break;
-                ClipsView.BeginDrag();
+                ClipsView.BeginDrag(this);
                 // fall through so the frame that started the drag also moves the
                 // clips - otherwise the selection visibly jumps the threshold
                 goto case MouseAction.DragMove;
@@ -119,7 +124,7 @@ public partial class UIClip : PanelContainer
 	{
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start),
-			(float)ClipsView.UITimeline.VerticalScale * GetChannelsDown()
+			(float)(ClipsView.UITimeline.VerticalScale * (GetChannelsDown() + ClipsView.ChannelOffset))
 		);
 
 		Size = new(
@@ -133,9 +138,15 @@ public partial class UIClip : PanelContainer
 	{
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start + timeDelta),
-			(float)(ClipsView.UITimeline.VerticalScale * (double)(GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta)))
+			(float)(ClipsView.UITimeline.VerticalScale * (GetChannelsDownAfter(channelDelta) + ClipsView.ChannelOffset))
 		);
 	}
+
+	// which row this clip would sit on after moving the given number of channels.
+	// video channels are drawn bottom-up, so a positive delta moves them up the
+	// screen and a negative row means it wants a channel that does not exist yet
+	public int GetChannelsDownAfter(int channelDelta)
+		=> GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta);
 
 	int GetChannelsDown()
 	{

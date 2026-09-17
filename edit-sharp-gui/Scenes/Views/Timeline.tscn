@@ -110,7 +110,7 @@ vertical_scroll_mode = 3
 [node name="Edits" type="VBoxContainer" parent="VBoxContainer/Channels/Edits/Edits Container" unique_id=1355853325]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
+size_flags_vertical = 3
 theme_override_constants/separation = 0
 
 [node name="Scrollbar Spacer" type="Control" parent="VBoxContainer/Channels/Edits" unique_id=1503460378]
