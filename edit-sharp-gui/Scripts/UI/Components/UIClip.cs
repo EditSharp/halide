@@ -4,6 +4,7 @@ using EditSharp;
 using EditSharp.Components.Clips;
 using EditSharpGUI.Scripts.Input;
 using static UIClipsView;
+using EditSharpGUI.Scripts.UI;
 
 public partial class UIClip : PanelContainer, IDragCancellable
 {

@@ -189,71 +189,41 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// public void AddClip(Source s, int channelIndex)
 
 	// all selected clips
-	public class Selection
+	public class ClipsSelection : Selection<UIClip>
 	{
-		public List<UIClip> Clips = [];
-
-		public TimeSpan EarliestPosition => Clips.Min(c => c.Clip.Start);
-		public TimeSpan LatestPosition => Clips.Max(c => c.Clip.End);
+		public TimeSpan EarliestPosition => this.Min(c => c.Clip.Start);
+		public TimeSpan LatestPosition => this.Max(c => c.Clip.End);
 
 		public int ZIndex 
 		{ 
 			get
 			{
-				return Clips.Min(c => c.ZIndex);
+				return this.Min(c => c.ZIndex);
 			}
 			set
 			{
 				int offset = value - ZIndex;
 
-				foreach (UIClip clip in Clips) clip.ZIndex += offset;
+				foreach (UIClip clip in this) clip.ZIndex += offset;
 			}
 		}
 
 		// the lowest channel the selection occupies
-		public int LowestChannelIndex => Clips.Min(c => c.Clip.Channel.Index);
+		public int LowestChannelIndex => this.Min(c => c.Clip.Channel.Index);
 
 		// the lowest channel the selection occupies
-		public int HighestChannelIndex => Clips.Max(c => c.Clip.Channel.Index);
+		public int HighestChannelIndex => this.Max(c => c.Clip.Channel.Index);
 	}
 
-	// when a clip gets clicked on
-	public enum SelectionMode
-	{
-		// add this item to existing selection
-		// if it is not already part of it
-		Inclusive,
-		// if this item is part of the current selection, do nothing
-		// otherwise act exclusive
-		ExclusiveIfUnselected,
-		// make this item the only one in the selection
-		Exclusive
-	}
-
-	Selection CurrentSelection = new();
+	ClipsSelection Selection = new();
 
 	public void SelectClip(UIClip uiClip, SelectionMode mode = SelectionMode.ExclusiveIfUnselected, bool invert = false)
 	{
-		if (mode == SelectionMode.ExclusiveIfUnselected)
-		{
-			if (!CurrentSelection.Clips.Contains(uiClip)) SelectClip(uiClip, SelectionMode.Exclusive);
-			return;
-		}
-		else if (mode == SelectionMode.Exclusive)
-		{
-			// clear current selection
-			CurrentSelection.Clips.Clear();
-		}
+		// select clip and all clips linked to it
+		if (uiClip.Clip.LinkGroupId is not null)
+			Selection.Select(UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId), mode);
+		else Selection.Select(uiClip, mode);
 		
-        // select clip and all clips linked to it
-		if (uiClip.Clip.LinkGroupId.HasValue)
-		{
-			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
-			{
-				if (!CurrentSelection.Clips.Contains(c)) CurrentSelection.Clips.Add(c);
-			}
-		}
-		else if (!CurrentSelection.Clips.Contains(uiClip)) CurrentSelection.Clips.Add(uiClip);
 		
 		UpdateSelection();
 	}
@@ -261,10 +231,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	public void SelectAll()
 	{
 		// add any clips not already in selection
-		foreach (UIClip clip in UIClips)
-		{
-			if (!CurrentSelection.Clips.Contains(clip)) CurrentSelection.Clips.Add(clip);
-		}
+		Selection.Select(UIClips, SelectionMode.Inclusive);
 
 		UpdateSelection();
 	}
@@ -272,24 +239,16 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// when a clip gets control clicked on
 	public void DeselectClip(UIClip uiClip)
 	{
-		if (!CurrentSelection.Clips.Contains(uiClip)) return;
-
-		 // deselect clip and all clips linked to it
-		if (uiClip.Clip.LinkGroupId.HasValue)
-		{
-			foreach (UIClip c in UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId))
-			{
-				CurrentSelection.Clips.Remove(c);
-			}
-		}
-		else CurrentSelection.Clips.Remove(uiClip);
+		if (uiClip.Clip.LinkGroupId is not null)
+			Selection.Deselect(UIClips.Where(u => u.Clip.LinkGroupId == uiClip.Clip.LinkGroupId));
+		else Selection.Deselect(uiClip);
 		
 		UpdateSelection();
 	}
 
 	public void DeselectAll()
 	{
-		CurrentSelection.Clips.Clear();
+		Selection.Clear();
 
 		UpdateSelection();
 	}
@@ -299,7 +258,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// highlight current selection, unhighlight any other clips
 		foreach (UIClip c in UIClips)
 		{
-			c.Selected = CurrentSelection.Clips.Contains(c);
+			c.Selected = Selection.Contains(c);
 		}
 	}
 
@@ -312,13 +271,13 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// still settle on the way out: SettleAfterDrag is what releases the
 		// content, and skipping it here would hold the timeline open for good
-		if (CurrentSelection.Clips.Count == 0) { SettleAfterDrag(); return; }
+		if (Selection.Count == 0) { SettleAfterDrag(); return; }
 
 		// set all clips back to opaque
 		foreach (UIClip c in UIClips) c.SetTransparency(1f);
 
 		// move selection z index back down to other clips
-		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
+		while (UIClips.Where(c => !Selection.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < Selection.ZIndex) Selection.ZIndex--;
 
 		// the drag only ever moved the gui, so the data is still right and
 		// Refresh puts every clip back on top of where it actually belongs
@@ -388,7 +347,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		int audio = phantomAudioChannels;
 
 		// a video clip aiming above the top channel lands on a negative row
-		int topRow = CurrentSelection.Clips
+		int topRow = Selection
 			.Where(c => c.Clip is VideoClip)
 			.Select(c => c.GetChannelsDownAfter(channelDelta))
 			.DefaultIfEmpty(0)
@@ -397,7 +356,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		if (topRow < 0) video = Mathf.Max(video, -topRow);
 
 		// and an audio clip aiming below the bottom one lands past the last row
-		int bottomRow = CurrentSelection.Clips
+		int bottomRow = Selection
 			.Where(c => c.Clip is AudioClip)
 			.Select(c => c.GetChannelsDownAfter(channelDelta))
 			.DefaultIfEmpty(0)
@@ -415,7 +374,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// the offset moved, so every clip placed from data moves with it. the
 		// selection is about to be placed by the MoveGUI calls that follow
-		foreach (UIClip c in UIClips.Where(c => !CurrentSelection.Clips.Contains(c))) c.Refresh();
+		foreach (UIClip c in UIClips.Where(c => !Selection.Contains(c))) c.Refresh();
 
 		UITimeline.SetPhantomChannels(phantomVideoChannels, phantomAudioChannels);
 
@@ -535,7 +494,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 	public void BeginDrag(UIClip uiClip)
 	{
-		if (CurrentSelection.Clips.Count == 0) return;
+		if (Selection.Count == 0) return;
 
 		dragClip = uiClip;
 		UITimeline.BeginViewScroll();
@@ -551,18 +510,18 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// make selection translucent
 		foreach (UIClip c in UIClips)
 		{
-			c.SetTransparency(CurrentSelection.Clips.Contains(c) ? 0.5f : 1f);
+			c.SetTransparency(Selection.Contains(c) ? 0.5f : 1f);
 		}
 
 		// move selection z index above other clips.
 		// everything may be selected, in which case there is nothing to clear
-		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MinValue).Max() >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
+		while (UIClips.Where(c => !Selection.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MinValue).Max() >= Selection.ZIndex) Selection.ZIndex++;
 	}
 
 	// drag selection with context provided from the dragged clip
 	public void DragSelection(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
-		if (CurrentSelection.Clips.Count == 0) return;
+		if (Selection.Count == 0) return;
 
 		var move = GetClipMove(uiClip, WithViewScroll(drag));
 
@@ -571,7 +530,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		EnsurePhantomChannels(move.channelDelta);
 
 		// move clips visually
-		foreach (UIClip s in CurrentSelection.Clips) s.MoveGUI(move.timeDelta, move.channelDelta);
+		foreach (UIClip s in Selection) s.MoveGUI(move.timeDelta, move.channelDelta);
 	}
 
 	// when the user lets go of the selection they were dragging
@@ -584,7 +543,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// still settle on the way out: SettleAfterDrag is what releases the
 		// content, and skipping it here would hold the timeline open for good
-		if (CurrentSelection.Clips.Count == 0) { ClearDragState(); SettleAfterDrag(); return; }
+		if (Selection.Count == 0) { ClearDragState(); SettleAfterDrag(); return; }
 
 		// resolve the move while the phantom rows are still in place, since
 		// GetChannelAtPoint measures against them
@@ -603,7 +562,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// move selection z index back down to other clips.
 		// everything may be selected, in which case there is nothing to drop below
-		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
+		while (UIClips.Where(c => !Selection.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < Selection.ZIndex) Selection.ZIndex--;
 
 		// create any new channels needed so every clip in the selection has a valid target channel
 		EnsureChannelsExist(move.channelDelta);
@@ -621,7 +580,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		int channelOrder = move.channelDelta >= 0 ? -1 : 1;
 		long timeOrder = move.timeDelta >= TimeSpan.Zero ? -1 : 1;
 
-		List<UIClip> ordered = [.. CurrentSelection.Clips
+		List<UIClip> ordered = [.. Selection
 			.OrderBy(c => channelOrder * c.Clip.Channel.Index)
 			.ThenBy(c => timeOrder * c.Clip.Start.Ticks)];
 
@@ -646,10 +605,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		foreach (UIClip c in UIClips)
 		{
 			// do not delete clips in selection
-			if (CurrentSelection.Clips.Any(s => ReferenceEquals(c, s))) continue;
+			if (Selection.Any(s => ReferenceEquals(c, s))) continue;
 
 			// delete this clip's gui if it intersects selection
-			if (CurrentSelection.Clips.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
+			if (Selection.Any(s => c.GetGlobalRect().Intersects(s.GetGlobalRect())))
 			{
 				GD.Print($"{c.Clip.Name} ({c.GetGlobalRect()}) intersects selection. regenerating");
 				remove.Add(c);
@@ -669,9 +628,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	{
 		if (channelDelta <= 0) return;
 
-		if (CurrentSelection.Clips.Any(c => c.Clip is VideoClip))
+		if (Selection.Any(c => c.Clip is VideoClip))
 		{
-			int highestVideoTarget = CurrentSelection.Clips
+			int highestVideoTarget = Selection
 				.Where(c => c.Clip is VideoClip)
 				.Max(c => c.Clip.Channel.Index) + channelDelta;
 
@@ -679,9 +638,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 				UITimeline.Timeline.AddChannel(new VideoChannel());
 		}
 
-		if (CurrentSelection.Clips.Any(c => c.Clip is AudioClip))
+		if (Selection.Any(c => c.Clip is AudioClip))
 		{
-			int highestAudioTarget = CurrentSelection.Clips
+			int highestAudioTarget = Selection
 				.Where(c => c.Clip is AudioClip)
 				.Max(c => c.Clip.Channel.Index) + channelDelta;
 
@@ -699,10 +658,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		float offset = drag.delta.X;
 		// don't let offset move selection past zero
-		if (!(CurrentSelection.EarliestPosition + UITimeline.PixelsToTimeSpan(offset) >= TimeSpan.Zero))
+		if (!(Selection.EarliestPosition + UITimeline.PixelsToTimeSpan(offset) >= TimeSpan.Zero))
 		{
 			// reign offset back in
-			offset = -(float)UITimeline.TimeSpanToPixels(CurrentSelection.EarliestPosition);
+			offset = -(float)UITimeline.TimeSpanToPixels(Selection.EarliestPosition);
 		}
 
 		return (UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
@@ -722,18 +681,18 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			if (dragChannel.type == ChannelType.Video)
 			{
 				channelDelta = dragChannel.index - v.Channel.Index;
-				channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+				channelDelta = Selection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
 			}
-			else return -CurrentSelection.LowestChannelIndex;
+			else return -Selection.LowestChannelIndex;
 		}
 		else if (uiClip.Clip is AudioClip a)
 		{
 			if (dragChannel.type == ChannelType.Audio)
 			{
 				channelDelta = dragChannel.index - a.Channel.Index;
-				channelDelta = CurrentSelection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
+				channelDelta = Selection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
 			}
-			else return -CurrentSelection.LowestChannelIndex;
+			else return -Selection.LowestChannelIndex;
 		}
 
 		return channelDelta;
