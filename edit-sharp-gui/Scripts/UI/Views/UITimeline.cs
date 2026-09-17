@@ -209,6 +209,20 @@ public partial class UITimeline : Control
 	public Vector2 ViewScroll => new(clipsViewContainer.ScrollHorizontal, clipsViewContainer.ScrollVertical);
 	public Vector2 ViewSize => clipsViewContainer.Size;
 
+	// the slice of content the view is actually showing, top and bottom, in
+	// content pixels. taken from the scrollbar page rather than the container
+	// size, so the strip a visible horizontal scrollbar covers is not counted as
+	// somewhere a clip can be seen
+	public Vector2 ViewVerticalRange
+	{
+		get
+		{
+			float top = clipsViewContainer.ScrollVertical;
+
+			return new(top, top + (float)clipsViewContainer.GetVScrollBar().Page);
+		}
+	}
+
 	// the content-space point under a global position, worked out from the scroll
 	// value rather than from where the content node currently sits.
 	//

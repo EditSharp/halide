@@ -17,14 +17,13 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-InputManager="*res://Scenes/InputManager.tscn"
 ProjectManager="*uid://bc68xkyitnlxp"
+InputManager="*res://Scenes/InputManager.tscn"
 
 [display]
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
 [dotnet]

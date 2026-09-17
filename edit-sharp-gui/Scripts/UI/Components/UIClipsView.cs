@@ -309,6 +309,25 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// scroll while the cursor is pushing against an edge of the visible area
 		Vector2 push = UITimeline.GetEdgePush(InputManager.Singleton.Mouse.CurrentPosition);
+
+		// vertically, getting the selection into sight comes first - whether or
+		// not the cursor is asking for it, a clip left off the edge has to be
+		// reachable. and it has to win outright while it lasts: revealing moves
+		// the view, which moves what the cursor is pointing at, which can unpin
+		// the drag and hand the cursor its old push straight back. the two then
+		// alternate frame by frame and the whole thing crawls to a halt just
+		// short of arriving.
+		//
+		// once there is nothing left to reveal, a pinned selection gets no
+		// vertical scroll at all: there is nothing further for it to be dragged
+		// onto, so chasing the cursor only carries the view away from the clip.
+		// horizontal is untouched either way - a pinned selection still slides
+		// along in time
+		float reveal = GetDragClipRevealDistance(push.Y);
+
+		if (reveal != 0f) push.Y = Mathf.Clamp(reveal / (float)delta, -REVEAL_SCROLL_SPEED, REVEAL_SCROLL_SPEED);
+		else if (verticalDragPinned) push.Y = 0f;
+
 		if (push != Vector2.Zero) UITimeline.ScrollView(push * (float)delta);
 
 		// re-apply the move every frame, not just on motion. the view can slide
@@ -414,6 +433,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	void ClearDragState()
 	{
 		dragClip = null;
+		verticalDragPinned = false;
 	}
 
 	// video channels stack upwards but content coordinates only grow downwards,
@@ -667,10 +687,59 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		return (UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
 	}
 
+	// how fast the view catches up to a pinned selection that is off the edge of
+	// it, in pixels per second
+	const float REVEAL_SCROLL_SPEED = 900f;
+
+	// how far the view has to move, in pixels, to bring the clip being dragged
+	// back into sight. zero once there is nothing left to show. heading is which
+	// way the drag is pushing, which only matters for a clip too tall to fit.
+	//
+	// deliberately the one clip under the cursor rather than the whole
+	// selection. a selection holding both video and audio pulls apart as it
+	// moves - the delta sends video up its channels and audio down its own - so
+	// its bounds grow every frame and say nothing about where the user is
+	// steering. the clip in hand is the thing that has to stay in sight
+	float GetDragClipRevealDistance(float heading)
+	{
+		if (dragClip is null) return 0f;
+
+		Vector2 range = UITimeline.ViewVerticalRange;
+
+		// measured in content space, from positions the drag sets directly.
+		// the on-screen rects would do too, but they trail a scroll by a frame
+		float top = dragClip.Position.Y;
+		float bottom = top + dragClip.Size.Y;
+
+		// no scroll position shows all of a clip taller than the view, so show
+		// the end the drag is heading for rather than stopping somewhere in the
+		// middle of it. each direction stops once that end is reached
+		if (bottom - top >= range.Y - range.X)
+		{
+			if (heading > 0f) return Mathf.Max(0f, bottom - range.Y);
+			if (heading < 0f) return Mathf.Min(0f, top - range.X);
+
+			return 0f;
+		}
+
+		if (top < range.X) return top - range.X;
+		if (bottom > range.Y) return bottom - range.Y;
+
+		return 0f;
+	}
+
+	// set when the cursor is reaching for a channel the selection cannot follow
+	// it to: a video clip pushed down past the bottom video channel, or an audio
+	// clip pushed up past the top audio one. those directions are walls - unlike
+	// video upward or audio downward, where new channels can always be made - so
+	// the edge scroll reads this and stops chasing a cursor it cannot serve
+	bool verticalDragPinned;
+
 	int GetChannelDragDelta(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
 		var dragChannel = GetChannelAtPoint(drag.start + drag.delta);
-		int channelDelta = 0;
+
+		verticalDragPinned = false;
 
 		// dragChannel.index is a meaningful target even when dragChannel.exists is
 		// false (it points one past the last channel of its kind) - that's how a
@@ -678,24 +747,34 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// delta, which EnsureChannelsExist then uses to create new channels
 		if (uiClip.Clip is VideoClip v)
 		{
-			if (dragChannel.type == ChannelType.Video)
-			{
-				channelDelta = dragChannel.index - v.Channel.Index;
-				channelDelta = Selection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
-			}
-			else return -Selection.LowestChannelIndex;
-		}
-		else if (uiClip.Clip is AudioClip a)
-		{
-			if (dragChannel.type == ChannelType.Audio)
-			{
-				channelDelta = dragChannel.index - a.Channel.Index;
-				channelDelta = Selection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : 0;
-			}
-			else return -Selection.LowestChannelIndex;
+			// the cursor has left the video channels behind, so the furthest this
+			// can go is the bottom one
+			if (dragChannel.type != ChannelType.Video) return Pin();
+
+			return Limit(dragChannel.index - v.Channel.Index);
 		}
 
-		return channelDelta;
+		if (uiClip.Clip is AudioClip a)
+		{
+			if (dragChannel.type != ChannelType.Audio) return Pin();
+
+			return Limit(dragChannel.index - a.Channel.Index);
+		}
+
+		return 0;
+
+		// no channel of either kind has an index below zero, so the selection
+		// cannot go past the first one of its own kind
+		int Limit(int channelDelta)
+			=> Selection.LowestChannelIndex + channelDelta >= 0 ? channelDelta : Pin();
+
+		int Pin()
+		{
+			verticalDragPinned = true;
+
+			// as far as it will go, rather than refusing to move at all
+			return -Selection.LowestChannelIndex;
+		}
 	}
 
 }
