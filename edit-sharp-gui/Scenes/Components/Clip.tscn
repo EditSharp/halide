@@ -67,6 +67,7 @@ corner_radius_bottom_left = 5
 oversampling_with_scale = 1
 offset_right = 300.0
 offset_bottom = 80.0
+mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxEmpty_7dmxs")
 script = ExtResource("1_fin3e")
 content = NodePath("Content")

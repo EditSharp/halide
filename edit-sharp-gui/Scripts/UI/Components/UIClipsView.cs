@@ -1,6 +1,7 @@
 using EditSharp.Components;
 using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
+using EditSharpGUI.Scripts.Input;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -19,26 +20,25 @@ public partial class UIClipsView : PanelContainer
 	public UITimeline UITimeline;
 	public List<UIClip> UIClips { get; private set; } = [];
 
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
+    public override void _GuiInput(InputEvent _)
 	{
-		/*
-		var channel = GetChannelAtPoint(GetGlobalMousePosition());
-		string name = string.Empty;
-		if (channel.exists)
-		{
-			if (channel.type == ChannelType.Video)
-			{
-				name = UITimeline.Timeline.VideoChannels[channel.index].Name;
-			}
-			else
-			{
-				name = UITimeline.Timeline.AudioChannels[channel.index].Name;
-			}
-		}
-		*/
-		
-		//GD.Print($"mouse ({GetLocalMousePosition()}) is over {channel.type} channel {(name == string.Empty ? $"New {channel.index}" : name)}");
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+        switch (left.Action)
+        {
+            case MouseAction.Press:
+            case MouseAction.DoubleClick:
+                if (!left.Capture(this)) break;
+
+                if (left.PressModifiers.Shift) SelectAll();
+                // ctrl on empty space deliberately does nothing - it is the
+                // "remove from selection" modifier and there is nothing here
+                else if (!left.PressModifiers.Control) DeselectAll();
+                break;
+        }
+
+        // rubber-band selection goes on DragStart/DragMove here.
+        // middle-button panning is the same switch over Mouse.MiddleButton
 	}
 
 	enum ChannelType { Video, Audio }
@@ -46,7 +46,6 @@ public partial class UIClipsView : PanelContainer
 	{
 		// convert global position to local position
 		Vector2 localPosition = globalPosition - GlobalPosition;
-		//GD.Print($"local position is {localPosition}");
 
 		int channelsDown = (int)(localPosition.Y / UITimeline.VerticalScale);
 
@@ -54,27 +53,23 @@ public partial class UIClipsView : PanelContainer
 		// channel is a new video channel
 		if (channelsDown < 0)
 		{
-			//GD.Print("new video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, false);
 		}
 		// if channels down is greater than highest channel index
 		// channel is a new audio channel
 		else if (channelsDown > UITimeline.Timeline.Channels.Count - 1)
 		{
-			//GD.Print("new audio channel");
 			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, false);
 		}
 		// if channels down is greater than the highest video channel index
 		// channel is an existing audio channel
 		else if (channelsDown > UITimeline.Timeline.VideoChannels.Count - 1)
 		{
-			//GD.Print("existing audio channel");
 			return (ChannelType.Audio, channelsDown - UITimeline.Timeline.VideoChannels.Count, true);
 		}
 		// otherwise, channel is an existing a video channel
 		else
 		{
-			//GD.Print("existing video channel");
 			return (ChannelType.Video, UITimeline.Timeline.VideoChannels.Count - 1 - channelsDown, true);
 		}
 	}
@@ -200,6 +195,17 @@ public partial class UIClipsView : PanelContainer
 		UpdateSelection();
 	}
 
+	public void SelectAll()
+	{
+		// add any clips not already in selection
+		foreach (UIClip clip in UIClips)
+		{
+			if (!CurrentSelection.Clips.Contains(clip)) CurrentSelection.Clips.Add(clip);
+		}
+
+		UpdateSelection();
+	}
+
 	// when a clip gets control clicked on
 	public void DeselectClip(UIClip uiClip)
 	{
@@ -218,6 +224,13 @@ public partial class UIClipsView : PanelContainer
 		UpdateSelection();
 	}
 
+	public void DeselectAll()
+	{
+		CurrentSelection.Clips.Clear();
+
+		UpdateSelection();
+	}
+
 	void UpdateSelection()
 	{
 		// highlight current selection, unhighlight any other clips
@@ -227,17 +240,27 @@ public partial class UIClipsView : PanelContainer
 		}
 	}
 
-	// drag selection with context provided from the dragged clip
-	public void DragSelection(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
+	// one-time setup when a drag begins: lift the selection clear of the other
+	// clips and make it translucent so the user can see what is underneath
+	public void BeginDrag()
 	{
+		if (CurrentSelection.Clips.Count == 0) return;
+
 		// make selection translucent
 		foreach (UIClip c in UIClips)
 		{
 			c.SetTransparency(CurrentSelection.Clips.Contains(c) ? 0.5f : 1f);
 		}
 
-		// move selection z index above other clips
-		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
+		// move selection z index above other clips.
+		// everything may be selected, in which case there is nothing to clear
+		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MinValue).Max() >= CurrentSelection.ZIndex) CurrentSelection.ZIndex++;
+	}
+
+	// drag selection with context provided from the dragged clip
+	public void DragSelection(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
+	{
+		if (CurrentSelection.Clips.Count == 0) return;
 
 		var move = GetClipMove(uiClip, drag);
 
@@ -249,14 +272,17 @@ public partial class UIClipsView : PanelContainer
 	// when the user lets go of the selection they were dragging
 	public void FinishDrag(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
+		if (CurrentSelection.Clips.Count == 0) return;
+
 		// set all clips back to opaque
 		foreach (UIClip c in UIClips)
 		{
 			c.SetTransparency(1f);
 		}
 
-		// move selection z index back down to other clips
-		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Max(c => c.ZIndex) < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
+		// move selection z index back down to other clips.
+		// everything may be selected, in which case there is nothing to drop below
+		while (UIClips.Where(c => !CurrentSelection.Clips.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < CurrentSelection.ZIndex) CurrentSelection.ZIndex--;
 
 		var move = GetClipMove(uiClip, drag);
 

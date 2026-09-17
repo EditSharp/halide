@@ -5,12 +5,14 @@
 [ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="3_nspqo"]
 
 [node name="Clips View" type="PanelContainer" unique_id=1508855282 node_paths=PackedStringArray("clipsControl")]
+mouse_filter = 0
 script = ExtResource("1_htyfg")
 clipsControl = NodePath("Clips")
 clipScene = ExtResource("3_nspqo")
 
 [node name="Clips" type="Control" parent="." unique_id=361613671]
 layout_mode = 2
+mouse_filter = 2
 script = ExtResource("2_4clo1")
 Horizontal = true
 Vertical = true

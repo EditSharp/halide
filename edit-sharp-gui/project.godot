@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+InputManager="*res://Scenes/InputManager.tscn"
 ProjectManager="*uid://bc68xkyitnlxp"
 
 [display]
