@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="3_x0hv0"]
 [ext_resource type="Texture2D" uid="uid://p3ldo02ctj21" path="res://Images/Icons/Extend.png" id="5_b2xat"]
 [ext_resource type="Texture2D" uid="uid://cu8ts4x8xkhe2" path="res://Images/Icons/Time.png" id="6_3pjoj"]
+[ext_resource type="Script" uid="uid://cl65r35xlwikt" path="res://Scripts/UI/Components/UIDragHandle.cs" id="6_fdvya"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7dmxs"]
 
@@ -65,7 +66,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail", "outline")]
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail", "outline", "extends", "timeshifts")]
 oversampling_with_scale = 1
 offset_right = 300.0
 offset_bottom = 100.0
@@ -76,6 +77,8 @@ content = NodePath("Content")
 clipName = NodePath("Content/VBoxContainer/HBoxContainer/Name")
 thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
 outline = NodePath("Content/Outline")
+extends = [NodePath("Clip Start Controls/Extend"), NodePath("Clip End Controls/Extend")]
+timeshifts = [NodePath("Clip Start Controls/Timeshift"), NodePath("Clip End Controls/Timeshift")]
 contentStyleBox = SubResource("StyleBoxFlat_b2xat")
 videoColor = Color(0.101960786, 0.37254903, 0.7058824, 1)
 audioColor = Color(0.26666668, 0.56078434, 0.39215687, 1)
@@ -179,6 +182,7 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_7dmxs")
 
 [node name="Clip Start Controls" type="VBoxContainer" parent="." unique_id=1514293511]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 offset_transform_enabled = true
@@ -194,6 +198,8 @@ mouse_filter = 0
 texture = ExtResource("5_b2xat")
 expand_mode = 1
 flip_h = true
+script = ExtResource("6_fdvya")
+Side = 3
 
 [node name="Timeshift" type="TextureRect" parent="Clip Start Controls" unique_id=1819573934]
 texture_filter = 4
@@ -202,8 +208,11 @@ layout_mode = 2
 mouse_filter = 0
 texture = ExtResource("6_3pjoj")
 expand_mode = 1
+script = ExtResource("6_fdvya")
+Side = 3
 
 [node name="Clip End Controls" type="VBoxContainer" parent="." unique_id=950023300]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 offset_transform_enabled = true
@@ -218,6 +227,8 @@ layout_mode = 2
 mouse_filter = 0
 texture = ExtResource("5_b2xat")
 expand_mode = 1
+script = ExtResource("6_fdvya")
+Side = 1
 
 [node name="Timeshift" type="TextureRect" parent="Clip End Controls" unique_id=1524096014]
 texture_filter = 4
@@ -226,3 +237,5 @@ layout_mode = 2
 mouse_filter = 0
 texture = ExtResource("6_3pjoj")
 expand_mode = 1
+script = ExtResource("6_fdvya")
+Side = 1

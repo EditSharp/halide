@@ -15,6 +15,11 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	[Export] Panel thumbnail;
 	[Export] Panel outline;
 
+	[ExportSubgroup("Drag Handles")]
+
+	[Export] UIDragHandle[] extends;
+	[Export] UIDragHandle[] timeshifts;
+
 	[ExportGroup("Styles")]
 
 	[Export] StyleBoxFlat contentStyleBox;

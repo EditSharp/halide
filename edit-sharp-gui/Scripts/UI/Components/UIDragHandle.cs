@@ -2,8 +2,18 @@ using EditSharpGUI.Scripts.Input;
 using Godot;
 using System;
 
-public partial class UIPlayhead : VBoxContainer, IDragCancellable
+public partial class UIDragHandle : Control, IDragCancellable
 {
+	[Export] public HandleSide Side;
+
+	public enum HandleSide
+	{
+		Top,
+		Right,
+		Bottom,
+		Left
+	}
+
 	public event EventHandler<float> Drag;
 
 	protected virtual void OnDrag(float drag)
@@ -21,7 +31,7 @@ public partial class UIPlayhead : VBoxContainer, IDragCancellable
             case MouseAction.DoubleClick:
                 // claim the press, so whatever drag follows is unambiguously ours
                 if (!left.Capture(this)) break;
-                GD.Print("Playhead clicked");
+                GD.Print($"Drag handle {Name} {Side} clicked");
                 break;
 			case MouseAction.DragStart:
 			case MouseAction.DragMove:
@@ -31,16 +41,8 @@ public partial class UIPlayhead : VBoxContainer, IDragCancellable
         }
 	}
 
-	public void CancelDrag(MouseButtonState button)
+    public void CancelDrag(MouseButtonState button)
     {
         throw new NotImplementedException();
     }
-
-	public void Move(float position)
-	{
-		Position = new(
-			position,
-			Position.Y
-		);
-	}
 }
