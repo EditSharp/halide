@@ -79,7 +79,7 @@ layout_mode = 2
 size_flags_vertical = 4
 min_value = 30.0
 max_value = 125.0
-value = 80.0
+value = 100.0
 
 [node name="Label" type="Label" parent="VBoxContainer/Options/Height" unique_id=165888277]
 layout_mode = 2
@@ -91,7 +91,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 0
 
 [node name="Edits" type="VBoxContainer" parent="VBoxContainer/Channels" unique_id=1024709311]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 theme_override_constants/separation = 0
 

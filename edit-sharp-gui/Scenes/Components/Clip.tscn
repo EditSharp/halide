@@ -53,10 +53,10 @@ corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7dmxs"]
 draw_center = false
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
 border_color = Color(0.6917556, 0.2192756, 0.12965634, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
@@ -66,7 +66,7 @@ corner_radius_bottom_left = 5
 [node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail", "outline")]
 oversampling_with_scale = 1
 offset_right = 300.0
-offset_bottom = 80.0
+offset_bottom = 100.0
 mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxEmpty_7dmxs")
 script = ExtResource("1_fin3e")
@@ -98,20 +98,20 @@ grow_vertical = 2
 theme_override_constants/separation = 3
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Content/VBoxContainer" unique_id=1019129972]
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
 
 [node name="Name" type="Label" parent="Content/VBoxContainer/HBoxContainer" unique_id=1198296580]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_fonts/font = ExtResource("2_x0hv0")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 16
 text = "Clip name"
 clip_text = true
 text_overrun_behavior = 3
 
 [node name="Graph" type="Button" parent="Content/VBoxContainer/HBoxContainer" unique_id=2118694722]
-custom_minimum_size = Vector2(18, 0)
+custom_minimum_size = Vector2(25, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 12
@@ -129,7 +129,7 @@ texture = ExtResource("2_0to43")
 expand_mode = 2
 
 [node name="Options" type="Button" parent="Content/VBoxContainer/HBoxContainer" unique_id=1248435097]
-custom_minimum_size = Vector2(18, 0)
+custom_minimum_size = Vector2(25, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_font_sizes/font_size = 12
