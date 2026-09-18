@@ -4,14 +4,11 @@ using System;
 
 public partial class UIPlayhead : VBoxContainer
 {
-	// Called when the node enters the scene tree for the first time.
-	public override void _Ready()
-	{
-	}
+	public event EventHandler<float> Drag;
 
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
+	protected virtual void OnDrag(float drag)
 	{
+		Drag.Invoke(this, drag);
 	}
 
 	public override void _GuiInput(InputEvent _)
@@ -29,13 +26,16 @@ public partial class UIPlayhead : VBoxContainer
 			case MouseAction.DragStart:
 			case MouseAction.DragMove:
 				if (!left.HasCapture(this)) break;
-
+				OnDrag(InputManager.Singleton.Mouse.GetDragStepDelta(left).X);
 				break;
         }
 	}
 
-	public void Move()
+	public void Move(float position)
 	{
-		
+		Position = new(
+			position,
+			Position.Y
+		);
 	}
 }

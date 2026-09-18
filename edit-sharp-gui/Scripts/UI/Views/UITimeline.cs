@@ -10,6 +10,7 @@ public partial class UITimeline : Control
 {
 	[ExportGroup("Options")]
 
+	[Export] OptionButton magnetLevel;
 	[Export] Slider widthSlider;
 	[Export] Slider heightSlider;
 
@@ -143,6 +144,34 @@ public partial class UITimeline : Control
 			pendingTimeAnchor = (seconds, offset);
 			anchorFrames = ANCHOR_FRAMES;
 		};
+
+		playhead.Drag += (_, drag) => DragPlayhead(drag);
+	}
+
+	public void MovePlayheadTo(TimeSpan time)
+	{
+		TimeSpan playheadTime = time - PixelsToTimeSpan(clipsViewContainer.ScrollHorizontal);
+		playhead.Move((float)TimeSpanToPixels(playheadTime));
+	}
+
+	void DragPlayhead(float pixels)
+	{
+		TimeSpan playheadTime = PixelsToTimeSpan(playhead.Position.X) + PixelsToTimeSpan(clipsViewContainer.ScrollHorizontal);
+		if (playheadTime + PixelsToTimeSpan(pixels) < TimeSpan.Zero)
+		{
+			MovePlayheadTo(TimeSpan.Zero);
+		}
+		else MovePlayheadTo(playheadTime + PixelsToTimeSpan(pixels));
+
+		// send signal that playhead was dragged here
+		OnPlayheadDrag(PixelsToTimeSpan(playhead.Position.X));
+	}
+
+	public event EventHandler<TimeSpan> PlayheadDrag;
+
+	protected virtual void OnPlayheadDrag(TimeSpan t)
+	{
+		PlayheadDrag.Invoke(this, t);
 	}
 
 	public void SetTimeline(Timeline t)

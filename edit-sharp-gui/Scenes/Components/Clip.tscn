@@ -4,6 +4,8 @@
 [ext_resource type="Texture2D" uid="uid://dkfp6hv7wgru7" path="res://Images/Icons/Graph.png" id="2_0to43"]
 [ext_resource type="FontFile" uid="uid://bupdexllo43at" path="res://Fonts/InterVariableNoOverlap.ttf" id="2_x0hv0"]
 [ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="3_x0hv0"]
+[ext_resource type="Texture2D" uid="uid://p3ldo02ctj21" path="res://Images/Icons/Extend.png" id="5_b2xat"]
+[ext_resource type="Texture2D" uid="uid://cu8ts4x8xkhe2" path="res://Images/Icons/Time.png" id="6_3pjoj"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7dmxs"]
 
@@ -175,3 +177,52 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_7dmxs")
+
+[node name="Clip Start Controls" type="VBoxContainer" parent="." unique_id=1514293511]
+layout_mode = 2
+size_flags_horizontal = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(-30, 0)
+offset_transform_visual_only = false
+alignment = 1
+
+[node name="Extend" type="TextureRect" parent="Clip Start Controls" unique_id=1749982850]
+texture_filter = 4
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+mouse_filter = 0
+texture = ExtResource("5_b2xat")
+expand_mode = 1
+flip_h = true
+
+[node name="Timeshift" type="TextureRect" parent="Clip Start Controls" unique_id=1819573934]
+texture_filter = 4
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+mouse_filter = 0
+texture = ExtResource("6_3pjoj")
+expand_mode = 1
+
+[node name="Clip End Controls" type="VBoxContainer" parent="." unique_id=950023300]
+layout_mode = 2
+size_flags_horizontal = 8
+offset_transform_enabled = true
+offset_transform_position = Vector2(30, 0)
+offset_transform_visual_only = false
+alignment = 1
+
+[node name="Extend" type="TextureRect" parent="Clip End Controls" unique_id=1678041072]
+texture_filter = 4
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+mouse_filter = 0
+texture = ExtResource("5_b2xat")
+expand_mode = 1
+
+[node name="Timeshift" type="TextureRect" parent="Clip End Controls" unique_id=1524096014]
+texture_filter = 4
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+mouse_filter = 0
+texture = ExtResource("6_3pjoj")
+expand_mode = 1

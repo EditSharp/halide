@@ -13,7 +13,7 @@ border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("magnetLevel", "widthSlider", "heightSlider", "playhead", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,8 +23,10 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_douqe")
+magnetLevel = NodePath("VBoxContainer/Options/Magnet Level/Magnet Level")
 widthSlider = NodePath("VBoxContainer/Options/Width/Width Slider")
 heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
+playhead = NodePath("VBoxContainer/Channels/Clips View/Playhead")
 editsContainer = NodePath("VBoxContainer/Channels/Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Edits/Scrollbar Spacer")
@@ -53,13 +55,18 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxContainer/Options/Magnet Level" unique_id=1722462650]
 layout_mode = 2
-text = "Magnet Level"
+text = "Magnet"
 
-[node name="Width Slider" type="HSlider" parent="VBoxContainer/Options/Magnet Level" unique_id=486509957]
-custom_minimum_size = Vector2(100, 0)
+[node name="Magnet Level" type="OptionButton" parent="VBoxContainer/Options/Magnet Level" unique_id=366991936]
 layout_mode = 2
-size_flags_vertical = 4
-max_value = 2.0
+selected = 0
+item_count = 3
+popup/item_0/text = "Off"
+popup/item_0/id = 0
+popup/item_1/text = "Snap to Framerate"
+popup/item_1/id = 1
+popup/item_2/text = "Snap to All"
+popup/item_2/id = 2
 
 [node name="Width" type="HBoxContainer" parent="VBoxContainer/Options" unique_id=1341110146]
 layout_mode = 2
