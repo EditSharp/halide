@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://wbgr10o6lvtx" path="res://Scripts/UI/Views/UITimeline.cs" id="1_douqe"]
 [ext_resource type="PackedScene" uid="uid://c24hvkyrk1yim" path="res://Scenes/Components/ChannelEdit.tscn" id="3_au47u"]
-[ext_resource type="Texture2D" uid="uid://c3w2vbjiw62bi" path="res://icon.svg" id="4_1s8ef"]
 [ext_resource type="PackedScene" uid="uid://c8qrwy2k7sxii" path="res://Scenes/Components/Ruler.tscn" id="5_1s8ef"]
+[ext_resource type="PackedScene" uid="uid://nvh266jw2m48" path="res://Scenes/Components/Playhead.tscn" id="5_ntujw"]
 [ext_resource type="PackedScene" uid="uid://0o67lwveiecr" path="res://Scenes/Components/ClipsView.tscn" id="7_300s3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
@@ -12,9 +12,6 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0dpan"]
-texture = ExtResource("4_1s8ef")
 
 [node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("widthSlider", "heightSlider", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
@@ -31,10 +28,10 @@ heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
 editsContainer = NodePath("VBoxContainer/Channels/Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Edits/Scrollbar Spacer")
-clipsViewContainer = NodePath("VBoxContainer/Channels/Clips/Clips View Container")
-clipsView = NodePath("VBoxContainer/Channels/Clips/Clips View Container/Clips View")
-rulerContainer = NodePath("VBoxContainer/Channels/Clips/Ruler Container")
-ruler = NodePath("VBoxContainer/Channels/Clips/Ruler Container/Ruler")
+clipsViewContainer = NodePath("VBoxContainer/Channels/Clips View/Clips/Clips View Container")
+clipsView = NodePath("VBoxContainer/Channels/Clips View/Clips/Clips View Container/Clips View")
+rulerContainer = NodePath("VBoxContainer/Channels/Clips View/Clips/Ruler Container")
+ruler = NodePath("VBoxContainer/Channels/Clips View/Clips/Ruler Container/Ruler")
 channelEditScene = ExtResource("3_au47u")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1431695054]
@@ -51,12 +48,25 @@ layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="CheckButton" type="CheckButton" parent="VBoxContainer/Options" unique_id=841070390]
+[node name="Magnet Level" type="HBoxContainer" parent="VBoxContainer/Options" unique_id=38402210]
 layout_mode = 2
-text = "Magnet"
+
+[node name="Label" type="Label" parent="VBoxContainer/Options/Magnet Level" unique_id=1722462650]
+layout_mode = 2
+text = "Magnet Level"
+
+[node name="Width Slider" type="HSlider" parent="VBoxContainer/Options/Magnet Level" unique_id=486509957]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 4
+max_value = 2.0
 
 [node name="Width" type="HBoxContainer" parent="VBoxContainer/Options" unique_id=1341110146]
 layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Options/Width" unique_id=1918616512]
+layout_mode = 2
+text = "Width"
 
 [node name="Width Slider" type="HSlider" parent="VBoxContainer/Options/Width" unique_id=957201149]
 custom_minimum_size = Vector2(100, 0)
@@ -66,12 +76,12 @@ min_value = 5.0
 max_value = 500.0
 value = 100.0
 
-[node name="Label" type="Label" parent="VBoxContainer/Options/Width" unique_id=1918616512]
-layout_mode = 2
-text = "Width"
-
 [node name="Height" type="HBoxContainer" parent="VBoxContainer/Options" unique_id=375180713]
 layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Options/Height" unique_id=165888277]
+layout_mode = 2
+text = "Height"
 
 [node name="Height Slider" type="HSlider" parent="VBoxContainer/Options/Height" unique_id=1387621063]
 custom_minimum_size = Vector2(100, 0)
@@ -80,10 +90,6 @@ size_flags_vertical = 4
 min_value = 30.0
 max_value = 125.0
 value = 100.0
-
-[node name="Label" type="Label" parent="VBoxContainer/Options/Height" unique_id=165888277]
-layout_mode = 2
-text = "Height"
 
 [node name="Channels" type="HBoxContainer" parent="VBoxContainer" unique_id=586494631]
 layout_mode = 2
@@ -117,38 +123,40 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="Clips" type="VBoxContainer" parent="VBoxContainer/Channels" unique_id=2137122751]
+[node name="Clips View" type="Control" parent="VBoxContainer/Channels" unique_id=1849701406]
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Clips" type="VBoxContainer" parent="VBoxContainer/Channels/Clips View" unique_id=2137122751]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1976138246]
+[node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=1976138246]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 mouse_filter = 2
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 0
 
-[node name="Ruler" parent="VBoxContainer/Channels/Clips/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
+[node name="Ruler" parent="VBoxContainer/Channels/Clips View/Clips/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
 custom_minimum_size = Vector2(3000, 0)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Panel" type="Panel" parent="VBoxContainer/Channels/Clips/Ruler Container/Ruler" unique_id=2032768200]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -30.0
-offset_right = 30.0
-grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxTexture_0dpan")
-
-[node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips" unique_id=1543339615]
+[node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=1543339615]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Clips View" parent="VBoxContainer/Channels/Clips/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
+[node name="Clips View" parent="VBoxContainer/Channels/Clips View/Clips/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="Playhead" parent="VBoxContainer/Channels/Clips View" unique_id=2022042968 instance=ExtResource("5_ntujw")]
+layout_mode = 1

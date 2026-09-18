@@ -81,12 +81,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			// is deliberately left alone so it still reaches the container
 			Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
 
-			if (mods.Control)
+			if (mods.Alt)
 			{
 				UITimeline.ZoomTime(steps, cursor.X);
 				AcceptEvent();
 			}
-			else if (mods.Alt)
+			else if (mods.Control)
 			{
 				UITimeline.ZoomChannelHeight(steps, cursor.Y);
 				AcceptEvent();

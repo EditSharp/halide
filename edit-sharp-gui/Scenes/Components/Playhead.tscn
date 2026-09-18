@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://nvh266jw2m48"]
+
+[ext_resource type="Script" uid="uid://18ck41m8fhio" path="res://Scripts/UI/Components/UIPlayhead.cs" id="1_iwkj4"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ntujw"]
+bg_color = Color(0.6745098, 0.28235295, 0.22352941, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_color = Color(0.49151483, 0.19772916, 0.15366128, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1s8ef"]
+bg_color = Color(0.6741943, 0.28127015, 0.22360975, 1)
+border_width_left = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.49151483, 0.19772916, 0.15366128, 1)
+
+[node name="Playhead" type="VBoxContainer" unique_id=2022042968]
+custom_minimum_size = Vector2(4, 0)
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 5.0000305
+grow_vertical = 2
+theme_override_constants/separation = 0
+script = ExtResource("1_iwkj4")
+
+[node name="Head" type="Panel" parent="." unique_id=2013607080]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_scale = Vector2(3, 1)
+offset_transform_visual_only = false
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_ntujw")
+
+[node name="Body" type="Panel" parent="." unique_id=1804902641]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_1s8ef")

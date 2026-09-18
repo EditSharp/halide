@@ -31,17 +31,16 @@ public partial class UIPlayback : Control
 		audioStreamPlayer.Play();
 		_generatorPlayback = (AudioStreamGeneratorPlayback)audioStreamPlayer.GetStreamPlayback();
 
-		playback = new()
-		{
-			Timeline = ProjectManager.Singleton.CurrentProject.Timeline,
-			RenderSettings = ProjectManager.Singleton.CurrentProject.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
-		};
-
 		playButton.Pressed += PlayButton_Pressed;
 
 		slider.DragStarted += Slider_DragStarted;
 		slider.ValueChanged += Slider_ValueChanged;
 		slider.DragEnded += Slider_DragEnded;
+	}
+
+	public void SetPlayback(Playback p)
+	{
+		playback = p;
 
 		playback.VideoFrame += OnVideoFrame;
 		playback.AudioSample += OnAudioSample;

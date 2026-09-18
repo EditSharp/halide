@@ -13,6 +13,10 @@ public partial class UITimeline : Control
 	[Export] Slider widthSlider;
 	[Export] Slider heightSlider;
 
+	[ExportGroup("Controls")]
+
+	[Export] UIPlayhead playhead;
+
 	[ExportGroup("Channels")]
 
 	[Export] ScrollContainer editsContainer;
@@ -101,6 +105,8 @@ public partial class UITimeline : Control
 
 				// update ruler
 				ruler.Update(value, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
+
+				//
 			}
 			else throw new ArgumentOutOfRangeException(nameof(value), "Pixels per second must be greater than zero");
 		}
@@ -113,9 +119,6 @@ public partial class UITimeline : Control
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		// TEMPORARILY GET TIMELINE AUTOMATICALLY INSTEAD OF MANUAL ASSIGNMENT
-		Timeline = ProjectManager.Singleton.CurrentProject.Timeline;
-
 		// add event listeners.
 		// both capture their anchor before overwriting the scale it was measured
 		// against, then hand it to ApplyPendingAnchors to re-centre the view
@@ -140,6 +143,11 @@ public partial class UITimeline : Control
 			pendingTimeAnchor = (seconds, offset);
 			anchorFrames = ANCHOR_FRAMES;
 		};
+	}
+
+	public void SetTimeline(Timeline t)
+	{
+		Timeline = t;
 
 		RefreshChannelEdits();
 
