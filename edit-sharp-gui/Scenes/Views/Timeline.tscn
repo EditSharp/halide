@@ -13,7 +13,14 @@ border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("magnetLevel", "widthSlider", "heightSlider", "playhead", "snapLine", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
+[sub_resource type="Gradient" id="Gradient_htyfg"]
+interpolation_mode = 2
+colors = PackedColorArray(0, 0, 0, 0.34901962, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_1s8ef"]
+gradient = SubResource("Gradient_htyfg")
+
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("magnetLevel", "widthSlider", "heightSlider", "playhead", "snapLine", "chasm", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,11 +35,12 @@ widthSlider = NodePath("VBoxContainer/Options/Width/Width Slider")
 heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
 playhead = NodePath("VBoxContainer/Channels/Clips View/Playhead")
 snapLine = NodePath("VBoxContainer/Channels/Clips View/Snap Line")
+chasm = NodePath("VBoxContainer/Channels/Clips View/Clips/View/Chasm")
 editsContainer = NodePath("VBoxContainer/Channels/Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Edits/Scrollbar Spacer")
-clipsViewContainer = NodePath("VBoxContainer/Channels/Clips View/Clips/Clips View Container")
-clipsView = NodePath("VBoxContainer/Channels/Clips View/Clips/Clips View Container/Clips View")
+clipsViewContainer = NodePath("VBoxContainer/Channels/Clips View/Clips/View/Clips View Container")
+clipsView = NodePath("VBoxContainer/Channels/Clips View/Clips/View/Clips View Container/Clips View")
 rulerContainer = NodePath("VBoxContainer/Channels/Clips View/Clips/Ruler Container")
 ruler = NodePath("VBoxContainer/Channels/Clips View/Clips/Ruler Container/Ruler")
 channelEditScene = ExtResource("3_au47u")
@@ -159,16 +167,35 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=1543339615]
+[node name="View" type="Control" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=971158237]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Clips View" parent="VBoxContainer/Channels/Clips View/Clips/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
+[node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips/View" unique_id=1543339615]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+
+[node name="Clips View" parent="VBoxContainer/Channels/Clips View/Clips/View/Clips View Container" unique_id=1508855282 instance=ExtResource("7_300s3")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Snap Line" type="ColorRect" parent="VBoxContainer/Channels/Clips View"]
+[node name="Chasm" type="TextureRect" parent="VBoxContainer/Channels/Clips View/Clips/View" unique_id=945506609]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+grow_vertical = 2
+size_flags_horizontal = 0
+texture = SubResource("GradientTexture1D_1s8ef")
+expand_mode = 1
+
+[node name="Snap Line" type="ColorRect" parent="VBoxContainer/Channels/Clips View" unique_id=1848741569]
 visible = false
 custom_minimum_size = Vector2(2, 0)
 layout_mode = 1

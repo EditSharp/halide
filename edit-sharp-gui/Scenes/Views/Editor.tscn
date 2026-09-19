@@ -4,11 +4,12 @@
 [ext_resource type="PackedScene" uid="uid://byuamsawv1kcd" path="res://Scenes/Views/SourceViewer.tscn" id="2_gtnbc"]
 [ext_resource type="PackedScene" uid="uid://c3uao3qqjglxj" path="res://Scenes/Views/Playback.tscn" id="3_3xcsf"]
 [ext_resource type="PackedScene" uid="uid://rmor8if075lh" path="res://Scenes/Views/Timeline.tscn" id="4_ffi10"]
+[ext_resource type="PackedScene" uid="uid://dm10ihadq0lji" path="res://Scenes/Views/Inspector.tscn" id="4_gtnbc"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7qsqj"]
 bg_color = Color(0.16078432, 0.16078432, 0.16078432, 1)
 
-[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback")]
+[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "Inspector")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,6 +19,7 @@ grow_vertical = 2
 script = ExtResource("1_ktno0")
 UITimeline = NodePath("VSplitContainer/Timeline")
 UIPlayback = NodePath("VSplitContainer/HSplitContainer/Playback")
+Inspector = NodePath("VSplitContainer/HSplitContainer/Inspector")
 
 [node name="Background" type="Panel" parent="." unique_id=1167067985]
 layout_mode = 1
@@ -47,9 +49,8 @@ layout_mode = 2
 [node name="Playback" parent="VSplitContainer/HSplitContainer" unique_id=1515650523 instance=ExtResource("3_3xcsf")]
 layout_mode = 2
 
-[node name="Inspector" type="Control" parent="VSplitContainer/HSplitContainer" unique_id=302617610]
+[node name="Inspector" parent="VSplitContainer/HSplitContainer" unique_id=701008058 instance=ExtResource("4_gtnbc")]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="Timeline" parent="VSplitContainer" unique_id=407201115 instance=ExtResource("4_ffi10")]
 layout_mode = 2

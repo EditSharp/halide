@@ -24,6 +24,7 @@ public partial class UITimeline : Control
 
 	[Export] UIPlayhead playhead;
 	[Export] Control snapLine;
+	[Export] Control chasm;
 
 	[ExportGroup("Channels")]
 
@@ -504,6 +505,9 @@ public partial class UITimeline : Control
 
 		// show scrollbar spacer if timeline is scrollable
 		editsScrollSpacer.Visible = clipsViewContainer.GetHScrollBar().Visible;
+
+		// spooky chasm to show that there is more on the left
+		chasm.Visible = clipsViewContainer.ScrollHorizontal != 0;
 
 		LayoutOverlays();
     }
