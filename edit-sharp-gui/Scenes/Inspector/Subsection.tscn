@@ -3,13 +3,14 @@
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
 
-[node name="Subsection" type="VBoxContainer" node_paths=PackedStringArray("header", "headerControls", "indent", "body")]
+[node name="Subsection" type="VBoxContainer" node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
 theme_type_variation = &"TightVBox"
 script = ExtResource("1_section")
 header = NodePath("Header")
 headerControls = NodePath("Header/HeaderControls")
 indent = NodePath("Indent")
 body = NodePath("Indent/Body")
+toggle = NodePath("Header/HeaderControls/Switch")
 
 [node name="Header" type="Button" parent="."]
 layout_mode = 2
@@ -36,6 +37,12 @@ grow_vertical = 2
 mouse_filter = 1
 theme_type_variation = &"InspectorEditor"
 alignment = 2
+
+[node name="Switch" type="CheckButton" parent="Header/HeaderControls"]
+visible = false
+layout_mode = 2
+tooltip_text = "Enabled"
+focus_mode = 0
 
 [node name="Indent" type="MarginContainer" parent="."]
 layout_mode = 2

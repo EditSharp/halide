@@ -1,3 +1,4 @@
+using EditSharpGUI.Scripts.Tools.ThemeEditing;
 using EditSharpGUI.Scripts.UI;
 using EditSharpGUI.Scripts.UI.Inspecting;
 using EditSharpGUI.Scripts.UI.Theming;
@@ -212,6 +213,46 @@ public partial class SmokeTest : Node
 			timeline.History.Undo();
 			await Frames(2);
 			Check(animatable.Keyframes.Count == 0, $"five undos clear the keyframes: {animatable.Keyframes.Count}");
+		}
+
+		// ---- the theme tool: every type's preview and pages build without complaint
+		{
+			ThemeEditor tool = GD.Load<PackedScene>("res://Scenes/Tools/ThemeEditor.tscn").Instantiate<ThemeEditor>();
+			AddChild(tool);
+			await Frames(2);
+
+			Inspector pages = tool.GetNode<Inspector>("Layout/Split/Right/Properties");
+			Check(Find<InspectorRow>(pages).Count > 20, $"the definitions page has rows: {Find<InspectorRow>(pages).Count}");
+			Check(Find<ThemeSwatch>(tool).Count > 20, $"the definitions page has swatches: {Find<ThemeSwatch>(tool).Count}");
+
+			int shown = 0;
+			foreach (string type in theme.GetTypeList())
+			{
+				tool.Select(type);
+				await Frames(1);
+				shown++;
+			}
+
+			tool.Select("Button");
+			await Frames(2);
+			Check(Find<InspectorRow>(pages).Count > 40, $"a button's pages have rows: {Find<InspectorRow>(pages).Count}");
+			Check(Find<ThemeSwatch>(tool).Count >= 16, $"a button's items have swatches: {Find<ThemeSwatch>(tool).Count}");
+			Check(Find<Button>(tool.GetNode("Layout/Split/Right/PreviewScroll")).Count >= 1, "a button's live sample is a button");
+			Check(shown == theme.GetTypeList().Length, $"every type showed: {shown}");
+
+			// a pick made through the tool lands on the theme
+			InspectorSection normalSection = Find<InspectorSection>(pages).Find(x => x.Title == "normal");
+			InspectorRow background = normalSection is null ? null : Find<InspectorRow>(normalSection).Find(r => r.Label == "Background");
+			Check(background is not null, "the normal stylebox's background pick is there");
+			if (background is not null)
+			{
+				background.Apply(ThemeDefinition.AccentColor);
+				await Frames(2);
+				Check(theme.GetStylebox("normal", "Button") is ThemedStyleBox b && b.Background == ThemeDefinition.AccentColor && b.BgColor == theme.AccentColor, "picking a definition recolours the stylebox");
+			}
+
+			tool.QueueFree();
+			await Frames(1);
 		}
 
 		// ---- thumbnails come in

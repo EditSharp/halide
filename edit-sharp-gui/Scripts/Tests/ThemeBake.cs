@@ -20,6 +20,20 @@ public partial class ThemeBake : Node
 			return;
 		}
 
+		// `++ --reset-type=X` drops X's items first, so they come back as the
+		// current defaults - for a type whose defaults changed in code
+		foreach (string arg in OS.GetCmdlineUserArgs())
+		{
+			if (!arg.StartsWith("--reset-type=")) continue;
+
+			string type = arg["--reset-type=".Length..];
+			foreach (string item in theme.GetStyleboxList(type)) theme.ClearStylebox(item, type);
+			foreach (string item in theme.GetColorList(type)) theme.ClearColor(item, type);
+			foreach (string item in theme.GetConstantList(type)) theme.ClearConstant(item, type);
+			for (int i = theme.ColorBindings.Count - 1; i >= 0; i--) if (theme.ColorBindings[i]?.ThemeType == type) theme.ColorBindings.RemoveAt(i);
+			GD.Print($"BAKE reset {type}");
+		}
+
 		theme.EnsureDefaults();
 		theme.ApplyDefinitions();
 

@@ -72,8 +72,10 @@ public partial class SpinSlider : Control, IDragCancellable
 
 		if (IsEditing) return;
 
-		Font font = GetThemeDefaultFont();
-		int fontSize = GetThemeDefaultFontSize();
+		// the type's own font and size when the theme binds them - the mono
+		// font for values, say - else the theme's default
+		Font font = HasThemeFont("font", "SpinSlider") ? GetThemeFont("font", "SpinSlider") : GetThemeDefaultFont();
+		int fontSize = HasThemeFontSize("font_size", "SpinSlider") ? GetThemeFontSize("font_size", "SpinSlider") : GetThemeDefaultFontSize();
 		float left = box.GetMargin(Side.Left);
 		float right = Size.X - box.GetMargin(Side.Right);
 		float baseline = (Size.Y + font.GetAscent(fontSize) - font.GetDescent(fontSize)) / 2f;

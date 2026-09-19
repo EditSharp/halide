@@ -373,7 +373,78 @@ public partial class EditSharpTheme : Theme
 		return script.New().AsGodotObject() as T ?? new T();
 	}
 
-	static ThemedStyleBox NewThemedStyleBox() => FromScript<ThemedStyleBox>(ref themedStyleBoxScript, "res://Scripts/UI/Theme/ThemedStyleBox.cs");
+	public static ThemedStyleBox NewThemedStyleBox() => FromScript<ThemedStyleBox>(ref themedStyleBoxScript, "res://Scripts/UI/Theme/ThemedStyleBox.cs");
+	public static ColorBinding NewColorBinding() => FromScript<ColorBinding>(ref colorBindingScript, "res://Scripts/UI/Theme/ColorBinding.cs");
+	public static FontBinding NewFontBinding() => FromScript<FontBinding>(ref fontBindingScript, "res://Scripts/UI/Theme/FontBinding.cs");
+
+	// ---- taking another theme's contents: reverting to the file ----
+
+	// loads the file afresh and becomes it - items, definitions, bindings -
+	// so every control already using this theme follows. false when the
+	// file could not be read as one of these
+	public bool ReloadFrom(string path)
+	{
+		if (ResourceLoader.Load(path, "", ResourceLoader.CacheMode.Ignore) is not EditSharpTheme fresh) return false;
+
+		CopyFrom(fresh);
+		return true;
+	}
+
+	public void CopyFrom(EditSharpTheme other)
+	{
+		applying = true;
+		applyingPreset = true;
+
+		try
+		{
+			Clear();
+			MergeWith(other);
+
+			BackgroundColor1 = other.BackgroundColor1;
+			BackgroundColor2 = other.BackgroundColor2;
+			PopupBackgroundColor = other.PopupBackgroundColor;
+			AccentColor = other.AccentColor;
+			FontColor1 = other.FontColor1;
+			FontColor2 = other.FontColor2;
+			TextFieldColor = other.TextFieldColor;
+			ButtonColor = other.ButtonColor;
+			HyperlinkColor = other.HyperlinkColor;
+			StrokeColor = other.StrokeColor;
+			WhiteColor = other.WhiteColor;
+			BlackColor = other.BlackColor;
+			VideoClipColor = other.VideoClipColor;
+			AudioClipColor = other.AudioClipColor;
+			TextClipColor = other.TextClipColor;
+			GeneratorVideoClipColor = other.GeneratorVideoClipColor;
+			GeneratorAudioClipColor = other.GeneratorAudioClipColor;
+			EffectNodeColor = other.EffectNodeColor;
+			MaskNodeColor = other.MaskNodeColor;
+			MathNodeColor = other.MathNodeColor;
+			KeyingNodeColor = other.KeyingNodeColor;
+			SourceNodeColor = other.SourceNodeColor;
+			AudioNodeColor = other.AudioNodeColor;
+			CompositeNodeColor = other.CompositeNodeColor;
+			HoverShift = other.HoverShift;
+			PressedShift = other.PressedShift;
+			DisabledAlpha = other.DisabledAlpha;
+			UIFont = other.UIFont;
+			MonoFont = other.MonoFont;
+			SmallFontSize = other.SmallFontSize;
+			FontSize = other.FontSize;
+			TitleFontSize = other.TitleFontSize;
+			_preset = other._preset;
+
+			ColorBindings = new Array<ColorBinding>(other.ColorBindings);
+			FontBindings = new Array<FontBinding>(other.FontBindings);
+		}
+		finally
+		{
+			applyingPreset = false;
+			applying = false;
+		}
+
+		ApplyDefinitions();
+	}
 
 	void Constant(string item, string type, int value)
 	{
@@ -480,7 +551,7 @@ public partial class EditSharpTheme : Theme
 			// ---- buttons, and everything that is a button ----
 			foreach (string type in new[] { "Button", "OptionButton", "CheckBox", "CheckButton", "MenuButton", "ColorPickerButton", "LinkButton" })
 			{
-				bool boxless = type == "CheckBox";
+				bool boxless = type is "CheckBox" or "CheckButton";
 
 				Box("normal", type, boxless ? new StyleBoxEmpty() : Flat(button, radius: 3, margin: 4f));
 				Box("hover", type, boxless ? new StyleBoxEmpty() : Flat(button, hover, radius: 3, margin: 4f));
@@ -702,6 +773,22 @@ public partial class EditSharpTheme : Theme
 			Box("hover_pressed", "InspectorKeyButton", Flat(font, alpha: 0.18f, radius: 3, margin: 0f));
 			Box("disabled", "InspectorKeyButton", new StyleBoxEmpty());
 			Box("focus", "InspectorKeyButton", new StyleBoxEmpty());
+
+			// the glyph icons take the dim colour, and the accent while active
+			foreach (string icon in new[] { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color" })
+				Colour("InspectorKeyButton", icon, dim);
+			Colour("InspectorKeyButton", "icon_disabled_color", dim, disabled);
+
+			Variation("InspectorKeyButtonActive", "Button");
+			Box("normal", "InspectorKeyButtonActive", new StyleBoxEmpty());
+			Box("hover", "InspectorKeyButtonActive", Flat(font, alpha: 0.1f, radius: 3, margin: 0f));
+			Box("pressed", "InspectorKeyButtonActive", Flat(font, alpha: 0.18f, radius: 3, margin: 0f));
+			Box("hover_pressed", "InspectorKeyButtonActive", Flat(font, alpha: 0.18f, radius: 3, margin: 0f));
+			Box("disabled", "InspectorKeyButtonActive", new StyleBoxEmpty());
+			Box("focus", "InspectorKeyButtonActive", new StyleBoxEmpty());
+			foreach (string icon in new[] { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color" })
+				Colour("InspectorKeyButtonActive", icon, accent);
+			Colour("InspectorKeyButtonActive", "icon_disabled_color", accent, disabled);
 
 			Variation("InspectorSwatch", "Button");
 			Box("normal", "InspectorSwatch", Flat(field, radius: 3, border: stroke, borderWidth: 1, margin: 0f));

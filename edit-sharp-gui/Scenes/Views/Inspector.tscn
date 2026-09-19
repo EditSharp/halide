@@ -18,7 +18,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Time.tscn" id="s_14"]
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Label.tscn" id="s_15"]
 
-[node name="Inspector" type="Control" node_paths=PackedStringArray("scroll", "content", "empty")]
+[node name="Inspector" type="Control" unique_id=897422045 node_paths=PackedStringArray("scroll", "content", "empty")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -47,7 +47,7 @@ vectorEditor = ExtResource("s_13")
 timeEditor = ExtResource("s_14")
 labelEditor = ExtResource("s_15")
 
-[node name="Scroll" type="ScrollContainer" parent="."]
+[node name="Scroll" type="ScrollContainer" parent="." unique_id=970534146]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,12 +56,20 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Content" type="VBoxContainer" parent="Scroll"]
+[node name="Content" type="VBoxContainer" parent="Scroll" unique_id=156579262]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"InspectorSections"
 
-[node name="Empty" type="Label" parent="Scroll/Content"]
+[node name="Empty" type="VBoxContainer" parent="Scroll/Content" unique_id=914386928]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Spacer" type="Control" parent="Scroll/Content/Empty" unique_id=712190786]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="Text" type="Label" parent="Scroll/Content/Empty" unique_id=468417487]
 layout_mode = 2
 theme_type_variation = &"InspectorLabel"
 text = "Nothing selected"

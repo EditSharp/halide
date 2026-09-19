@@ -30,7 +30,7 @@ public partial class Inspector : Control
 	[ExportGroup("Parts")]
 	[Export] ScrollContainer scroll;
 	[Export] VBoxContainer content;
-	[Export] Label empty;
+	[Export] Control empty;
 
 	[ExportGroup("Scenes")]
 	[Export] PackedScene sectionScene;
@@ -159,8 +159,30 @@ public partial class Inspector : Control
 		{
 			InspectorSection section = CreateSection(spec.Title, spec.Accent, nested: false);
 			content.AddChild(section);
-			BuildRows(section.Body, spec.Targets);
+
+			// an Enabled shared by every object goes on the header as a
+			// switch rather than in the body as a row
+			PropertyDescriptor enabled = HeaderToggle(spec.Targets);
+			if (enabled is not null) section.BindToggle(this, enabled, spec.Targets);
+
+			BuildRows(section.Body, spec.Targets, skip: enabled?.Name);
 		}
+	}
+
+	// the bool property named Enabled, when every object has one
+	static PropertyDescriptor HeaderToggle(IReadOnlyList<InspectorTarget> targets)
+	{
+		if (targets.Count == 0) return null;
+
+		PropertyDescriptor first = Inspect.Of(targets[0].Object).FirstOrDefault(d => d.Name == "Enabled" && d.ValueType == typeof(bool) && !d.IsReadOnly);
+		if (first is null) return null;
+
+		for (int i = 1; i < targets.Count; i++)
+		{
+			if (!Inspect.Of(targets[i].Object).Any(d => d.Name == "Enabled" && d.ValueType == typeof(bool))) return null;
+		}
+
+		return first;
 	}
 
 	// clips: the clip itself, then each node of its graph in graph order,
@@ -198,13 +220,13 @@ public partial class Inspector : Control
 	// the rows for a set of objects edited together: one per property they
 	// all have, grouped as their attributes say, objects folded inline,
 	// lists as lists
-	internal void BuildRows(VBoxContainer into, IReadOnlyList<InspectorTarget> targets)
+	internal void BuildRows(VBoxContainer into, IReadOnlyList<InspectorTarget> targets, string skip = null)
 	{
 		if (targets.Count == 0) return;
 
 		// the descriptors of the first, kept only where every other object
 		// has one by the same name
-		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object)];
+		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object).Where(d => d.Name != skip)];
 
 		for (int i = 1; i < targets.Count; i++)
 		{
@@ -289,7 +311,7 @@ public partial class Inspector : Control
 		{
 			case InspectorRow row: row.Refresh(); break;
 			case ListRow list: list.Refresh(); break;
-			case InspectorSection section: foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
+			case InspectorSection section: section.RefreshToggle(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
 		}
 	}
 
