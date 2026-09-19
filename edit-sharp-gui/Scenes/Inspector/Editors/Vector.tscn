@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/VectorEditor.cs" id="1_editor"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="4_glyph"]
+
+[node name="VectorEditor" type="HBoxContainer" node_paths=PackedStringArray("x", "y", "link")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+x = NodePath("X")
+y = NodePath("Y")
+link = NodePath("Link")
+
+[node name="XLabel" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"InspectorAxis"
+text = "x"
+
+[node name="X" parent="." instance=ExtResource("2_spin")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Link" type="Button" parent="."]
+custom_minimum_size = Vector2(20, 18)
+layout_mode = 2
+tooltip_text = "Keep the ratio between x and y"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+toggle_mode = true
+script = ExtResource("4_glyph")
+Shape = 5
+
+[node name="YLabel" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"InspectorAxis"
+text = "y"
+
+[node name="Y" parent="." instance=ExtResource("2_spin")]
+layout_mode = 2
+size_flags_horizontal = 3

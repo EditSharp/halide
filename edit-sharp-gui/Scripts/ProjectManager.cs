@@ -2,6 +2,7 @@ using EditSharp;
 using EditSharp.Components;
 using EditSharp.History;
 using EditSharp.Rendering;
+using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using System;
 
@@ -16,6 +17,10 @@ public partial class ProjectManager : Node
 		if (Singleton != this) return;
 
 		EditSharpConfig.Logger = new ConsoleLogger();
+
+		// the project theme is ours; the user's preset and accent go on top of
+		// whatever the file says, and the whole tree restyles from it
+		if (ThemeDB.GetProjectTheme() is EditSharpTheme theme) theme.LoadUserSettings();
 	}
 
 	public Project CurrentProject = new()

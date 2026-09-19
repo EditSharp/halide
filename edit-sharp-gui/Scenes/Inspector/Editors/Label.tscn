@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/LabelEditor.cs" id="1_editor"]
+
+[node name="LabelEditor" type="HBoxContainer" node_paths=PackedStringArray("label")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+label = NodePath("Label")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorValue"
+clip_text = true
+text_overrun_behavior = 3

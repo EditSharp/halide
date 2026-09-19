@@ -1,8 +1,5 @@
 [gd_scene format=3 uid="uid://byuamsawv1kcd"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mgnd2"]
-bg_color = Color(0.105882354, 0.105882354, 0.105882354, 1)
-
 [node name="Source Viewer" type="Control" unique_id=861251413]
 layout_mode = 3
 anchors_preset = 15
@@ -20,7 +17,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 0
+theme_type_variation = &"TightVBox"
 
 [node name="Source Options" type="Control" parent="VBoxContainer" unique_id=541275116]
 custom_minimum_size = Vector2(0, 30)
@@ -33,7 +30,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_mgnd2")
+theme_type_variation = &"ToolbarBackground"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Source Options" unique_id=72477359]
 custom_minimum_size = Vector2(0, 30)

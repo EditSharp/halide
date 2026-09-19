@@ -93,20 +93,35 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		if (pasteTarget is (bool video, int index))
 		{
+			// the move is a number of rows on screen, worked out from the clip in
+			// hand (or the lowest of the target's kind) to the target channel,
+			// and every clip moves by that many rows - video and audio alike.
+			// rows count downwards; video indices go up the screen and audio
+			// indices go down it, so the two kinds shift in opposite directions
+			int videoCount = UITimeline.Timeline.VideoChannels.Count;
+			int Row(bool isVideo, int channelIndex) => isVideo ? videoCount - 1 - channelIndex : videoCount + channelIndex;
+
+			ClipsItem.Entry? anchor = item.AnchorIndex >= 0 ? entries[item.AnchorIndex] : null;
 			List<ClipsItem.Entry> ofKind = [.. entries.Where(e => e.Video == video)];
 
-			if (ofKind.Count > 0)
-			{
-				int reference = item.AnchorIndex >= 0 && entries[item.AnchorIndex].Video == video
-					? entries[item.AnchorIndex].ChannelIndex
-					: ofKind.Min(e => e.ChannelIndex);
+			int? fromRow = anchor is ClipsItem.Entry held ? Row(held.Video, held.ChannelIndex)
+				: ofKind.Count > 0 ? Row(video, ofKind.Min(e => e.ChannelIndex))
+				: null;
 
-				int shift = index - reference;
+			if (fromRow is int from)
+			{
+				int rows = Row(video, index) - from;
+				int videoShift = -rows;
+				int audioShift = rows;
 
 				// nothing can go below the first channel of its kind
-				shift = Mathf.Max(shift, -ofKind.Min(e => e.ChannelIndex));
+				List<ClipsItem.Entry> videos = [.. entries.Where(e => e.Video)];
+				List<ClipsItem.Entry> audios = [.. entries.Where(e => !e.Video)];
 
-				entries = [.. entries.Select(e => e.Video == video ? e with { ChannelIndex = e.ChannelIndex + shift } : e)];
+				if (videos.Count > 0) videoShift = Mathf.Max(videoShift, -videos.Min(e => e.ChannelIndex));
+				if (audios.Count > 0) audioShift = Mathf.Max(audioShift, -audios.Min(e => e.ChannelIndex));
+
+				entries = [.. entries.Select(e => e with { ChannelIndex = e.ChannelIndex + (e.Video ? videoShift : audioShift) })];
 			}
 		}
 
@@ -408,9 +423,6 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			clips++;
 		}
 
-		// the clips may have moved, and the seams sit on them
-		UpdateEditPoints();
-
 		return clips;
 	}
 
@@ -437,17 +449,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 	// ---- which selected clip wears the handles ----
 
-	// with several clips selected, only the last one the cursor passed over
-	// shows its drag handles - a selection five channels tall would
-	// otherwise be a thicket of them
+	// with several clips selected, only the one nearest the cursor shows its
+	// drag handles - a selection five channels tall would otherwise be a
+	// thicket of them, and two touching clips would put handles in the crevice
 	UIClip handleClip;
-
-	public void HoverClip(UIClip clip)
-	{
-		if (!clip.Selected || clip == handleClip) return;
-
-		SetHandleClip(clip);
-	}
 
 	void SetHandleClip(UIClip clip)
 	{
@@ -457,13 +462,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		previous?.SetHandlesEnabled(false);
 		clip?.SetHandlesEnabled(true);
 
-		// its handles hang over its neighbours, so it goes last in the tree to
-		// win the hit test - but never above the seams, which straddle its
-		// own edges and have to stay on top of it
-		if (clip is null) return;
-
-		clipsControl.MoveChild(clip, -1);
-		foreach (UIEditPoint p in editPoints) clipsControl.MoveChild(p, -1);
+		// its handles hang over its neighbours, so it goes last in the tree
+		// to win the hit test
+		if (clip is not null) clipsControl.MoveChild(clip, -1);
 	}
 
 	// the data moved without this view seeing a drag - an undo or redo - so
@@ -551,8 +552,27 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		UpdateSelection();
 	}
 
+	// the selection as data, for whoever shows it - the inspector, through
+	// the timeline. raised only when the set really changed, however many
+	// times the view re-ran its selection
+	public event EventHandler SelectionChanged;
+	public IReadOnlyList<Clip> SelectedClips => [.. Selection.Select(c => c.Clip)];
+
+	readonly List<UIClip> notifiedSelection = [];
+
+	void NotifySelection()
+	{
+		if (notifiedSelection.Count == Selection.Count && notifiedSelection.All(Selection.Contains)) return;
+
+		notifiedSelection.Clear();
+		notifiedSelection.AddRange(Selection);
+		SelectionChanged?.Invoke(this, EventArgs.Empty);
+	}
+
 	void UpdateSelection()
 	{
+		NotifySelection();
+
 		// highlight current selection, unhighlight any other clips
 		foreach (UIClip c in UIClips)
 		{
@@ -565,84 +585,53 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		}
 
 		// the handles stay with the clip that had them if it is still
-		// selected; otherwise the clip just clicked, or the only one there is
+		// selected; otherwise the clip just clicked, or the only one there is.
+		// from then on the cursor decides - see FollowCursorWithHandles
 		if (handleClip is null || !Selection.Contains(handleClip))
 		{
 			SetHandleClip(lastClicked is not null && Selection.Contains(lastClicked) ? lastClicked
 				: Selection.Count == 1 ? Selection[0]
 				: null);
 		}
-
-		UpdateEditPoints();
 	}
 
-	// ---- edit points: the seam between two selected clips that touch ----
-
-	readonly List<UIEditPoint> editPoints = [];
-
-	// how wide the strip over a seam is, in pixels
-	const float EDIT_POINT_WIDTH = 12f;
-
-	// pairs of selected clips that meet end to start on the same channel
-	IEnumerable<(UIClip before, UIClip after)> Seams()
+	// with several clips selected, the one nearest the cursor wears the
+	// handles - nearest, not hovered, so they turn up as the cursor comes
+	// towards a clip rather than only once it is over it. left alone during
+	// a drag, since a handle in the middle of one must not vanish
+	void FollowCursorWithHandles()
 	{
-		foreach (UIClip a in Selection)
-		{
-			if (a.Clip.Channel is null) continue;
+		if (Selection.Count < 2 || dragClip is not null || edgeDrag is not null) return;
 
-			foreach (UIClip b in Selection)
+		Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
+		if (!UITimeline.ViewContains(cursor)) return;
+
+		Vector2 point = UITimeline.ToViewContent(cursor);
+
+		UIClip closest = null;
+		float best = float.MaxValue;
+
+		foreach (UIClip c in Selection)
+		{
+			float distance = DistanceSquared(point, c.GetRect());
+
+			if (distance < best)
 			{
-				if (ReferenceEquals(a, b) || !ReferenceEquals(a.Clip.Channel, b.Clip.Channel)) continue;
-				if (a.Clip.End == b.Clip.Start) yield return (a, b);
+				best = distance;
+				closest = c;
 			}
 		}
+
+		if (closest is not null && closest != handleClip) SetHandleClip(closest);
 	}
 
-	// rebuild the seams from the selection. each hides the handles either
-	// side of it and puts a roll handle over the join instead
-	void UpdateEditPoints()
+	// zero inside the rect, else the square of the gap to its nearest edge
+	static float DistanceSquared(Vector2 point, Rect2 rect)
 	{
-		foreach (UIEditPoint p in editPoints)
-		{
-			clipsControl.RemoveChild(p);
-			p.QueueFree();
-		}
+		float dx = Mathf.Max(Mathf.Max(rect.Position.X - point.X, 0f), point.X - rect.End.X);
+		float dy = Mathf.Max(Mathf.Max(rect.Position.Y - point.Y, 0f), point.Y - rect.End.Y);
 
-		editPoints.Clear();
-
-		HashSet<UIClip> seamAtEnd = [];
-		HashSet<UIClip> seamAtStart = [];
-
-		foreach ((UIClip before, UIClip after) in Seams())
-		{
-			seamAtEnd.Add(before);
-			seamAtStart.Add(after);
-
-			UIEditPoint point = new() { Before = before, After = after };
-
-			point.DragStarted += (_, _) => BeginRollDrag(point);
-			point.DragEnded += (_, _) => FinishEdgeDrag(point);
-			point.DragCancelled += (_, _) => CancelEdgeDrag(point);
-
-			// after every clip, so it wins the hit test over the two it straddles
-			clipsControl.AddChild(point);
-			editPoints.Add(point);
-		}
-
-		foreach (UIClip c in UIClips) c.SetSeams(seamAtStart.Contains(c), seamAtEnd.Contains(c));
-
-		LayoutEditPoints();
-	}
-
-	void LayoutEditPoints()
-	{
-		foreach (UIEditPoint p in editPoints)
-		{
-			float x = (float)UITimeline.TimeSpanToPixels(p.After.Clip.Start);
-
-			p.Position = new(x - EDIT_POINT_WIDTH / 2f, p.After.Position.Y);
-			p.Size = new(EDIT_POINT_WIDTH, p.After.Size.Y);
-		}
+		return dx * dx + dy * dy;
 	}
 
 	// abandon a drag that will never get a release of its own - the window lost
@@ -682,6 +671,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// screen, which moves whenever the view scrolls or the clip does
 		Vector2 window = UITimeline.ViewHorizontalRange;
 		foreach (UIClip c in UIClips) c.KeepControlsInView(window.X, window.Y);
+
+		FollowCursorWithHandles();
+		NotifySelection();
 
 		if (edgeDrag is not null)
 		{
@@ -920,10 +912,6 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		UITimeline.BeginViewScroll();
 		UITimeline.FlushScrollEase();
 
-		// the seams sit on clips that are about to move; the refresh at the
-		// end of the drag puts them back
-		foreach (UIEditPoint p in editPoints) p.Visible = false;
-
 		// hold the content open for the duration. letting it shrink while the
 		// selection moves feeds the clamped scroll back into the clip positions
 		// and the view bolts to the start - see FitToChildren.GrowOnly
@@ -1121,9 +1109,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// move the edge over the content: extend or trim
 		Extend,
 		// move the edge and stretch the content to fit: retime
-		Timeshift,
-		// move the join between two clips: one grows by what the other gives up
-		Roll
+		Timeshift
 	}
 
 	sealed class EdgeDrag
@@ -1134,12 +1120,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// every selected clip whose edge sits where the grabbed one does. they
 		// all move together, like a multi-edit trim, so linked video and audio
-		// that start together stay together. for a roll, this is the clip
-		// after the join, whose start moves
+		// that start together stay together
 		public List<UIClip> Clips;
-
-		// a roll's clip before the join, whose end moves
-		public UIClip Before;
 
 		// where the edge was when grabbed, and where it currently previews
 		public TimeSpan EdgeAtStart;
@@ -1180,32 +1162,6 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		};
 	}
 
-	// the join between two touching clips grabbed: a roll. the edge is the
-	// after clip's start, and the before clip's end goes wherever it goes
-	public void BeginRollDrag(UIEditPoint point)
-	{
-		if (edgeDrag is not null || dragClip is not null) return;
-
-		UITimeline.FlushScrollEase();
-		UITimeline.BeginViewScroll();
-
-		if (ClipsBounds is not null) ClipsBounds.GrowOnly = true;
-
-		TimeSpan edge = point.After.Clip.Start;
-
-		edgeDrag = new()
-		{
-			Handle = point,
-			Kind = EdgeDragKind.Roll,
-			Left = true,
-			Clips = [point.After],
-			Before = point.Before,
-			EdgeAtStart = edge,
-			Edge = edge,
-			ScrollAtStart = UITimeline.ViewScroll
-		};
-	}
-
 	void ProcessEdgeDrag(double delta)
 	{
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
@@ -1236,18 +1192,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// magnet first, then what the clips themselves allow. a snap the clip
 		// cannot reach is not a snap, so the line goes if the clamp moved it
-		IEnumerable<Clip> moving = edgeDrag.Clips.Select(c => c.Clip);
-		if (edgeDrag.Before is not null) moving = moving.Append(edgeDrag.Before.Clip);
-
-		candidate = UITimeline.SnapPoint(candidate, moving, includePlayhead: true, out TimeSpan? lineAt);
+		candidate = UITimeline.SnapPoint(candidate, edgeDrag.Clips.Select(c => c.Clip), includePlayhead: true, out TimeSpan? lineAt);
 		TimeSpan edge = ClampEdge(candidate);
 
 		UITimeline.SnapLine = edge == candidate ? lineAt : null;
 
 		edgeDrag.Edge = edge;
-
-		// the other side of a roll follows the same edge
-		edgeDrag.Before?.PreviewSpan(edgeDrag.Before.Clip.Start, edge);
 
 		foreach (UIClip c in edgeDrag.Clips)
 		{
@@ -1269,13 +1219,6 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// head of the content - a timeshift has no content limit, it stretches
 	TimeSpan ClampEdge(TimeSpan edge)
 	{
-		// the clip before a roll's join cannot be squeezed to nothing either
-		if (edgeDrag.Before is not null)
-		{
-			TimeSpan min = UITimeline.EarliestEndAfter(edgeDrag.Before.Clip.Start);
-			if (edge < min) edge = min;
-		}
-
 		foreach (UIClip c in edgeDrag.Clips)
 		{
 			Clip clip = c.Clip;
@@ -1284,8 +1227,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			{
 				TimeSpan min = TimeSpan.Zero;
 
-				// a roll pulls the after clip's head over its content just like an extend
-				if (edgeDrag.Kind is EdgeDragKind.Extend or EdgeDragKind.Roll)
+				if (edgeDrag.Kind == EdgeDragKind.Extend)
 				{
 					TimeSpan limit = clip.HeadExtendLimit;
 					if (limit != TimeSpan.MaxValue && clip.Start - limit > min) min = clip.Start - limit;
@@ -1317,12 +1259,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		UITimeline.SnapLine = null;
 
 		// edit underlying clip data, as one history entry
-		string what = drag.Kind switch { EdgeDragKind.Timeshift => "Retime", EdgeDragKind.Roll => "Roll", _ => "Trim" };
+		string what = drag.Kind == EdgeDragKind.Timeshift ? "Retime" : "Trim";
 		using (Transaction.Scope change = UITimeline.History.Begin(drag.Clips.Count == 1 ? $"{what} clip" : $"{what} {drag.Clips.Count} clips"))
 		{
-			if (drag.Kind == EdgeDragKind.Roll) ApplyRoll(drag);
-			else foreach (UIClip c in drag.Clips) ApplyEdge(c.Clip, drag);
-
+			foreach (UIClip c in drag.Clips) ApplyEdge(c.Clip, drag);
 			change.Commit();
 		}
 
@@ -1333,19 +1273,6 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		Refresh();
 		SettleAfterDrag();
-	}
-
-	// a roll is one extend: the side that grows overwrites the other by
-	// exactly the amount it moved, and the overwrite is what trims the other
-	// side - in-point and keyframes included, the same as any trim
-	static void ApplyRoll(EdgeDrag drag)
-	{
-		Clip before = drag.Before.Clip;
-		Clip after = drag.Clips[0].Clip;
-		TimeSpan delta = drag.Edge - after.Start;
-
-		if (delta > TimeSpan.Zero) before.ExtendEnd(delta);
-		else if (delta < TimeSpan.Zero) after.ExtendStart(-delta);
 	}
 
 	static void ApplyEdge(Clip clip, EdgeDrag drag)

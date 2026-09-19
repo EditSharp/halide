@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/AngleEditor.cs" id="1_editor"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/AngleKnob.tscn" id="3_knob"]
+
+[node name="AngleEditor" type="HBoxContainer" node_paths=PackedStringArray("knob", "spin")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+knob = NodePath("Knob")
+spin = NodePath("Spin")
+
+[node name="Knob" parent="." instance=ExtResource("3_knob")]
+layout_mode = 2
+
+[node name="Spin" parent="." instance=ExtResource("2_spin")]
+layout_mode = 2
+size_flags_horizontal = 3

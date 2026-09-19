@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
+
+[node name="Section" type="VBoxContainer" node_paths=PackedStringArray("header", "headerControls", "indent", "body")]
+theme_type_variation = &"TightVBox"
+script = ExtResource("1_section")
+header = NodePath("Header")
+headerControls = NodePath("Header/HeaderControls")
+indent = NodePath("Indent")
+body = NodePath("Indent/Body")
+
+[node name="Header" type="Button" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"InspectorSection"
+toggle_mode = true
+button_pressed = true
+text = "Section"
+alignment = 0
+clip_text = true
+text_overrun_behavior = 3
+script = ExtResource("2_header")
+
+[node name="HeaderControls" type="HBoxContainer" parent="Header"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_right = -4.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 1
+theme_type_variation = &"InspectorEditor"
+alignment = 2
+
+[node name="Indent" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"InspectorNoIndent"
+
+[node name="Body" type="VBoxContainer" parent="Indent"]
+layout_mode = 2
+theme_type_variation = &"InspectorRows"

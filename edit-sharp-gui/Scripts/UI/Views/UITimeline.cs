@@ -3,6 +3,7 @@ using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using EditSharp.History;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Thumbnails;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,17 @@ public partial class UITimeline : Control
 	[Export] PackedScene channelEditScene;
 
 	public Timeline Timeline;
+
+	// where the clips get their frames from. handed over by whoever wires
+	// this view up, before the timeline is set, since it owns a playback
+	// of its own
+	public ThumbnailCache Thumbnails { get; set; }
+
+	// the clips selected in the view, as data, and a word when that changes
+	public event EventHandler SelectionChanged;
+	public IReadOnlyList<Clip> SelectedClips => clipsView.SelectedClips;
+
+	void OnClipsSelectionChanged(object sender, EventArgs e) => SelectionChanged?.Invoke(this, EventArgs.Empty);
 
 	List<UIChannelEdit> ChannelEdits = [];
 
@@ -161,6 +173,19 @@ public partial class UITimeline : Control
 
 		ruler.Pressed += (_, _) => BeginPlayheadDrag(ruler, TimeSpan.Zero);
 		ruler.Released += (_, _) => EndPlayheadDrag();
+
+		ApplyThemeColors();
+	}
+
+	// the few colours drawn by hand here come from the theme like the rest
+	void ApplyThemeColors()
+	{
+		if (snapLine is ColorRect line) line.Color = GetThemeColor("snap_line", "Timeline");
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationThemeChanged && IsNodeReady()) ApplyThemeColors();
 	}
 
 	// ---- keyboard ----
@@ -479,6 +504,8 @@ public partial class UITimeline : Control
 		RefreshChannelEdits();
 
 		clipsView.UITimeline = this;
+		clipsView.SelectionChanged -= OnClipsSelectionChanged;
+		clipsView.SelectionChanged += OnClipsSelectionChanged;
 		clipsView.Refresh();
 
 		// update ruler
@@ -583,6 +610,9 @@ public partial class UITimeline : Control
 			return new(top, top + (float)clipsViewContainer.GetVScrollBar().Page);
 		}
 	}
+
+	// whether a global position is over the clips view at all
+	public bool ViewContains(Vector2 globalPosition) => clipsViewContainer.GetGlobalRect().HasPoint(globalPosition);
 
 	// the same sideways: the slice of content in view, left and right, in
 	// content pixels

@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/ListRow.cs" id="1_list"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Subsection.tscn" id="2_subsection"]
+
+[node name="ListRow" type="VBoxContainer" node_paths=PackedStringArray("section", "add")]
+theme_type_variation = &"TightVBox"
+script = ExtResource("1_list")
+section = NodePath("Section")
+add = NodePath("Section/Header/HeaderControls/Add")
+
+[node name="Section" parent="." instance=ExtResource("2_subsection")]
+layout_mode = 2
+
+[node name="Add" type="Button" parent="Section/Header/HeaderControls"]
+custom_minimum_size = Vector2(22, 0)
+layout_mode = 2
+tooltip_text = "Add an item"
+focus_mode = 0
+theme_type_variation = &"InspectorButton"
+text = "+"
+
+[editable path="Section"]

@@ -1,5 +1,6 @@
 using EditSharp.History;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Thumbnails;
 using Godot;
 using System;
 
@@ -11,34 +12,65 @@ public partial class Editor : Control
 	[Export] UIPlayback UIPlayback;
 	[Export] Inspector Inspector;
 
+	// the clips' frames. it owns a playback of its own, apart from the one
+	// the user watches, so the two never wait on each other
+	ThumbnailCache thumbnails;
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		UITimeline.SetTimeline(ProjectManager.Singleton.CurrentProject.Timeline);
+		Project project = ProjectManager.Singleton.CurrentProject;
+
+		thumbnails = new ThumbnailCache(project.Timeline, project.RenderSettings, project.History);
+		UITimeline.Thumbnails = thumbnails;
+
+		UITimeline.SetTimeline(project.Timeline);
 		UIPlayback.SetPlayback(new()
 		{
-			Timeline = ProjectManager.Singleton.CurrentProject.Timeline,
-			RenderSettings = ProjectManager.Singleton.CurrentProject.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
+			Timeline = project.Timeline,
+			RenderSettings = project.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
 		});
 
 		// the timeline and playback never see each other - this is the only
 		// place the two are joined. the playhead drives playback: grabbing it
 		// scrubs, letting go picks playback back up if it was running. playback
 		// drives the playhead back - but only the line, never the view. the
-		// view stays wherever the user put it
+		// view stays wherever the user put it. the inspector follows the
+		// playhead too, for what an animated value is right now
 		UITimeline.PlayheadDragStarted += (_, _) => UIPlayback.BeginScrub();
-		UITimeline.PlayheadDrag += (_, time) => UIPlayback.ScrubTo(time);
+		UITimeline.PlayheadDrag += (_, time) => { UIPlayback.ScrubTo(time); Inspector.Playhead = time; };
 		UITimeline.PlayheadDragEnded += (_, _) => UIPlayback.EndScrub();
 
-		UIPlayback.PositionChanged += (_, time) => UITimeline.PlayheadTime = time;
+		UIPlayback.PositionChanged += (_, time) => { UITimeline.PlayheadTime = time; Inspector.Playhead = time; };
+
+		// the inspector shows whatever the timeline has selected, records
+		// into the project's history, and can ask for the playhead to be
+		// moved to a keyframe
+		Inspector.History = project.History;
+		Inspector.Framerate = project.RenderSettings.Framerate;
+		Inspector.Playhead = UITimeline.PlayheadTime;
+		UITimeline.SelectionChanged += (_, _) => Inspector.ShowClips(UITimeline.SelectedClips);
+		Inspector.SeekRequested += (_, time) =>
+		{
+			UIPlayback.BeginScrub();
+			UIPlayback.ScrubTo(time);
+			UIPlayback.EndScrub();
+			UITimeline.PlayheadTime = time;
+			Inspector.Playhead = time;
+		};
 
 		// the project's history is the one stray writes fall into, and an undo
 		// or redo moves the data with no view watching - so the timeline
 		// re-reads it. a commit needs nothing: the view that made the change
-		// already updated itself
-		History history = ProjectManager.Singleton.CurrentProject.History;
+		// already updated itself. (not on every commit: a model call made
+		// outside a transaction commits each primitive as it goes, and a
+		// view re-reading the data between two of them would see it half
+		// moved.) the inspector is the exception - it edits clips the
+		// timeline shows - so its edits are what tell the timeline to re-read
+		History history = project.History;
 		History.Active = history;
 		history.Changed += (_, e) => { if (e.Action != HistoryAction.Commit) UITimeline.Reconcile(); };
+		Inspector.Edited += (_, _) => UITimeline.Reconcile();
 
 		// page-wide shortcuts. every key that nothing closer wanted climbs up
 		// to here, since this page is above every view in it
@@ -49,6 +81,9 @@ public partial class Editor : Control
 	{
 		InputManager.Singleton.Keyboard.Unregister(this);
 		if (History.Active == ProjectManager.Singleton.CurrentProject.History) History.Active = null;
+
+		thumbnails?.Dispose();
+		thumbnails = null;
 	}
 
 	void OnShortcut(ShortcutEventArgs e)

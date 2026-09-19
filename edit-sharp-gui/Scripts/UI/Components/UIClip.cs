@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using EditSharp;
 using EditSharp.Components.Clips;
+using EditSharp.Components.Nodes.Sources;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Thumbnails;
 using static UIClipsView;
 using EditSharpGUI.Scripts.UI;
 
@@ -14,10 +16,11 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	[Export] Control content;
 
-	// the box the inner controls live in. it is anchored across the whole
-	// clip in the scene; at runtime its offsets are pulled in to whatever
-	// part of the clip is actually on screen, so the controls stay in view
-	// on a clip that runs off the edge - see KeepControlsInView
+	// the row the inner controls live in. at runtime it is narrowed and slid
+	// to whatever part of the clip is actually on screen, so the controls
+	// stay in view on a clip that runs off the edge, while everything else
+	// in the clip - the thumbnail under it - still spans the whole clip.
+	// see KeepControlsInView
 	[Export] Control controlsBox;
 
 	[Export] Label clipName;
@@ -48,26 +51,43 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	[Export] Control startControls;
 	[Export] Control endControls;
 
-	[ExportGroup("Styles")]
-
-	[Export] StyleBoxFlat contentStyleBox;
-	[Export] Color videoColor;
-	[Export] Color audioColor;
-
 	public Clip Clip;
 	public UIClipsView ClipsView;
 
+	// the clip's colour is the theme's colour for its kind, painted over the
+	// theme's ClipContent style - so the theme decides both the palette and
+	// the shape, and this only picks which colour
 	public Color Color
 	{
         get;
         set
 		{
-			StyleBoxFlat style = contentStyleBox.DuplicateDeep() as StyleBoxFlat;
-			style.BgColor = value;
-			content.AddThemeStyleboxOverride("panel", style);
+			if (GetThemeStylebox("panel", "ClipContent").Duplicate() is StyleBoxFlat style)
+			{
+				style.BgColor = value;
+				content.AddThemeStyleboxOverride("panel", style);
+			}
+
 			field = value;
 		}
 	}
+
+	// which of the theme's clip colours this clip takes: by what feeds its
+	// graph, since a clip is its graph
+	string ColorKind
+	{
+		get
+		{
+			bool source = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode or AudioSourceNode or TimelineVideoInputNode or TimelineAudioInputNode);
+			bool text = Clip.Graph.AllNodes.Any(n => n is TextInputNode);
+
+			if (Clip is AudioClip) return source ? "audio" : "generator_audio";
+			if (text && !source) return "text";
+			return source ? "video" : "generator_video";
+		}
+	}
+
+	void ApplyThemeColor() => Color = GetThemeColor(ColorKind, "Clip");
 	public bool Selected
 	{
 		get
@@ -87,8 +107,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		// update gui based on provided clip
 		clipName.Text = Clip.Name;
 
-		if (Clip is VideoClip) Color = videoColor;
-		else Color = audioColor;
+		ApplyThemeColor();
 
 		// the handles only report the life of a drag. the view runs it from the
 		// cursor every frame, the same as a clip drag, so it edge-scrolls and
@@ -96,17 +115,23 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		foreach (UIDragHandle handle in extends) Wire(handle, EdgeDragKind.Extend);
 		foreach (UIDragHandle handle in timeshifts) Wire(handle, EdgeDragKind.Timeshift);
 
-		// the margins the scene gave the controls box are what it keeps from
-		// the visible edges once it starts following the view
+		// the row is laid out by the box around it. from here on it takes its
+		// width from the visible slice of the clip and slides along inside the
+		// box to sit under it - the box, and the thumbnail below the row, keep
+		// spanning the whole clip. the box's own margins are what the row
+		// keeps from the visible edges
 		if (controlsBox is not null)
 		{
-			insetLeft = controlsBox.OffsetLeft;
-			insetRight = -controlsBox.OffsetRight;
-		}
+			controlsBox.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+			controlsBox.OffsetTransformEnabled = true;
+			controlsBox.OffsetTransformVisualOnly = false;
 
-		// of a multi-selection, the clip under the cursor is the one that
-		// wears the handles
-		MouseEntered += () => ClipsView.HoverClip(this);
+			if (controlsBox.GetParent() is Control box)
+			{
+				insetLeft = box.OffsetLeft;
+				insetRight = -box.OffsetRight;
+			}
+		}
 
 		Refresh();
 		UpdateThumbnail();
@@ -119,21 +144,8 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		}
 	}
 
-	// a seam is where this clip meets another selected clip on its channel.
-	// the handles on that side give way to the seam's own roll handle - see
-	// UIEditPoint and the clips view
-	bool seamAtStart;
-	bool seamAtEnd;
-
-	public void SetSeams(bool atStart, bool atEnd)
-	{
-		seamAtStart = atStart;
-		seamAtEnd = atEnd;
-		UpdateHandles();
-	}
-
 	// whether this clip is the one in the selection wearing the handles -
-	// the view picks one, the last selected clip hovered
+	// the view picks one, the selected clip nearest the cursor
 	bool handlesEnabled;
 
 	public void SetHandlesEnabled(bool enabled)
@@ -146,8 +158,8 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		bool selected = outline.Visible && handlesEnabled;
 
-		if (endControls is not null) endControls.Visible = selected && !seamAtEnd;
-		if (startControls is not null) startControls.Visible = selected && !seamAtStart && Clip.Start > TimeSpan.Zero;
+		if (endControls is not null) endControls.Visible = selected;
+		if (startControls is not null) startControls.Visible = selected && Clip.Start > TimeSpan.Zero;
 	}
 
 	// ---- keeping the inner controls on screen ----
@@ -161,18 +173,22 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	float viewLeft = float.NegativeInfinity;
 	float viewRight = float.PositiveInfinity;
 
-	// how much of this clip's width the controls can currently use
+	// how much of this clip's width the controls can currently use, and
+	// where that starts inside the box
 	float visibleWidth = -1f;
+	float rowStart;
 
-	// called every frame by the view. the controls box is pulled in to the
-	// part of the clip inside the window, so the row lays out - name left,
-	// buttons pinned right - against the visible edges, not the clip's
+	// called every frame by the view. the row is narrowed to the part of the
+	// clip inside the window and slid across to it, so it lays out - name
+	// left, buttons pinned right - against the visible edges, not the clip's
 	public void KeepControlsInView(float left, float right)
 	{
 		viewLeft = left;
 		viewRight = right;
 
 		if (ApplyVisibleSpan()) FitControls();
+
+		KeepThumbnailInView(left, right);
 	}
 
 	// returns whether the span changed
@@ -185,21 +201,20 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		// collapsing to nothing and reshuffling when it comes back
 		if (right - left < 1f) return false;
 
-		float width = right - left;
-		bool changed = width != visibleWidth;
+		// into the box's own space, which is inset from the clip's edges
+		float boxWidth = Mathf.Max(0f, Size.X - insetLeft - insetRight);
+		float start = Mathf.Clamp(left - insetLeft, 0f, boxWidth);
+		float end = Mathf.Clamp(right - insetLeft, 0f, boxWidth);
+		float width = Mathf.Max(0f, end - start);
+
+		bool changed = width != visibleWidth || start != rowStart;
 		visibleWidth = width;
+		rowStart = start;
 
-		if (controlsBox is not null)
+		if (changed && controlsBox is not null)
 		{
-			float offsetLeft = left + insetLeft;
-			float offsetRight = -(Size.X - right) - insetRight;
-
-			if (controlsBox.OffsetLeft != offsetLeft || controlsBox.OffsetRight != offsetRight)
-			{
-				controlsBox.OffsetLeft = offsetLeft;
-				controlsBox.OffsetRight = offsetRight;
-				changed = true;
-			}
+			controlsBox.OffsetTransformPosition = new(start, 0f);
+			controlsBox.CustomMinimumSize = new(width, controlsBox.CustomMinimumSize.Y);
 		}
 
 		return changed;
@@ -239,6 +254,10 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	public override void _Notification(int what)
 	{
+		// the theme can change under a running app - a preset switch, an
+		// accent change - and the colour was copied out of it
+		if (what == NotificationThemeChanged && Clip is not null && content is not null) ApplyThemeColor();
+
 		if (what != NotificationResized) return;
 
 		ApplyVisibleSpan();
@@ -260,8 +279,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		// the view has said otherwise), not the content panel's size: the
 		// resize notification arrives before the panel has re-laid out its
 		// child, so the content would still be a frame behind
-		float span = visibleWidth >= 0f ? visibleWidth : Size.X;
-		float available = span - (insetLeft + insetRight);
+		float available = visibleWidth >= 0f ? visibleWidth : Size.X - (insetLeft + insetRight);
 
 		// drop from the front until the rest fits. no room for even the most
 		// important one means no room for any
@@ -379,6 +397,10 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		// the start may have moved onto or off zero
 		UpdateHandles();
 		UpdateSpeed();
+
+		// the scale may have changed, and any head preview is over
+		UpdateThumbnail();
+		strip?.SetPreviewShift(TimeSpan.Zero);
 	}
 
 	// show the clip spanning start to end, leaving the data alone - an edge
@@ -387,6 +409,10 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		Position = new((float)ClipsView.UITimeline.TimeSpanToPixels(start), Position.Y);
 		Size = new((float)ClipsView.UITimeline.TimeSpanToPixels(end - start), Size.Y);
+
+		// the head moving is the edge sliding over the content, not the
+		// content moving with the edge - tell the strip how far
+		strip?.SetPreviewShift(TimeSpan.FromSeconds((start - Clip.Start).TotalSeconds * Clip.Speed));
 	}
 
 	// move clip ui relative to what is actually stored in data
@@ -437,8 +463,37 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		UpdateThumbnail();
 	}
 
+	// ---- the thumbnail ----
+
+	// the filmstrip filling the thumbnail panel, from the scene. video
+	// clips only - an audio clip will get a waveform there instead, later.
+	// it is fed the first time the cache is there to feed it, since the
+	// timeline may hand the cache over after this clip exists
+	[Export] ThumbnailStrip strip;
+	bool stripFed;
+
 	void UpdateThumbnail()
 	{
-		
+		if (strip is null || Clip is not VideoClip video) return;
+
+		if (!stripFed)
+		{
+			if (ClipsView?.UITimeline?.Thumbnails is not ThumbnailCache cache) return;
+
+			strip.Setup(cache, video);
+			stripFed = true;
+		}
+
+		strip.SetScale(ClipsView.UITimeline.PixelsPerSecond);
+	}
+
+	// the view's window, in the strip's own x. the strip sits inset from
+	// the clip's edge by the scene's margins
+	void KeepThumbnailInView(float left, float right)
+	{
+		if (strip is null) return;
+
+		float offset = strip.GlobalPosition.X - GlobalPosition.X;
+		strip.SetVisibleRange(left - Position.X - offset, right - Position.X - offset);
 	}
 }

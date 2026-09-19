@@ -6,13 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://nvh266jw2m48" path="res://Scenes/Components/Playhead.tscn" id="5_ntujw"]
 [ext_resource type="PackedScene" uid="uid://0o67lwveiecr" path="res://Scenes/Components/ClipsView.tscn" id="7_300s3"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
-border_blend = true
-
 [sub_resource type="Gradient" id="Gradient_htyfg"]
 interpolation_mode = 2
 colors = PackedColorArray(0, 0, 0, 0.34901962, 0, 0, 0, 0)
@@ -56,7 +49,7 @@ grow_vertical = 2
 [node name="Options" type="HBoxContainer" parent="VBoxContainer" unique_id=863834428]
 custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_type_variation = &"SpacedHBox"
 alignment = 1
 
 [node name="Magnet Level" type="HBoxContainer" parent="VBoxContainer/Options" unique_id=38402210]
@@ -68,7 +61,7 @@ text = "Magnet"
 
 [node name="Magnet Level" type="OptionButton" parent="VBoxContainer/Options/Magnet Level" unique_id=366991936]
 layout_mode = 2
-selected = 0
+selected = 2
 item_count = 3
 popup/item_0/text = "Off"
 popup/item_0/id = 0
@@ -110,17 +103,17 @@ value = 100.0
 [node name="Channels" type="HBoxContainer" parent="VBoxContainer" unique_id=586494631]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 0
+theme_type_variation = &"TightHBox"
 
 [node name="Edits" type="VBoxContainer" parent="VBoxContainer/Channels" unique_id=1024709311]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
-theme_override_constants/separation = 0
+theme_type_variation = &"TightVBox"
 
 [node name="Ruler Spacer" type="Panel" parent="VBoxContainer/Channels/Edits" unique_id=321474229]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+theme_type_variation = &"TimelineSpacer"
 
 [node name="Edits Container" type="ScrollContainer" parent="VBoxContainer/Channels/Edits" unique_id=1414978845]
 layout_mode = 2
@@ -133,7 +126,7 @@ vertical_scroll_mode = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 0
+theme_type_variation = &"TightVBox"
 
 [node name="Scrollbar Spacer" type="Control" parent="VBoxContainer/Channels/Edits" unique_id=1503460378]
 custom_minimum_size = Vector2(0, 8)
@@ -152,7 +145,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 0
+theme_type_variation = &"TightVBox"
 
 [node name="Ruler Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=1976138246]
 custom_minimum_size = Vector2(0, 30)

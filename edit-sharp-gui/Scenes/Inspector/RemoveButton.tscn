@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[node name="Remove" type="Button"]
+custom_minimum_size = Vector2(22, 0)
+tooltip_text = "Remove"
+focus_mode = 0
+theme_type_variation = &"InspectorButton"
+text = "×"

@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/DropdownEditor.cs" id="1_editor"]
+
+[node name="DropdownEditor" type="HBoxContainer" node_paths=PackedStringArray("options")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+options = NodePath("Options")
+
+[node name="Options" type="OptionButton" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3

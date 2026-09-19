@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorRow.cs" id="1_row"]
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/KeyColumn.tscn" id="3_keys"]
+
+[node name="Row" type="HBoxContainer" node_paths=PackedStringArray("nameLabel", "reset", "editorSlot", "trailing", "keys")]
+theme_type_variation = &"InspectorRow"
+script = ExtResource("1_row")
+nameLabel = NodePath("Name")
+reset = NodePath("Reset")
+editorSlot = NodePath("Editor")
+trailing = NodePath("Trailing")
+keys = NodePath("Keys")
+
+[node name="Name" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_type_variation = &"InspectorLabel"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Reset" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+tooltip_text = "Reset to default"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+script = ExtResource("2_glyph")
+Shape = 3
+
+[node name="Editor" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+theme_type_variation = &"InspectorEditorSlot"
+
+[node name="Trailing" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"InspectorEditor"
+
+[node name="Keys" parent="." instance=ExtResource("3_keys")]
+layout_mode = 2

@@ -11,10 +11,21 @@ public partial class UIRuler : Control, IDragCancellable
 	[Export] float markWidth = 0.25f;
 	[Export] int markMaxWidth = 10;
 	[Export] VerticalAlignment markAlignment = VerticalAlignment.Bottom;
-	[Export] Color markColor;
-	[Export] Color submarkColor;
 	[Export] float ratio = 0.5f;
 	[Export] float cornerRounding = 0.5f;
+
+	// the mark colours come from the theme, so a preset or accent change
+	// redraws them - see EditSharpTheme's "Ruler" colours
+	Color markColor => GetThemeColor("mark", "Ruler");
+	Color submarkColor => GetThemeColor("submark", "Ruler");
+
+	double lastPixelsPerSecond;
+	int lastFramerate;
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationThemeChanged && lastPixelsPerSecond > 0d) Update(lastPixelsPerSecond, lastFramerate);
+	}
 
 	[ExportGroup("Controls")]
 
@@ -53,6 +64,9 @@ public partial class UIRuler : Control, IDragCancellable
 
 	public void Update(double pixelsPerSecond, int framerate)
 	{
+		lastPixelsPerSecond = pixelsPerSecond;
+		lastFramerate = framerate;
+
 		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, framerate)))
 		{
 			marksTexture.SetImage(marksImage);

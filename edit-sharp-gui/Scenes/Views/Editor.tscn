@@ -6,9 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://rmor8if075lh" path="res://Scenes/Views/Timeline.tscn" id="4_ffi10"]
 [ext_resource type="PackedScene" uid="uid://dm10ihadq0lji" path="res://Scenes/Views/Inspector.tscn" id="4_gtnbc"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7qsqj"]
-bg_color = Color(0.16078432, 0.16078432, 0.16078432, 1)
-
 [node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "Inspector")]
 layout_mode = 3
 anchors_preset = 15
@@ -28,7 +25,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_7qsqj")
+theme_type_variation = &"ViewBackground"
 
 [node name="VSplitContainer" type="VSplitContainer" parent="." unique_id=1206312887]
 layout_mode = 1

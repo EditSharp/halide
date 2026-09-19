@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/PathEditor.cs" id="1_editor"]
+
+[node name="PathEditor" type="HBoxContainer" node_paths=PackedStringArray("entry", "browse", "dialog")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+entry = NodePath("Entry")
+browse = NodePath("Browse")
+dialog = NodePath("Dialog")
+
+[node name="Entry" type="LineEdit" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorField"
+
+[node name="Browse" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "Browse"
+focus_mode = 0
+theme_type_variation = &"InspectorButton"
+text = "…"
+
+[node name="Dialog" type="FileDialog" parent="."]
+title = "Open a File"
+size = Vector2i(800, 600)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+use_native_dialog = true

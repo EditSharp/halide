@@ -1,6 +1,24 @@
 [gd_scene format=3 uid="uid://dm10ihadq0lji"]
 
-[node name="Inspector" type="Control" unique_id=701008058]
+[ext_resource type="Script" uid="uid://dq3qs8ntj604l" path="res://Scripts/UI/Views/Inspector.cs" id="1_klbkf"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Section.tscn" id="s_0"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Subsection.tscn" id="s_1"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Row.tscn" id="s_2"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/ListRow.tscn" id="s_3"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/RemoveButton.tscn" id="s_4"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Toggle.tscn" id="s_5"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Number.tscn" id="s_6"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Angle.tscn" id="s_7"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Text.tscn" id="s_8"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Multiline.tscn" id="s_9"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Path.tscn" id="s_10"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Dropdown.tscn" id="s_11"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Color.tscn" id="s_12"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Vector.tscn" id="s_13"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Time.tscn" id="s_14"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/Editors/Label.tscn" id="s_15"]
+
+[node name="Inspector" type="Control" node_paths=PackedStringArray("scroll", "content", "empty")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -8,3 +26,43 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
+script = ExtResource("1_klbkf")
+scroll = NodePath("Scroll")
+content = NodePath("Scroll/Content")
+empty = NodePath("Scroll/Content/Empty")
+sectionScene = ExtResource("s_0")
+subsectionScene = ExtResource("s_1")
+rowScene = ExtResource("s_2")
+listRowScene = ExtResource("s_3")
+removeButtonScene = ExtResource("s_4")
+toggleEditor = ExtResource("s_5")
+numberEditor = ExtResource("s_6")
+angleEditor = ExtResource("s_7")
+textEditor = ExtResource("s_8")
+multilineEditor = ExtResource("s_9")
+pathEditor = ExtResource("s_10")
+dropdownEditor = ExtResource("s_11")
+colorEditor = ExtResource("s_12")
+vectorEditor = ExtResource("s_13")
+timeEditor = ExtResource("s_14")
+labelEditor = ExtResource("s_15")
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorSections"
+
+[node name="Empty" type="Label" parent="Scroll/Content"]
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+text = "Nothing selected"
+horizontal_alignment = 1

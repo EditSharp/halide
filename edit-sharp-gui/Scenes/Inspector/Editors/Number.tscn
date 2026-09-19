@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/NumberEditor.cs" id="1_editor"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
+
+[node name="NumberEditor" type="HBoxContainer" node_paths=PackedStringArray("spin")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+spin = NodePath("Spin")
+
+[node name="Spin" parent="." instance=ExtResource("2_spin")]
+layout_mode = 2
+size_flags_horizontal = 3

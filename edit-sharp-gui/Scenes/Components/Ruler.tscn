@@ -4,9 +4,6 @@
 
 [sub_resource type="ImageTexture" id="ImageTexture_d1v6r"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3ygwi"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-
 [node name="Ruler" type="Control" unique_id=1594127530 node_paths=PackedStringArray("marksRect")]
 custom_minimum_size = Vector2(3000, 30)
 layout_mode = 3
@@ -15,8 +12,6 @@ script = ExtResource("1_5nnl7")
 markWidth = 1.0
 markMaxWidth = 2
 markAlignment = 0
-markColor = Color(1, 1, 1, 1)
-submarkColor = Color(0.5372549, 0.5372549, 0.5372549, 1)
 ratio = 0.6
 cornerRounding = 1.0
 marksRect = NodePath("Marks")
@@ -30,7 +25,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_3ygwi")
+theme_type_variation = &"RulerBackground"
 
 [node name="Marks" type="TextureRect" parent="." unique_id=990569819]
 custom_minimum_size = Vector2(50, 0)

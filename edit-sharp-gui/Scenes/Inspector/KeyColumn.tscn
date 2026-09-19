@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/KeyColumn.cs" id="1_keys"]
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
+
+[node name="KeyColumn" type="HBoxContainer" node_paths=PackedStringArray("prev", "key", "next", "resetTrack")]
+custom_minimum_size = Vector2(78, 0)
+theme_type_variation = &"TightHBox"
+alignment = 2
+script = ExtResource("1_keys")
+prev = NodePath("Prev")
+key = NodePath("Key")
+next = NodePath("Next")
+resetTrack = NodePath("ResetTrack")
+
+[node name="Prev" type="Button" parent="."]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+tooltip_text = "Previous keyframe"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+script = ExtResource("2_glyph")
+Shape = 0
+
+[node name="Key" type="Button" parent="."]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+tooltip_text = "Add or remove a keyframe here"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+script = ExtResource("2_glyph")
+Shape = 1
+
+[node name="Next" type="Button" parent="."]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+tooltip_text = "Next keyframe"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+script = ExtResource("2_glyph")
+Shape = 2
+
+[node name="ResetTrack" type="Button" parent="."]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+tooltip_text = "Remove every keyframe, keeping the value at the playhead"
+focus_mode = 0
+theme_type_variation = &"InspectorKeyButton"
+script = ExtResource("2_glyph")
+Shape = 4

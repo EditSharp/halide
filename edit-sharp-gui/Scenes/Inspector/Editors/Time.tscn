@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/TimeEditor.cs" id="1_editor"]
+[ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
+
+[node name="TimeEditor" type="HBoxContainer" node_paths=PackedStringArray("frames", "clock", "toggle")]
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorEditor"
+script = ExtResource("1_editor")
+frames = NodePath("Frames")
+clock = NodePath("Clock")
+toggle = NodePath("Toggle")
+
+[node name="Frames" parent="." instance=ExtResource("2_spin")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Clock" type="LineEdit" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorField"
+
+[node name="Toggle" type="Button" parent="."]
+custom_minimum_size = Vector2(22, 0)
+layout_mode = 2
+tooltip_text = "Show as frames or as time"
+focus_mode = 0
+theme_type_variation = &"InspectorButton"
+text = "t"
