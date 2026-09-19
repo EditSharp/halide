@@ -1,5 +1,6 @@
 using EditSharp;
 using EditSharp.Components;
+using EditSharp.History;
 using EditSharp.Rendering;
 using Godot;
 using System;
@@ -49,7 +50,14 @@ public class ConsoleLogger : IEditSharpLogger
 
 public class Project
 {
-	public Timeline Timeline = new();
+	// everything the user has done to this project, for undo and redo. the
+	// timeline records its own edits into whichever history is active - see
+	// EditSharp.History.Transaction - and Editor makes this one active
+	public History History { get; } = new();
 
-	public RenderSettings RenderSettings = new();
+	Timeline _timeline = new();
+	public Timeline Timeline { get => _timeline; set => Transaction.Set(this, ref _timeline, value, static (o, v) => o._timeline = v); }
+
+	RenderSettings _renderSettings = new();
+	public RenderSettings RenderSettings { get => _renderSettings; set => Transaction.Set(this, ref _renderSettings, value, static (o, v) => o._renderSettings = v); }
 }

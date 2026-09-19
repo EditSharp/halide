@@ -85,7 +85,7 @@ public static class Tests
             List<VideoClip> videos = [];
             for (int i = 1; i < 7; i++)
             {
-                VideoClip video = VideoClip.CreateFromSource(videoSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
+                VideoClip video = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.Zero, TimeSpan.FromSeconds(13));
 
                 video.Name = $"Video {i}";
 
@@ -135,11 +135,11 @@ public static class Tests
             timeline.Link(videos);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
+            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
             timeline.Channels[6].AddClip(extraVideo);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo2 = VideoClip.CreateFromSource(videoSource, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
+            VideoClip extraVideo2 = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
             timeline.Channels[7].AddClip(extraVideo2);
             
             //sound

@@ -13,7 +13,7 @@ border_width_bottom = 2
 border_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
 border_blend = true
 
-[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("magnetLevel", "widthSlider", "heightSlider", "playhead", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
+[node name="Timeline" type="Control" unique_id=407201115 node_paths=PackedStringArray("magnetLevel", "widthSlider", "heightSlider", "playhead", "snapLine", "editsContainer", "edits", "editsScrollSpacer", "clipsViewContainer", "clipsView", "rulerContainer", "ruler")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,6 +27,7 @@ magnetLevel = NodePath("VBoxContainer/Options/Magnet Level/Magnet Level")
 widthSlider = NodePath("VBoxContainer/Options/Width/Width Slider")
 heightSlider = NodePath("VBoxContainer/Options/Height/Height Slider")
 playhead = NodePath("VBoxContainer/Channels/Clips View/Playhead")
+snapLine = NodePath("VBoxContainer/Channels/Clips View/Snap Line")
 editsContainer = NodePath("VBoxContainer/Channels/Edits/Edits Container")
 edits = NodePath("VBoxContainer/Channels/Edits/Edits Container/Edits")
 editsScrollSpacer = NodePath("VBoxContainer/Channels/Edits/Scrollbar Spacer")
@@ -131,6 +132,7 @@ custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="Clips View" type="Control" parent="VBoxContainer/Channels" unique_id=1849701406]
+clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -154,6 +156,7 @@ vertical_scroll_mode = 0
 [node name="Ruler" parent="VBoxContainer/Channels/Clips View/Clips/Ruler Container" unique_id=1594127530 instance=ExtResource("5_1s8ef")]
 custom_minimum_size = Vector2(3000, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="Clips View Container" type="ScrollContainer" parent="VBoxContainer/Channels/Clips View/Clips" unique_id=1543339615]
@@ -164,6 +167,17 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="Snap Line" type="ColorRect" parent="VBoxContainer/Channels/Clips View"]
+visible = false
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 2.0
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.6)
 
 [node name="Playhead" parent="VBoxContainer/Channels/Clips View" unique_id=2022042968 instance=ExtResource("5_ntujw")]
 layout_mode = 1

@@ -1,9 +1,10 @@
+using EditSharpGUI.Scripts.Input;
 using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public partial class UIRuler : Control
+public partial class UIRuler : Control, IDragCancellable
 {
 	[ExportGroup("Mark Options")]
 
@@ -20,7 +21,36 @@ public partial class UIRuler : Control
 	[Export] TextureRect marksRect;
 	[Export] ImageTexture marksTexture;
 
-	
+	// pressing the ruler is how the playhead gets summoned, and holding it is
+	// how the playhead gets dragged from there. the ruler only reports the
+	// press and the release - the timeline owns the playhead and runs the drag
+	public event EventHandler Pressed;
+	public event EventHandler Released;
+
+	public override void _GuiInput(InputEvent _)
+	{
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+		switch (left.Action)
+		{
+			case MouseAction.Press:
+			case MouseAction.DoubleClick:
+				if (!left.Capture(this)) break;
+				Pressed?.Invoke(this, EventArgs.Empty);
+				break;
+
+			case MouseAction.Click:
+			case MouseAction.DragEnd:
+				if (!left.HasCapture(this)) break;
+				Released?.Invoke(this, EventArgs.Empty);
+				break;
+		}
+	}
+
+	// the press will never get a release of its own, so let go now
+	public void CancelDrag(MouseButtonState button) => Released?.Invoke(this, EventArgs.Empty);
+
+
 	public void Update(double pixelsPerSecond, int framerate)
 	{
 		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, framerate)))

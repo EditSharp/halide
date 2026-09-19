@@ -6,6 +6,11 @@ public partial class FitToChildren : Control
 	[Export] bool Horizontal;
 	[Export] bool Vertical;
 
+	// room kept past the last child on each axis. the clips view needs it so
+	// the drag handles hung off the end of the last clip, which sit outside its
+	// rect, are still inside the scrollable area and can actually be reached
+	[Export] public Vector2 Padding;
+
 	// while set, this may grow to fit its children but never shrink.
 	//
 	// something being dragged moves its own bounds every frame, so letting the
@@ -29,6 +34,9 @@ public partial class FitToChildren : Control
 				height = c.GetRect().End.Y > height ? c.GetRect().End.Y : height;
 			}
 		}
+
+		width += Padding.X;
+		height += Padding.Y;
 
 		if (GrowOnly)
 		{

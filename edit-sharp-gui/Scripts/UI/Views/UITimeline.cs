@@ -1,6 +1,8 @@
 using EditSharp.Components;
 using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
+using EditSharp.History;
+using EditSharpGUI.Scripts.Input;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -14,9 +16,14 @@ public partial class UITimeline : Control
 	[Export] Slider widthSlider;
 	[Export] Slider heightSlider;
 
+	// how close, in screen pixels, something being dragged has to get to a
+	// clip edge or the playhead before the magnet catches it
+	[Export] float snapDistance = 10f;
+
 	[ExportGroup("Controls")]
 
 	[Export] UIPlayhead playhead;
+	[Export] Control snapLine;
 
 	[ExportGroup("Channels")]
 
@@ -145,33 +152,323 @@ public partial class UITimeline : Control
 			anchorFrames = ANCHOR_FRAMES;
 		};
 
-		playhead.Drag += (_, drag) => DragPlayhead(drag);
+		// grabbing the playhead keeps it however far from the cursor it was
+		// grabbed, so it does not jump under the hand. the ruler summons it to
+		// the cursor instead, and from then on the two drags are the same drag
+		playhead.Pressed += (_, _) => BeginPlayheadDrag(playhead, PlayheadTime - CursorTime);
+		playhead.Released += (_, _) => EndPlayheadDrag();
+
+		ruler.Pressed += (_, _) => BeginPlayheadDrag(ruler, TimeSpan.Zero);
+		ruler.Released += (_, _) => EndPlayheadDrag();
 	}
 
-	public void MovePlayheadTo(TimeSpan time)
-	{
-		TimeSpan playheadTime = time - PixelsToTimeSpan(clipsViewContainer.ScrollHorizontal);
-		playhead.Move((float)TimeSpanToPixels(playheadTime));
-	}
+	// ---- keyboard ----
 
-	void DragPlayhead(float pixels)
+	// the shortcuts that belong to the timeline as a whole. a key climbs here
+	// from anything inside - the clips view, a clip, the ruler, even the
+	// option buttons along the top - so this is the one place to answer them
+	public override void _EnterTree() => InputManager.Singleton.Keyboard.Register(this, OnShortcut);
+
+	public override void _ExitTree() => InputManager.Singleton.Keyboard.Unregister(this);
+
+	void OnShortcut(ShortcutEventArgs e)
 	{
-		TimeSpan playheadTime = PixelsToTimeSpan(playhead.Position.X) + PixelsToTimeSpan(clipsViewContainer.ScrollHorizontal);
-		if (playheadTime + PixelsToTimeSpan(pixels) < TimeSpan.Zero)
+		switch (e.Action)
 		{
-			MovePlayheadTo(TimeSpan.Zero);
-		}
-		else MovePlayheadTo(playheadTime + PixelsToTimeSpan(pixels));
+			case Shortcuts.SelectAll:
+				clipsView.SelectAll();
+				e.Handled = true;
+				break;
 
-		// send signal that playhead was dragged here
-		OnPlayheadDrag(PixelsToTimeSpan(playhead.Position.X));
+			case Shortcuts.Copy:
+				clipsView.CopySelection();
+				e.Handled = true;
+				break;
+		}
+
+		// the rest change the data. not mid-gesture: a drag in flight is
+		// positioned from clips that could vanish under it
+		if (e.Handled || MouseDragging) return;
+
+		switch (e.Action)
+		{
+			case Shortcuts.Cut:
+				clipsView.CutSelection();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Paste:
+				clipsView.Paste();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Delete:
+				clipsView.DeleteSelection(UIClipsView.RippleScope.None);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.RippleDelete:
+				clipsView.DeleteSelection(UIClipsView.RippleScope.OwnChannels);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.RippleDeleteAll:
+				clipsView.DeleteSelection(UIClipsView.RippleScope.AllChannels);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Split:
+				clipsView.SplitAtPlayhead(everything: false);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.SplitAll:
+				clipsView.SplitAtPlayhead(everything: true);
+				e.Handled = true;
+				break;
+		}
 	}
 
-	public event EventHandler<TimeSpan> PlayheadDrag;
+	static bool MouseDragging => InputManager.Singleton.Mouse.LeftButton.ClickState == MouseButtonClickState.Dragging;
 
-	protected virtual void OnPlayheadDrag(TimeSpan t)
+	// ---- playhead ----
+
+	// where the playhead sits, in timeline time. setting this only moves the
+	// line: playback hears about the playhead through PlayheadDrag, never
+	// through here, so whatever drives playback can write this every frame
+	// without hearing its own echo back
+	public TimeSpan PlayheadTime
 	{
-		PlayheadDrag.Invoke(this, t);
+		get;
+		set => field = value < TimeSpan.Zero ? TimeSpan.Zero : value;
+	}
+
+	// the user took hold of the playhead, moved it, and let go. a click on the
+	// ruler is a zero-length drag: started, one move, ended. PlayheadDrag only
+	// fires when the time actually changed
+	public event EventHandler PlayheadDragStarted;
+	public event EventHandler<TimeSpan> PlayheadDrag;
+	public event EventHandler PlayheadDragEnded;
+
+	// the drag in progress: which control holds the press, and how far the
+	// playhead sat from the cursor when it was grabbed
+	Node playheadCaptor;
+	TimeSpan? playheadGrabOffset;
+
+	TimeSpan CursorTime => PixelsToTimeSpan(ToViewContent(InputManager.Singleton.Mouse.CurrentPosition).X);
+
+	void BeginPlayheadDrag(Node captor, TimeSpan grabOffset)
+	{
+		if (playheadGrabOffset is not null) return;
+
+		// a click here is a click on the timeline, as far as the keyboard goes
+		InputManager.Singleton.Keyboard.Capture(this);
+
+		playheadCaptor = captor;
+		playheadGrabOffset = grabOffset;
+
+		FlushScrollEase();
+		BeginViewScroll();
+
+		PlayheadDragStarted?.Invoke(this, EventArgs.Empty);
+
+		// land it now rather than a frame from now - a ruler click should
+		// summon the playhead the moment the button goes down
+		DragPlayheadTo(CursorTime + grabOffset);
+	}
+
+	void EndPlayheadDrag()
+	{
+		if (playheadGrabOffset is null) return;
+
+		playheadGrabOffset = null;
+		playheadCaptor = null;
+		SnapLine = null;
+
+		PlayheadDragEnded?.Invoke(this, EventArgs.Empty);
+	}
+
+	// magnet, clamp, move, and tell whoever is listening - but only if it moved.
+	// no snap line here: the playhead is the line, so it would only draw over itself
+	void DragPlayheadTo(TimeSpan candidate)
+	{
+		TimeSpan time = SnapPoint(candidate, [], includePlayhead: false, out _);
+
+		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+
+		if (time == PlayheadTime) return;
+
+		PlayheadTime = time;
+		PlayheadDrag?.Invoke(this, time);
+	}
+
+	// runs every frame of a drag, not just on motion. the view can scroll out
+	// from under a stationary cursor - from the edge scroll here, or from the
+	// user scrolling mid-drag - and the playhead has to stay with the cursor
+	void UpdatePlayheadDrag(double delta)
+	{
+		if (playheadGrabOffset is not TimeSpan offset) return;
+
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+		// belt and braces: if the press ended by any route that never came
+		// back through Released, stop driving it
+		if (!left.HasCapture(playheadCaptor) || left.ClickState == MouseButtonClickState.Released)
+		{
+			EndPlayheadDrag();
+			return;
+		}
+
+		// sideways only - the playhead has no vertical position to chase
+		float push = GetEdgePush(InputManager.Singleton.Mouse.CurrentPosition).X;
+		if (push != 0f) ScrollView(new(push * (float)delta, 0f));
+
+		DragPlayheadTo(CursorTime + offset);
+	}
+
+	// ---- magnet ----
+
+	public enum MagnetMode
+	{
+		// free movement, between frames if you like
+		Off = 0,
+		// everything lands on a frame boundary
+		Framerate = 1,
+		// frames, plus catching on any clip edge or the playhead
+		All = 2
+	}
+
+	// the option button's item ids are the enum values. nothing selected
+	// reads as -1, which is nothing to snap to
+	public MagnetMode Magnet => magnetLevel.Selected < 0 ? MagnetMode.Off : (MagnetMode)magnetLevel.GetSelectedId();
+
+	static int Framerate => ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate;
+
+	// the one place a frame number becomes a time, so every grid point is
+	// rounded the same way and edges that should line up compare equal
+	static TimeSpan FrameToTime(double frame)
+		=> TimeSpan.FromTicks((long)Math.Round(frame * TimeSpan.TicksPerSecond / Framerate));
+
+	// the nearest frame boundary, or t untouched when the magnet is off
+	public TimeSpan SnapToFrame(TimeSpan t)
+	{
+		if (Magnet == MagnetMode.Off) return t;
+
+		return FrameToTime(Math.Round(t.TotalSeconds * Framerate));
+	}
+
+	// the shortest a clip may be, as an edge position. under the magnet that
+	// is one whole frame on the grid - the snap runs before the clamp, so a
+	// floor of the data model's millisecond could only ever be hit by
+	// overshooting, and a release anywhere short of a frame landed on it
+	// instead of on the frame. with the magnet off the data model's own
+	// floor is the floor
+	public TimeSpan EarliestEndAfter(TimeSpan start)
+	{
+		if (Magnet == MagnetMode.Off) return start + Clip.MinimumDuration;
+
+		// the first grid point strictly after start
+		return FrameToTime(Math.Floor(start.TotalSeconds * Framerate + 1e-6) + 1);
+	}
+
+	public TimeSpan LatestStartBefore(TimeSpan end)
+	{
+		if (Magnet == MagnetMode.Off) return end - Clip.MinimumDuration;
+
+		// the last grid point strictly before end
+		return FrameToTime(Math.Ceiling(end.TotalSeconds * Framerate - 1e-6) - 1);
+	}
+
+	// snap one moving point. exclude is the clips whose own edges must not
+	// count as targets - the ones being dragged
+	public TimeSpan SnapPoint(TimeSpan candidate, IEnumerable<Clip> exclude, bool includePlayhead, out TimeSpan? lineAt)
+		=> candidate + SnapDelta(TimeSpan.Zero, [candidate], candidate, exclude, includePlayhead, out lineAt);
+
+	// snap a set of points that all move together by delta. anchor is the one
+	// point that lands on the frame grid - the rest keep their spacing from
+	// it - and after that every point can catch on a clip edge or the
+	// playhead, with the closest catch winning for all of them.
+	//
+	// lineAt is where the snap line belongs, or null when nothing caught or
+	// the catch was the playhead, which is already a line
+	public TimeSpan SnapDelta(TimeSpan delta, IEnumerable<TimeSpan> points, TimeSpan anchor, IEnumerable<Clip> exclude, bool includePlayhead, out TimeSpan? lineAt)
+	{
+		lineAt = null;
+
+		if (Magnet == MagnetMode.Off) return delta;
+
+		delta = SnapToFrame(anchor + delta) - anchor;
+
+		if (Magnet != MagnetMode.All) return delta;
+
+		TimeSpan threshold = PixelsToTimeSpan(snapDistance);
+		TimeSpan[] moving = [.. points];
+		HashSet<Clip> excluded = [.. exclude];
+
+		TimeSpan? bestAdjust = null;
+		TimeSpan? bestLine = null;
+		TimeSpan bestDistance = TimeSpan.MaxValue;
+
+		foreach ((TimeSpan target, bool isClip) in SnapTargets(excluded, includePlayhead))
+		{
+			foreach (TimeSpan point in moving)
+			{
+				TimeSpan adjust = target - (point + delta);
+				TimeSpan distance = adjust.Duration();
+
+				if (distance > threshold || distance >= bestDistance) continue;
+
+				bestDistance = distance;
+				bestAdjust = adjust;
+				bestLine = isClip ? target : null;
+			}
+		}
+
+		if (bestAdjust is TimeSpan a)
+		{
+			delta += a;
+			lineAt = bestLine;
+		}
+
+		return delta;
+	}
+
+	// every edge on every channel, plus the playhead when asked for
+	IEnumerable<(TimeSpan time, bool isClip)> SnapTargets(HashSet<Clip> exclude, bool includePlayhead)
+	{
+		foreach (Channel channel in Timeline.Channels)
+		{
+			foreach (Clip clip in channel.Clips)
+			{
+				if (exclude.Contains(clip)) continue;
+
+				yield return (clip.Start, true);
+				yield return (clip.End, true);
+			}
+		}
+
+		if (includePlayhead) yield return (PlayheadTime, false);
+	}
+
+	// where the snap line is drawn, in timeline time. null hides it. whoever
+	// runs a drag sets this as it goes and clears it when the drag ends
+	public TimeSpan? SnapLine { get; set; }
+
+	// put the playhead and snap line over the view for the current scroll.
+	// called at the end of _Process, and again by every scroll this class
+	// makes, so a scroll from a child's _Process never leaves them a frame behind
+	void LayoutOverlays()
+	{
+		float scroll = clipsViewContainer.ScrollHorizontal;
+
+		playhead.Move((float)TimeSpanToPixels(PlayheadTime) - scroll);
+
+		if (snapLine is null) return;
+
+		snapLine.Visible = SnapLine.HasValue;
+
+		if (SnapLine is TimeSpan t)
+			snapLine.Position = new((float)TimeSpanToPixels(t) - scroll - snapLine.Size.X / 2f, snapLine.Position.Y);
 	}
 
 	public void SetTimeline(Timeline t)
@@ -193,6 +490,7 @@ public partial class UITimeline : Control
 		// showing the pre-zoom scroll
 		ApplyPendingAnchors();
 		AdvanceScrollEase(delta);
+		UpdatePlayheadDrag(delta);
 
 		// match scrolls to timeline
         editsContainer.ScrollVertical = clipsViewContainer.ScrollVertical;
@@ -206,8 +504,30 @@ public partial class UITimeline : Control
 
 		// show scrollbar spacer if timeline is scrollable
 		editsScrollSpacer.Visible = clipsViewContainer.GetHScrollBar().Visible;
+
+		LayoutOverlays();
     }
 
+
+	// the history every edit made through this timeline lands in
+	public History History => ProjectManager.Singleton.CurrentProject.History;
+
+	// the data moved without this view seeing a drag - an undo or redo. the
+	// channel list is rebuilt outright, since a channel can come or go
+	// anywhere in it and the incremental refresh only ever appends
+	public void Reconcile()
+	{
+		foreach (UIChannelEdit e in ChannelEdits)
+		{
+			edits.RemoveChild(e);
+			e.QueueFree();
+		}
+
+		ChannelEdits.Clear();
+		RefreshChannelEdits();
+
+		clipsView.Reconcile();
+	}
 
 	public int RefreshChannelEdits(bool all = false)
 	{
@@ -260,6 +580,18 @@ public partial class UITimeline : Control
 		}
 	}
 
+	// the same sideways: the slice of content in view, left and right, in
+	// content pixels
+	public Vector2 ViewHorizontalRange
+	{
+		get
+		{
+			float left = clipsViewContainer.ScrollHorizontal;
+
+			return new(left, left + (float)clipsViewContainer.GetHScrollBar().Page);
+		}
+	}
+
 	// the content-space point under a global position, worked out from the scroll
 	// value rather than from where the content node currently sits.
 	//
@@ -282,6 +614,8 @@ public partial class UITimeline : Control
 	{
 		clipsViewContainer.ScrollHorizontal += Mathf.RoundToInt(delta.X);
 		clipsViewContainer.ScrollVertical += Mathf.RoundToInt(delta.Y);
+
+		LayoutOverlays();
 	}
 
 	// a scroll position the view is sliding to rather than snapping to. letting
@@ -443,6 +777,8 @@ public partial class UITimeline : Control
 
 		clipsViewContainer.ScrollHorizontal += x;
 		clipsViewContainer.ScrollVertical += y;
+
+		LayoutOverlays();
 	}
 
 	// dragging the view moves the content with the cursor, so the scroll goes

@@ -16,3 +16,4 @@ mouse_filter = 2
 script = ExtResource("2_4clo1")
 Horizontal = true
 Vertical = true
+Padding = Vector2(80, 0)

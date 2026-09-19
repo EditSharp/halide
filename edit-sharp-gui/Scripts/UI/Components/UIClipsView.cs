@@ -1,6 +1,8 @@
 using EditSharp.Components;
 using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
+using EditSharp.History;
+using EditSharpGUI.Scripts;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI;
 using Godot;
@@ -26,6 +28,247 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// os swallowed the button. the pan cursor would otherwise stay stuck on
 	public void CancelDrag(MouseButtonState button) => MouseDefaultCursorShape = CursorShape.Arrow;
 
+	// ---- keyboard ----
+
+	// any press in here, on empty space or on a clip, makes this the view
+	// shortcuts are meant for until something else is clicked. the timeline
+	// above answers them - it is on the way up from here
+	public void ClaimKeyboard() => InputManager.Singleton.Keyboard.Capture(this);
+
+	// ---- editing the selection: cut, copy, paste, split, delete ----
+
+	// the channel the user last clicked, on a clip or on empty space. a
+	// paste re-bases the copied clips of that kind onto it. lastClicked is
+	// the clip itself when it was one - the copy remembers it as the clip in
+	// hand, so the paste lines that clip up with the target rather than the
+	// bottom of the set
+	(bool video, int index)? pasteTarget;
+	UIClip lastClicked;
+
+	public void MarkTarget(UIClip clip)
+	{
+		lastClicked = clip;
+
+		if (clip.Clip.Channel is Channel channel) pasteTarget = (channel is VideoChannel, channel.Index);
+	}
+
+	void MarkTarget((ChannelType type, int index, bool exists) at)
+	{
+		lastClicked = null;
+
+		if (at.exists) pasteTarget = (at.type == ChannelType.Video, at.index);
+	}
+
+	public void CopySelection()
+	{
+		if (Selection.Count == 0) return;
+
+		Clip anchor = lastClicked is not null && Selection.Contains(lastClicked) ? lastClicked.Clip : null;
+
+		Clipboard.Shared.Copy(ClipsItem.From(Selection.Select(s => s.Clip), anchor));
+	}
+
+	// copy, then a plain delete - the gap stays
+	public void CutSelection()
+	{
+		if (Selection.Count == 0) return;
+
+		CopySelection();
+		DeleteSelection(RippleScope.None, "Cut");
+	}
+
+	// the copied clips land with the earliest at the playhead, keeping their
+	// spacing. the ones of the kind the user last clicked are re-based onto
+	// that channel: the clip that was in hand when copying goes there and
+	// the rest keep their places around it (the lowest goes there when no
+	// clip was in hand). the other kind stays on the channels it came from.
+	// whatever is under them is overwritten, like a drop, and channels are
+	// made where the paste reaches past the top - never below the bottom
+	public void Paste()
+	{
+		if (!Clipboard.Shared.TryGet(out ClipsItem item) || item.Entries.Count == 0) return;
+
+		List<ClipsItem.Entry> entries = item.Materialize();
+		TimeSpan at = UITimeline.PlayheadTime;
+
+		if (pasteTarget is (bool video, int index))
+		{
+			List<ClipsItem.Entry> ofKind = [.. entries.Where(e => e.Video == video)];
+
+			if (ofKind.Count > 0)
+			{
+				int reference = item.AnchorIndex >= 0 && entries[item.AnchorIndex].Video == video
+					? entries[item.AnchorIndex].ChannelIndex
+					: ofKind.Min(e => e.ChannelIndex);
+
+				int shift = index - reference;
+
+				// nothing can go below the first channel of its kind
+				shift = Mathf.Max(shift, -ofKind.Min(e => e.ChannelIndex));
+
+				entries = [.. entries.Select(e => e.Video == video ? e with { ChannelIndex = e.ChannelIndex + shift } : e)];
+			}
+		}
+
+		List<Clip> pasted = [];
+
+		using (Transaction.Scope change = UITimeline.History.Begin(entries.Count == 1 ? "Paste clip" : $"Paste {entries.Count} clips"))
+		{
+			foreach (ClipsItem.Entry e in entries)
+			{
+				e.Clip.Start = at + e.Offset;
+				EnsureChannel(e.Video, e.ChannelIndex).AddClip(e.Clip);
+				pasted.Add(e.Clip);
+			}
+
+			// linked when copied, linked when pasted
+			foreach (IGrouping<Guid?, ClipsItem.Entry> group in entries.Where(e => e.LinkGroup is not null).GroupBy(e => e.LinkGroup))
+			{
+				if (group.Count() > 1) UITimeline.Timeline.Link(group.Select(e => e.Clip));
+			}
+
+			change.Commit();
+		}
+
+		Reconcile();
+		SelectClips(pasted);
+	}
+
+	Channel EnsureChannel(bool video, int index)
+	{
+		Timeline timeline = UITimeline.Timeline;
+
+		if (video)
+		{
+			while (timeline.VideoChannels.Count <= index) timeline.AddChannel(new VideoChannel());
+			return timeline.VideoChannels[index];
+		}
+
+		while (timeline.AudioChannels.Count <= index) timeline.AddChannel(new AudioChannel());
+		return timeline.AudioChannels[index];
+	}
+
+	// cuts at the playhead: the selected clips that span it, or every clip
+	// that spans it when nothing is selected or `everything` is asked for.
+	// the selection follows the clips it was on: a selected clip that was
+	// split is replaced by its pieces, the rest stay selected. with nothing
+	// selected, nothing ends up selected
+	public void SplitAtPlayhead(bool everything)
+	{
+		TimeSpan at = UITimeline.PlayheadTime;
+		Timeline timeline = UITimeline.Timeline;
+
+		IEnumerable<Clip> candidates = everything || Selection.Count == 0
+			? timeline.Channels.SelectMany(c => c.Clips)
+			: Selection.Select(s => s.Clip);
+
+		List<Clip> spanning = [.. candidates.Where(c => c.Start < at && c.End > at).Distinct()];
+		if (spanning.Count == 0) return;
+
+		HashSet<Clip> before = [.. timeline.Channels.SelectMany(c => c.Clips)];
+
+		// where the selected clips were, so their pieces can be found afterwards
+		List<Clip> selected = [.. Selection.Select(s => s.Clip)];
+		List<(Channel channel, TimeSpan start, TimeSpan end)> selectedSpans = [.. selected.Select(c => (c.Channel, c.Start, c.End))];
+
+		using (Transaction.Scope change = UITimeline.History.Begin(spanning.Count == 1 ? "Split clip" : $"Split {spanning.Count} clips"))
+		{
+			HashSet<Guid> groups = [];
+
+			foreach (Clip clip in spanning)
+			{
+				// a linked group splits as one, whichever of its members were picked
+				if (clip.LinkGroupId is Guid id)
+				{
+					if (groups.Add(id)) timeline.GetLinkGroup(id)?.Split(at);
+				}
+				else clip.Split(at);
+			}
+
+			change.Commit();
+		}
+
+		Reconcile();
+
+		// the selection: whatever was selected and survived, plus the pieces
+		// of whatever was selected and split
+		IEnumerable<Clip> pieces = timeline.Channels.SelectMany(c => c.Clips)
+			.Where(c => !before.Contains(c))
+			.Where(c => selectedSpans.Any(s => ReferenceEquals(s.channel, c.Channel) && c.Start >= s.start && c.End <= s.end));
+
+		SelectClips(selected.Where(c => c.Channel is not null).Concat(pieces));
+	}
+
+	public enum RippleScope
+	{
+		// the clips go, the gaps stay
+		None,
+		// each clip's own channel closes the gap it left
+		OwnChannels,
+		// the clips' time ranges come out of every channel, so the whole
+		// timeline shortens and nothing drifts out of sync
+		AllChannels
+	}
+
+	public void DeleteSelection(RippleScope ripple, string description = null)
+	{
+		if (Selection.Count == 0) return;
+
+		List<Clip> clips = [.. Selection.Select(s => s.Clip)];
+		Timeline timeline = UITimeline.Timeline;
+		description ??= ripple == RippleScope.None ? "Delete" : "Ripple delete";
+
+		using (Transaction.Scope change = UITimeline.History.Begin(clips.Count == 1 ? $"{description} clip" : $"{description} {clips.Count} clips"))
+		{
+			switch (ripple)
+			{
+				case RippleScope.None:
+					foreach (Clip clip in clips) clip.Delete();
+					break;
+
+				case RippleScope.OwnChannels:
+					// latest first, so closing one gap never moves a clip still
+					// waiting its turn
+					foreach (Clip clip in clips.OrderByDescending(c => c.Start)) clip.RippleDelete();
+					break;
+
+				case RippleScope.AllChannels:
+					foreach ((TimeSpan start, TimeSpan end) in MergeRanges(clips).OrderByDescending(r => r.start))
+						timeline.RippleRemoveRange(start, end);
+					break;
+			}
+
+			change.Commit();
+		}
+
+		Selection.Clear();
+		Reconcile();
+	}
+
+	// the clips' spans, with any that touch or overlap joined into one
+	static List<(TimeSpan start, TimeSpan end)> MergeRanges(IEnumerable<Clip> clips)
+	{
+		List<(TimeSpan start, TimeSpan end)> merged = [];
+
+		foreach (Clip c in clips.OrderBy(c => c.Start))
+		{
+			if (merged.Count > 0 && c.Start <= merged[^1].end)
+				merged[^1] = (merged[^1].start, c.End > merged[^1].end ? c.End : merged[^1].end);
+			else
+				merged.Add((c.Start, c.End));
+		}
+
+		return merged;
+	}
+
+	void SelectClips(IEnumerable<Clip> clips)
+	{
+		HashSet<Clip> set = [.. clips];
+
+		Selection.Select(UIClips.Where(u => set.Contains(u.Clip)), SelectionMode.Exclusive);
+		UpdateSelection();
+	}
+
     public override void _GuiInput(InputEvent _)
 	{
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
@@ -36,6 +279,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
             case MouseAction.Press:
             case MouseAction.DoubleClick:
                 if (!left.Capture(this)) break;
+
+                ClaimKeyboard();
+                MarkTarget(GetChannelAtPoint(InputManager.Singleton.Mouse.CurrentPosition));
 
                 if (left.PressModifiers.Shift) SelectAll();
                 // ctrl on empty space deliberately does nothing - it is the
@@ -162,6 +408,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			clips++;
 		}
 
+		// the clips may have moved, and the seams sit on them
+		UpdateEditPoints();
+
 		return clips;
 	}
 
@@ -182,7 +431,56 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	public void RemoveUIClip(UIClip c)
 	{
 		UIClips.Remove(c);
+		if (c == handleClip) handleClip = null;
 		c.QueueFree();
+	}
+
+	// ---- which selected clip wears the handles ----
+
+	// with several clips selected, only the last one the cursor passed over
+	// shows its drag handles - a selection five channels tall would
+	// otherwise be a thicket of them
+	UIClip handleClip;
+
+	public void HoverClip(UIClip clip)
+	{
+		if (!clip.Selected || clip == handleClip) return;
+
+		SetHandleClip(clip);
+	}
+
+	void SetHandleClip(UIClip clip)
+	{
+		UIClip previous = handleClip;
+		handleClip = clip;
+
+		previous?.SetHandlesEnabled(false);
+		clip?.SetHandlesEnabled(true);
+
+		// its handles hang over its neighbours, so it goes last in the tree to
+		// win the hit test - but never above the seams, which straddle its
+		// own edges and have to stay on top of it
+		if (clip is null) return;
+
+		clipsControl.MoveChild(clip, -1);
+		foreach (UIEditPoint p in editPoints) clipsControl.MoveChild(p, -1);
+	}
+
+	// the data moved without this view seeing a drag - an undo or redo - so
+	// bring every gui back in line with it: clips that are no longer on the
+	// timeline go, clips that came back get a gui, and the rest re-place
+	public void Reconcile()
+	{
+		List<UIClip> gone = [.. UIClips.Where(c => c.Clip.Channel is null || c.Clip.Channel.Timeline != UITimeline.Timeline)];
+
+		foreach (UIClip c in gone)
+		{
+			Selection.Remove(c);
+			RemoveUIClip(c);
+		}
+
+		Refresh();
+		UpdateSelection();
 	}
 
 	// FUTURE: add a clip and create its clip data from a dragged in source
@@ -259,6 +557,91 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		foreach (UIClip c in UIClips)
 		{
 			c.Selected = Selection.Contains(c);
+
+			// a selected clip's drag handles hang outside its rect, over
+			// whatever neighbour sits there. godot picks the last child first,
+			// so the selection goes to the back of the tree to win that
+			if (c.Selected) clipsControl.MoveChild(c, -1);
+		}
+
+		// the handles stay with the clip that had them if it is still
+		// selected; otherwise the clip just clicked, or the only one there is
+		if (handleClip is null || !Selection.Contains(handleClip))
+		{
+			SetHandleClip(lastClicked is not null && Selection.Contains(lastClicked) ? lastClicked
+				: Selection.Count == 1 ? Selection[0]
+				: null);
+		}
+
+		UpdateEditPoints();
+	}
+
+	// ---- edit points: the seam between two selected clips that touch ----
+
+	readonly List<UIEditPoint> editPoints = [];
+
+	// how wide the strip over a seam is, in pixels
+	const float EDIT_POINT_WIDTH = 12f;
+
+	// pairs of selected clips that meet end to start on the same channel
+	IEnumerable<(UIClip before, UIClip after)> Seams()
+	{
+		foreach (UIClip a in Selection)
+		{
+			if (a.Clip.Channel is null) continue;
+
+			foreach (UIClip b in Selection)
+			{
+				if (ReferenceEquals(a, b) || !ReferenceEquals(a.Clip.Channel, b.Clip.Channel)) continue;
+				if (a.Clip.End == b.Clip.Start) yield return (a, b);
+			}
+		}
+	}
+
+	// rebuild the seams from the selection. each hides the handles either
+	// side of it and puts a roll handle over the join instead
+	void UpdateEditPoints()
+	{
+		foreach (UIEditPoint p in editPoints)
+		{
+			clipsControl.RemoveChild(p);
+			p.QueueFree();
+		}
+
+		editPoints.Clear();
+
+		HashSet<UIClip> seamAtEnd = [];
+		HashSet<UIClip> seamAtStart = [];
+
+		foreach ((UIClip before, UIClip after) in Seams())
+		{
+			seamAtEnd.Add(before);
+			seamAtStart.Add(after);
+
+			UIEditPoint point = new() { Before = before, After = after };
+
+			point.DragStarted += (_, _) => BeginRollDrag(point);
+			point.DragEnded += (_, _) => FinishEdgeDrag(point);
+			point.DragCancelled += (_, _) => CancelEdgeDrag(point);
+
+			// after every clip, so it wins the hit test over the two it straddles
+			clipsControl.AddChild(point);
+			editPoints.Add(point);
+		}
+
+		foreach (UIClip c in UIClips) c.SetSeams(seamAtStart.Contains(c), seamAtEnd.Contains(c));
+
+		LayoutEditPoints();
+	}
+
+	void LayoutEditPoints()
+	{
+		foreach (UIEditPoint p in editPoints)
+		{
+			float x = (float)UITimeline.TimeSpanToPixels(p.After.Clip.Start);
+
+			p.Position = new(x - EDIT_POINT_WIDTH / 2f, p.After.Position.Y);
+			p.Size = new(EDIT_POINT_WIDTH, p.After.Size.Y);
 		}
 	}
 
@@ -295,6 +678,17 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 	public override void _Process(double delta)
 	{
+		// every clip keeps its inner controls inside the part of it that is on
+		// screen, which moves whenever the view scrolls or the clip does
+		Vector2 window = UITimeline.ViewHorizontalRange;
+		foreach (UIClip c in UIClips) c.KeepControlsInView(window.X, window.Y);
+
+		if (edgeDrag is not null)
+		{
+			ProcessEdgeDrag(delta);
+			return;
+		}
+
 		if (dragClip is null) return;
 
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
@@ -434,6 +828,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	{
 		dragClip = null;
 		verticalDragPinned = false;
+		UITimeline.SnapLine = null;
 	}
 
 	// video channels stack upwards but content coordinates only grow downwards,
@@ -472,12 +867,17 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		int releaseRows = phantomVideoChannels;
 
-		// what the content actually needs now, against what it is being held at
+		// what the content actually needs now, against what it is being held at.
+		// the padding is part of what it needs - the fit adds it back the moment
+		// it is released, and leaving it out here would slide the view that
+		// much short of where the content really settles
 		Vector2 natural = Vector2.Zero;
 		foreach (UIClip c in UIClips)
 		{
 			natural = new(Mathf.Max(natural.X, c.GetRect().End.X), Mathf.Max(natural.Y, c.GetRect().End.Y));
 		}
+
+		natural += ClipsBounds.Padding;
 
 		Vector2 held = ClipsBounds.CustomMinimumSize;
 		Vector2 shrink = new(Mathf.Max(0f, held.X - natural.X), Mathf.Max(0f, held.Y - natural.Y));
@@ -519,6 +919,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		dragClip = uiClip;
 		UITimeline.BeginViewScroll();
 		UITimeline.FlushScrollEase();
+
+		// the seams sit on clips that are about to move; the refresh at the
+		// end of the drag puts them back
+		foreach (UIEditPoint p in editPoints) p.Visible = false;
 
 		// hold the content open for the duration. letting it shrink while the
 		// selection moves feeds the clamped scroll back into the clip positions
@@ -584,6 +988,10 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// everything may be selected, in which case there is nothing to drop below
 		while (UIClips.Where(c => !Selection.Contains(c)).Select(c => c.ZIndex).DefaultIfEmpty(int.MaxValue).Max() < Selection.ZIndex) Selection.ZIndex--;
 
+		// one entry in the history for the whole drop: the channels it opens
+		// and every clip it moves
+		using (Transaction.Scope change = UITimeline.History.Begin(Selection.Count == 1 ? "Move clip" : $"Move {Selection.Count} clips"))
+		{
 		// create any new channels needed so every clip in the selection has a valid target channel
 		EnsureChannelsExist(move.channelDelta);
 
@@ -620,6 +1028,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		// edit underlying clip data
 		foreach ((Clip clip, TimeSpan start, Channel channel) in moves) clip.Move(start, channel);
+
+		change.Commit();
+		}
 
 		List<UIClip> remove = [];
 		foreach (UIClip c in UIClips)
@@ -676,15 +1087,305 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	{
 		int channelDragDelta = GetChannelDragDelta(uiClip, drag);
 
-		float offset = drag.delta.X;
-		// don't let offset move selection past zero
-		if (!(Selection.EarliestPosition + UITimeline.PixelsToTimeSpan(offset) >= TimeSpan.Zero))
+		TimeSpan timeDelta = UITimeline.PixelsToTimeSpan(drag.delta.X);
+
+		// magnet: the grabbed clip's start is what lands on the frame grid,
+		// and every edge in the selection can catch on another clip or the
+		// playhead. the selection's own edges are not targets
+		timeDelta = UITimeline.SnapDelta(
+			timeDelta,
+			Selection.SelectMany(c => new[] { c.Clip.Start, c.Clip.End }),
+			uiClip.Clip.Start,
+			Selection.Select(c => c.Clip),
+			includePlayhead: true,
+			out TimeSpan? lineAt
+		);
+
+		// don't let the selection move past zero
+		if (Selection.EarliestPosition + timeDelta < TimeSpan.Zero)
 		{
-			// reign offset back in
-			offset = -(float)UITimeline.TimeSpanToPixels(Selection.EarliestPosition);
+			// reign it back in
+			timeDelta = -Selection.EarliestPosition;
+			lineAt = null;
 		}
 
-		return (UITimeline.PixelsToTimeSpan(offset), channelDragDelta);
+		UITimeline.SnapLine = lineAt;
+
+		return (timeDelta, channelDragDelta);
+	}
+
+	// ---- edge drags: the handles hung off either side of a selected clip ----
+
+	public enum EdgeDragKind
+	{
+		// move the edge over the content: extend or trim
+		Extend,
+		// move the edge and stretch the content to fit: retime
+		Timeshift,
+		// move the join between two clips: one grows by what the other gives up
+		Roll
+	}
+
+	sealed class EdgeDrag
+	{
+		public UIDragHandle Handle;
+		public EdgeDragKind Kind;
+		public bool Left;
+
+		// every selected clip whose edge sits where the grabbed one does. they
+		// all move together, like a multi-edit trim, so linked video and audio
+		// that start together stay together. for a roll, this is the clip
+		// after the join, whose start moves
+		public List<UIClip> Clips;
+
+		// a roll's clip before the join, whose end moves
+		public UIClip Before;
+
+		// where the edge was when grabbed, and where it currently previews
+		public TimeSpan EdgeAtStart;
+		public TimeSpan Edge;
+
+		public Vector2 ScrollAtStart;
+	}
+
+	EdgeDrag edgeDrag;
+
+	public void BeginEdgeDrag(UIClip uiClip, UIDragHandle handle, EdgeDragKind kind)
+	{
+		// one drag at a time. a clip drag holds the same button, so this
+		// cannot overlap one either
+		if (edgeDrag is not null || dragClip is not null) return;
+
+		UITimeline.FlushScrollEase();
+		UITimeline.BeginViewScroll();
+
+		// hold the content open for the duration - see BeginDrag
+		if (ClipsBounds is not null) ClipsBounds.GrowOnly = true;
+
+		bool left = handle.Side == UIDragHandle.HandleSide.Left;
+		TimeSpan edge = left ? uiClip.Clip.Start : uiClip.Clip.End;
+
+		List<UIClip> clips = [.. Selection.Where(c => (left ? c.Clip.Start : c.Clip.End) == edge)];
+		if (!clips.Contains(uiClip)) clips.Insert(0, uiClip);
+
+		edgeDrag = new()
+		{
+			Handle = handle,
+			Kind = kind,
+			Left = left,
+			Clips = clips,
+			EdgeAtStart = edge,
+			Edge = edge,
+			ScrollAtStart = UITimeline.ViewScroll
+		};
+	}
+
+	// the join between two touching clips grabbed: a roll. the edge is the
+	// after clip's start, and the before clip's end goes wherever it goes
+	public void BeginRollDrag(UIEditPoint point)
+	{
+		if (edgeDrag is not null || dragClip is not null) return;
+
+		UITimeline.FlushScrollEase();
+		UITimeline.BeginViewScroll();
+
+		if (ClipsBounds is not null) ClipsBounds.GrowOnly = true;
+
+		TimeSpan edge = point.After.Clip.Start;
+
+		edgeDrag = new()
+		{
+			Handle = point,
+			Kind = EdgeDragKind.Roll,
+			Left = true,
+			Clips = [point.After],
+			Before = point.Before,
+			EdgeAtStart = edge,
+			Edge = edge,
+			ScrollAtStart = UITimeline.ViewScroll
+		};
+	}
+
+	void ProcessEdgeDrag(double delta)
+	{
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+		// belt and braces: if the gesture ended by any route that did not come
+		// back through FinishEdgeDrag or CancelEdgeDrag, stop driving it
+		if (!left.HasCapture(edgeDrag.Handle) || left.ClickState == MouseButtonClickState.Released)
+		{
+			CancelEdgeDrag(edgeDrag.Handle);
+			return;
+		}
+
+		// sideways only - an edge has no channel to move to
+		float push = UITimeline.GetEdgePush(InputManager.Singleton.Mouse.CurrentPosition).X;
+		if (push != 0f) UITimeline.ScrollView(new(push * (float)delta, 0f));
+
+		// re-apply every frame, not just on motion - the view can slide out
+		// from under a stationary cursor and the edge has to follow it
+		UpdateEdgeDrag(left);
+	}
+
+	void UpdateEdgeDrag(MouseButtonState left)
+	{
+		// the edge follows the cursor in content space, so scrolling since the
+		// drag began counts as extra travel
+		float travel = InputManager.Singleton.Mouse.GetDragDelta(left).X + (UITimeline.ViewScroll.X - edgeDrag.ScrollAtStart.X);
+		TimeSpan candidate = edgeDrag.EdgeAtStart + UITimeline.PixelsToTimeSpan(travel);
+
+		// magnet first, then what the clips themselves allow. a snap the clip
+		// cannot reach is not a snap, so the line goes if the clamp moved it
+		IEnumerable<Clip> moving = edgeDrag.Clips.Select(c => c.Clip);
+		if (edgeDrag.Before is not null) moving = moving.Append(edgeDrag.Before.Clip);
+
+		candidate = UITimeline.SnapPoint(candidate, moving, includePlayhead: true, out TimeSpan? lineAt);
+		TimeSpan edge = ClampEdge(candidate);
+
+		UITimeline.SnapLine = edge == candidate ? lineAt : null;
+
+		edgeDrag.Edge = edge;
+
+		// the other side of a roll follows the same edge
+		edgeDrag.Before?.PreviewSpan(edgeDrag.Before.Clip.Start, edge);
+
+		foreach (UIClip c in edgeDrag.Clips)
+		{
+			if (edgeDrag.Left) c.PreviewSpan(edge, c.Clip.End);
+			else c.PreviewSpan(c.Clip.Start, edge);
+
+			// a timeshift is a speed change in the making - show the speed it
+			// would land on, not the one it still has
+			if (edgeDrag.Kind == EdgeDragKind.Timeshift)
+			{
+				TimeSpan duration = edgeDrag.Left ? c.Clip.End - edge : edge - c.Clip.Start;
+				c.PreviewSpeed((double)c.Clip.ContentDuration.Ticks / duration.Ticks);
+			}
+		}
+	}
+
+	// the tightest range every clip in the drag can accept: nothing shorter
+	// than the minimum duration, nothing before zero, and no extend past the
+	// head of the content - a timeshift has no content limit, it stretches
+	TimeSpan ClampEdge(TimeSpan edge)
+	{
+		// the clip before a roll's join cannot be squeezed to nothing either
+		if (edgeDrag.Before is not null)
+		{
+			TimeSpan min = UITimeline.EarliestEndAfter(edgeDrag.Before.Clip.Start);
+			if (edge < min) edge = min;
+		}
+
+		foreach (UIClip c in edgeDrag.Clips)
+		{
+			Clip clip = c.Clip;
+
+			if (edgeDrag.Left)
+			{
+				TimeSpan min = TimeSpan.Zero;
+
+				// a roll pulls the after clip's head over its content just like an extend
+				if (edgeDrag.Kind is EdgeDragKind.Extend or EdgeDragKind.Roll)
+				{
+					TimeSpan limit = clip.HeadExtendLimit;
+					if (limit != TimeSpan.MaxValue && clip.Start - limit > min) min = clip.Start - limit;
+				}
+
+				TimeSpan max = UITimeline.LatestStartBefore(clip.End);
+
+				if (edge < min) edge = min;
+				if (edge > max) edge = max;
+			}
+			else
+			{
+				TimeSpan min = UITimeline.EarliestEndAfter(clip.Start);
+
+				if (edge < min) edge = min;
+			}
+		}
+
+		return edge;
+	}
+
+	// when the user lets go of the handle they were dragging
+	public void FinishEdgeDrag(UIDragHandle handle)
+	{
+		if (edgeDrag is null || edgeDrag.Handle != handle) return;
+
+		EdgeDrag drag = edgeDrag;
+		edgeDrag = null;
+		UITimeline.SnapLine = null;
+
+		// edit underlying clip data, as one history entry
+		string what = drag.Kind switch { EdgeDragKind.Timeshift => "Retime", EdgeDragKind.Roll => "Roll", _ => "Trim" };
+		using (Transaction.Scope change = UITimeline.History.Begin(drag.Clips.Count == 1 ? $"{what} clip" : $"{what} {drag.Clips.Count} clips"))
+		{
+			if (drag.Kind == EdgeDragKind.Roll) ApplyRoll(drag);
+			else foreach (UIClip c in drag.Clips) ApplyEdge(c.Clip, drag);
+
+			change.Commit();
+		}
+
+		// an extend overwrites whatever it grows over. clips that were eaten
+		// whole are off their channel now; ones that were split are replaced
+		// by fragments Refresh will pick up
+		foreach (UIClip c in UIClips.Where(c => c.Clip.Channel is null).ToList()) RemoveUIClip(c);
+
+		Refresh();
+		SettleAfterDrag();
+	}
+
+	// a roll is one extend: the side that grows overwrites the other by
+	// exactly the amount it moved, and the overwrite is what trims the other
+	// side - in-point and keyframes included, the same as any trim
+	static void ApplyRoll(EdgeDrag drag)
+	{
+		Clip before = drag.Before.Clip;
+		Clip after = drag.Clips[0].Clip;
+		TimeSpan delta = drag.Edge - after.Start;
+
+		if (delta > TimeSpan.Zero) before.ExtendEnd(delta);
+		else if (delta < TimeSpan.Zero) after.ExtendStart(-delta);
+	}
+
+	static void ApplyEdge(Clip clip, EdgeDrag drag)
+	{
+		TimeSpan delta = drag.Edge - (drag.Left ? clip.Start : clip.End);
+		if (delta == TimeSpan.Zero) return;
+
+		switch (drag.Kind, drag.Left)
+		{
+			case (EdgeDragKind.Extend, true):
+				if (delta < TimeSpan.Zero) clip.ExtendStart(-delta);
+				else clip.TrimStart(delta);
+				break;
+
+			case (EdgeDragKind.Extend, false):
+				if (delta > TimeSpan.Zero) clip.ExtendEnd(delta);
+				else clip.TrimEnd(-delta);
+				break;
+
+			case (EdgeDragKind.Timeshift, true):
+				clip.StretchStart(-delta);
+				break;
+
+			case (EdgeDragKind.Timeshift, false):
+				clip.StretchEnd(delta);
+				break;
+		}
+	}
+
+	// abandon an edge drag that will never get a release of its own. the
+	// drag only ever moved the gui, so Refresh puts every clip back
+	public void CancelEdgeDrag(UIDragHandle handle)
+	{
+		if (edgeDrag is null || edgeDrag.Handle != handle) return;
+
+		edgeDrag = null;
+		UITimeline.SnapLine = null;
+
+		Refresh();
+		SettleAfterDrag();
 	}
 
 	// how fast the view catches up to a pinned selection that is off the edge of

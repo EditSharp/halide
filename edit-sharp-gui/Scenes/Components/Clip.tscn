@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dkfp6hv7wgru7" path="res://Images/Icons/Graph.png" id="2_0to43"]
 [ext_resource type="FontFile" uid="uid://bupdexllo43at" path="res://Fonts/InterVariableNoOverlap.ttf" id="2_x0hv0"]
 [ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="3_x0hv0"]
+[ext_resource type="FontFile" uid="uid://ba7hs46686des" path="res://Fonts/JetBrainsMonoNoOverlap.ttf" id="4_fdvya"]
 [ext_resource type="Texture2D" uid="uid://p3ldo02ctj21" path="res://Images/Icons/Extend.png" id="5_b2xat"]
 [ext_resource type="Texture2D" uid="uid://cu8ts4x8xkhe2" path="res://Images/Icons/Time.png" id="6_3pjoj"]
 [ext_resource type="Script" uid="uid://cl65r35xlwikt" path="res://Scripts/UI/Components/UIDragHandle.cs" id="6_fdvya"]
@@ -66,7 +67,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "clipName", "thumbnail", "outline", "extends", "timeshifts")]
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "controlsBox", "clipName", "speed", "speedPercentage", "widthPriority", "thumbnail", "outline", "extends", "timeshifts", "startControls", "endControls")]
 oversampling_with_scale = 1
 offset_right = 300.0
 offset_bottom = 100.0
@@ -74,11 +75,17 @@ mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxEmpty_7dmxs")
 script = ExtResource("1_fin3e")
 content = NodePath("Content")
+controlsBox = NodePath("Content/VBoxContainer")
 clipName = NodePath("Content/VBoxContainer/HBoxContainer/Name")
+speed = NodePath("Content/VBoxContainer/HBoxContainer/Speed")
+speedPercentage = NodePath("Content/VBoxContainer/HBoxContainer/Speed/Percentage")
+widthPriority = [NodePath("Content/VBoxContainer/HBoxContainer/Name"), NodePath("Content/VBoxContainer/HBoxContainer/Speed"), NodePath("Content/VBoxContainer/HBoxContainer/Graph"), NodePath("Content/VBoxContainer/HBoxContainer/Options")]
 thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
 outline = NodePath("Content/Outline")
 extends = [NodePath("Clip Start Controls/Extend"), NodePath("Clip End Controls/Extend")]
 timeshifts = [NodePath("Clip Start Controls/Timeshift"), NodePath("Clip End Controls/Timeshift")]
+startControls = NodePath("Clip Start Controls")
+endControls = NodePath("Clip End Controls")
 contentStyleBox = SubResource("StyleBoxFlat_b2xat")
 videoColor = Color(0.101960786, 0.37254903, 0.7058824, 1)
 audioColor = Color(0.26666668, 0.56078434, 0.39215687, 1)
@@ -106,6 +113,7 @@ theme_override_constants/separation = 3
 custom_minimum_size = Vector2(0, 25)
 layout_mode = 2
 theme_override_constants/separation = 3
+alignment = 2
 
 [node name="Name" type="Label" parent="Content/VBoxContainer/HBoxContainer" unique_id=1198296580]
 layout_mode = 2
@@ -117,6 +125,27 @@ text = "Clip name"
 vertical_alignment = 1
 clip_text = true
 text_overrun_behavior = 3
+
+[node name="Speed" type="HBoxContainer" parent="Content/VBoxContainer/HBoxContainer" unique_id=544668007]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 0
+
+[node name="TextureRect" type="TextureRect" parent="Content/VBoxContainer/HBoxContainer/Speed" unique_id=1619173616]
+texture_filter = 4
+layout_mode = 2
+texture = ExtResource("6_3pjoj")
+expand_mode = 2
+
+[node name="Percentage" type="Label" parent="Content/VBoxContainer/HBoxContainer/Speed" unique_id=1972685189]
+layout_mode = 2
+size_flags_vertical = 1
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 1.675)
+theme_override_fonts/font = ExtResource("4_fdvya")
+text = "100%"
+vertical_alignment = 1
 
 [node name="Graph" type="Button" parent="Content/VBoxContainer/HBoxContainer" unique_id=2118694722]
 custom_minimum_size = Vector2(25, 0)
@@ -185,6 +214,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_7dmxs")
 visible = false
 layout_mode = 2
 size_flags_horizontal = 0
+size_flags_vertical = 4
 offset_transform_enabled = true
 offset_transform_position = Vector2(-30, 0)
 offset_transform_visual_only = false
@@ -215,6 +245,7 @@ Side = 3
 visible = false
 layout_mode = 2
 size_flags_horizontal = 8
+size_flags_vertical = 4
 offset_transform_enabled = true
 offset_transform_position = Vector2(30, 0)
 offset_transform_visual_only = false

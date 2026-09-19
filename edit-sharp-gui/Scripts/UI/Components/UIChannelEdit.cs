@@ -1,5 +1,6 @@
 using EditSharp.Components;
 using EditSharp.Components.Channels;
+using EditSharp.History;
 using Godot;
 using System;
 
@@ -18,7 +19,21 @@ public partial class UIChannelEdit : PanelContainer
 	{
 		channelName.Text = Channel.Name;
 
+		// the name is written back when typing ends, either way it ends
+		channelName.TextSubmitted += _ => CommitName();
+		channelName.FocusExited += CommitName;
+
 		Refresh();
+	}
+
+	void CommitName()
+	{
+		string name = channelName.Text;
+		if (name == Channel.Name) return;
+
+		using Transaction.Scope change = UITimeline.History.Begin("Rename channel");
+		Channel.Name = name;
+		change.Commit();
 	}
 
 	// reset chanel edit ui to what is actually stored in data
@@ -28,5 +43,9 @@ public partial class UIChannelEdit : PanelContainer
 			CustomMinimumSize.X,
 			(float)UITimeline.VerticalScale
 		);
+
+		// an undo can change the name under the field - but not while it is
+		// being typed in
+		if (!channelName.HasFocus()) channelName.Text = Channel.Name;
 	}
 }

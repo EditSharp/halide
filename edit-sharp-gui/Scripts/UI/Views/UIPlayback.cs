@@ -47,6 +47,50 @@ public partial class UIPlayback : Control
 		playback.EndReached += OnEndReached;
 	}
 
+	// where playback is, as far as anything watching from outside should know -
+	// a timeline playhead, say. raised on the main thread only: from _Process
+	// while playing, and from a scrub as it is requested. never from the
+	// decoder's own thread, so a listener can touch scene nodes directly
+	public event EventHandler<TimeSpan> PositionChanged;
+
+	public PlaybackState State => playback?.State ?? PlaybackState.Inactive;
+
+	TimeSpan? reportedPosition;
+
+	// set from the playback thread when the end is hit, picked up here so the
+	// last report is the very end rather than the last frame delivered
+	bool endReached;
+
+	public override void _Process(double delta)
+	{
+		if (playback is null) return;
+
+		if (playback.State == PlaybackState.Playing)
+		{
+			// the clock extrapolates, so it can read a hair past the end
+			TimeSpan position = playback.Position;
+			TimeSpan duration = playback.Timeline.Duration;
+
+			ReportPosition(position > duration ? duration : position);
+		}
+		else if (endReached)
+		{
+			endReached = false;
+			ReportPosition(playback.Timeline.Duration);
+		}
+	}
+
+	void ReportPosition(TimeSpan position)
+	{
+		if (reportedPosition == position) return;
+
+		reportedPosition = position;
+		PositionChanged?.Invoke(this, position);
+	}
+
+	// what the play button does, for whoever else wants to do it - a shortcut, say
+	public void TogglePlayback() => PlayButton_Pressed();
+
 	void PlayButton_Pressed()
     {
         if (playback.State == PlaybackState.Inactive)
@@ -54,8 +98,15 @@ public partial class UIPlayback : Control
 			//setup playback
 			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
 
-			//start playback
-			playback.Play(TimeSpan.Zero);
+			// start from wherever the position was left - a scrub while stopped
+			// moves it. at the very end there is nothing left to play, so go
+			// round to the start instead of playing one frame and stopping
+			TimeSpan start = playback.Position;
+			TimeSpan frame = TimeSpan.FromSeconds(1d / playback.RenderSettings.Framerate);
+
+			if (start + frame >= playback.Timeline.Duration) start = TimeSpan.Zero;
+
+			playback.Play(start);
 			SetPlayButtonText("Pause");
 		}
 		else
@@ -76,53 +127,98 @@ public partial class UIPlayback : Control
 		}
     }
 
+	// the slider is one way to scrub. anything outside - a timeline playhead -
+	// is another, through BeginScrub/ScrubTo/EndScrub below. same rules either
+	// way: pause for the duration, and pick playback back up where the scrub
+	// ends if it was running when the scrub began
 	bool dragging = false;
-	bool restartOnDragEnd = false;
+
 	void Slider_DragStarted()
 	{
-		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
-
-		if (playback.State == PlaybackState.Playing)
-		{
-			restartOnDragEnd = true;
-			Debug.WriteLine("scrub started mid-play, playback will be resumed on scrub end");
-		}
-		else
-		{
-			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
-		}
-
-		playback.Pause();
-		Debug.WriteLine("starting scrub, paused playback");
-		SetPlayButtonText("Play");
-
 		dragging = true;
+		BeginScrub();
 	}
 
 	void Slider_ValueChanged(double value)
 	{
 		if (!dragging) return;
 
-		try
-		{
-			playback.ScrubToAsync(playback.Timeline.Duration * value);
-		}
-		catch (Exception e)
-		{
-			Debug.WriteLine(e);
-		}
-		
+		TimeSpan position = playback.Timeline.Duration * value;
+
+		// the slider is playback's own control, so a scrub from it is
+		// playback moving - anything following along should hear about it.
+		// a scrub from outside is not reported back: the caller already knows
+		// where it asked for, and echoing the clamped value would fight it
+		ReportPosition(position);
+		ScrubTo(position);
 	}
 
 	void Slider_DragEnded(bool valueChanged)
 	{
 		dragging = false;
+		EndScrub();
+	}
 
-		if (restartOnDragEnd)
+	bool scrubbing = false;
+	bool restartOnScrubEnd = false;
+
+	public void BeginScrub()
+	{
+		if (playback is null || scrubbing) return;
+
+		scrubbing = true;
+
+		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+
+		if (playback.State == PlaybackState.Playing)
+		{
+			restartOnScrubEnd = true;
+			Debug.WriteLine("scrub started mid-play, playback will be resumed on scrub end");
+
+			playback.Pause();
+			SetPlayButtonText("Play");
+		}
+	}
+
+	// show the frame at position. clamped to the timeline, since playback
+	// refuses anything outside it and a playhead can be dragged past the end
+	public void ScrubTo(TimeSpan position)
+	{
+		if (playback is null) return;
+
+		TimeSpan duration = playback.Timeline.Duration;
+
+		if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+		if (position > duration) position = duration;
+
+		// so the next report after this scrub is the real change, not a repeat
+		reportedPosition = position;
+
+		// keep the slider in step unless the slider is what is doing the scrubbing
+		if (!dragging) SetSliderValue(duration > TimeSpan.Zero ? position / duration : 0d);
+
+		try
+		{
+			_ = playback.ScrubToAsync(position);
+		}
+		catch (Exception e)
+		{
+			Debug.WriteLine(e);
+		}
+	}
+
+	public void EndScrub()
+	{
+		if (!scrubbing) return;
+
+		scrubbing = false;
+
+		if (restartOnScrubEnd)
 		{
 			Debug.WriteLine("attempting to restart playback after scrub");
-			restartOnDragEnd = false;
+			restartOnScrubEnd = false;
 			playback.Play();
+			SetPlayButtonText("Pause");
 		}
 	}
 
@@ -162,6 +258,7 @@ public partial class UIPlayback : Control
 	void OnEndReached(object sender, EventArgs e)
 	{
 		Debug.WriteLine("end reached");
+		endReached = true;
 		SetPlayButtonText("Play");
 		SetTimestamp(playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate);
 	}
