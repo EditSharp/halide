@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://clyw03n8coc5c"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorRow.cs" id="1_row"]
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
+[ext_resource type="Script" uid="uid://b1a5qhtqfjstw" path="res://Scripts/UI/Inspector/InspectorRow.cs" id="1_row"]
+[ext_resource type="Texture2D" uid="uid://ccluhogtv2xb" path="res://Images/Icons/Reset.png" id="2_qjilx"]
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/KeyColumn.tscn" id="3_keys"]
 
-[node name="Row" type="HBoxContainer" node_paths=PackedStringArray("nameLabel", "reset", "editorSlot", "trailing", "keys")]
+[node name="Row" type="HBoxContainer" unique_id=473420168 node_paths=PackedStringArray("nameLabel", "reset", "editorSlot", "trailing", "keys")]
 offset_right = 420.0
 offset_bottom = 26.0
 theme_type_variation = &"InspectorRow"
@@ -15,20 +15,22 @@ editorSlot = NodePath("Editor")
 trailing = NodePath("Trailing")
 keys = NodePath("Keys")
 
-[node name="Name" type="Label" parent="."]
+[node name="Name" type="Label" parent="." unique_id=760464047]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 theme_type_variation = &"InspectorLabel"
+text = "Row"
 clip_text = true
 text_overrun_behavior = 3
 
-[node name="ResetSlot" type="Control" parent="."]
+[node name="ResetSlot" type="Control" parent="." unique_id=1356698847]
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 
-[node name="Reset" type="Button" parent="ResetSlot"]
+[node name="Reset" type="Button" parent="ResetSlot" unique_id=315734161]
 visible = false
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,18 +40,19 @@ grow_vertical = 2
 tooltip_text = "Reset to default"
 focus_mode = 0
 theme_type_variation = &"InspectorKeyButton"
-script = ExtResource("2_glyph")
-Shape = 3
+icon = ExtResource("2_qjilx")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Editor" type="MarginContainer" parent="."]
+[node name="Editor" type="MarginContainer" parent="." unique_id=1053977794]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.0
 theme_type_variation = &"InspectorEditorSlot"
 
-[node name="Trailing" type="HBoxContainer" parent="."]
+[node name="Trailing" type="HBoxContainer" parent="." unique_id=677352377]
 layout_mode = 2
 theme_type_variation = &"InspectorEditor"
 
-[node name="Keys" parent="." instance=ExtResource("3_keys")]
+[node name="Keys" parent="." unique_id=54305047 instance=ExtResource("3_keys")]
 layout_mode = 2
