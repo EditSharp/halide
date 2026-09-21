@@ -137,6 +137,18 @@ public partial class ThemePalette : Resource
 	[ExportGroup("Fonts")]
 	[Export] public Font UIFont { get => _uiFont; set => Define(ref _uiFont, value); }
 	[Export] public Font MonoFont { get => _monoFont; set => Define(ref _monoFont, value); }
+
+	// when the UI font is a variable font its weight axis makes every
+	// weight; a static font cannot, so a file per weight can stand in
+	Font _uiFontLight, _uiFontMedium, _uiFontBold;
+
+	[ExportSubgroup("Static Weights")]
+	[Export] public Font UIFontLight { get => _uiFontLight; set => Define(ref _uiFontLight, value); }
+	[Export] public Font UIFontMedium { get => _uiFontMedium; set => Define(ref _uiFontMedium, value); }
+	[Export] public Font UIFontBold { get => _uiFontBold; set => Define(ref _uiFontBold, value); }
+
+	// whether the UI font carries a weight axis to vary
+	public bool UIFontIsVariable => _uiFont is not null && _uiFont.GetSupportedVariationList().ContainsKey(TextServerManager.GetPrimaryInterface().NameToTag("wght"));
 	[Export] public int SmallFontSize { get => _smallFontSize; set => Define(ref _smallFontSize, value); }
 	[Export] public int FontSize { get => _fontSize; set => Define(ref _fontSize, value); }
 	[Export] public int TitleFontSize { get => _titleFontSize; set => Define(ref _titleFontSize, value); }
@@ -219,6 +231,17 @@ public partial class ThemePalette : Resource
 	{
 		if (family == ThemeFontFamily.Mono) return _monoFont;
 		if (family == ThemeFontFamily.None || _uiFont is null) return null;
+
+		// a static font per weight, when given, beats an axis the font may not have
+		Font given = weight switch
+		{
+			ThemeFontWeight.Light => _uiFontLight,
+			ThemeFontWeight.Medium => _uiFontMedium,
+			ThemeFontWeight.Bold => _uiFontBold,
+			_ => null
+		};
+		if (given is not null) return given;
+		if (weight == ThemeFontWeight.Regular || !UIFontIsVariable) return _uiFont;
 
 		int target = weight switch
 		{

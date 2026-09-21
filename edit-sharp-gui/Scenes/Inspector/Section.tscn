@@ -66,6 +66,7 @@ grow_vertical = 2
 theme_type_variation = &"HeaderAccent"
 
 [node name="Accent" type="ColorRect" parent="Header Section/Header/Header Accent" unique_id=2022253076]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

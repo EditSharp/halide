@@ -1,28 +1,15 @@
-[gd_resource type="Resource" script_class="ThemePalette" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="ThemePalette" format=3 uid="uid://cnq2prsb4vowi"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Theme/ThemePalette.cs" id="1_palette"]
-[ext_resource type="FontFile" uid="uid://bupdexllo43at" path="res://Fonts/InterVariableNoOverlap.ttf" id="1_470mv"]
-[ext_resource type="FontFile" uid="uid://ba7hs46686des" path="res://Fonts/JetBrainsMonoNoOverlap.ttf" id="2_mono"]
+[ext_resource type="FontFile" uid="uid://dtj7dnwrh6jfx" path="res://Fonts/JetBrainsMono-Regular.ttf" id="1_22qdm"]
+[ext_resource type="Script" uid="uid://b2kulxucqghvm" path="res://Scripts/UI/Theme/ThemePalette.cs" id="1_palette"]
+[ext_resource type="FontFile" uid="uid://c0m26h66ify6n" path="res://Fonts/Inter-Regular.ttf" id="2_33hwj"]
+[ext_resource type="FontFile" uid="uid://bnjo0df5yi27i" path="res://Fonts/Inter-Bold.ttf" id="3_5f42q"]
+[ext_resource type="FontFile" uid="uid://d0wu4mlr8fcou" path="res://Fonts/Inter-Light.ttf" id="4_b3oqw"]
+[ext_resource type="FontFile" uid="uid://vummfd7daq78" path="res://Fonts/Inter-Medium.ttf" id="5_go4jo"]
 
 [resource]
 script = ExtResource("1_palette")
-BackgroundColor1 = Color(0.16, 0.16, 0.16, 1)
-BackgroundColor2 = Color(0.104, 0.104, 0.104, 1)
-PopupBackgroundColor = Color(0.13, 0.13, 0.13, 1)
 AccentColor = Color(0.6901961, 0.21960784, 0.12941177, 1)
-FontColor1 = Color(0.92, 0.92, 0.92, 1)
-FontColor2 = Color(0.537, 0.537, 0.537, 1)
-TextFieldColor = Color(0.12, 0.12, 0.12, 1)
-ButtonColor = Color(0.22, 0.22, 0.22, 1)
-HyperlinkColor = Color(0.35, 0.6, 0.9, 1)
-StrokeColor = Color(0.078, 0.078, 0.078, 1)
-WhiteColor = Color(1, 1, 1, 1)
-BlackColor = Color(0, 0, 0, 1)
-VideoClipColor = Color(0.102, 0.373, 0.706, 1)
-AudioClipColor = Color(0.267, 0.561, 0.392, 1)
-TextClipColor = Color(0.55, 0.35, 0.7, 1)
-GeneratorVideoClipColor = Color(0.7, 0.45, 0.15, 1)
-GeneratorAudioClipColor = Color(0.2, 0.55, 0.55, 1)
 EffectNodeColor = Color(0.4, 0.6392157, 1, 1)
 MaskNodeColor = Color(0.9098039, 0.7529412, 0.3137255, 1)
 MathNodeColor = Color(0.6, 0.5882353, 0.9882353, 1)
@@ -30,5 +17,8 @@ KeyingNodeColor = Color(0.45490196, 0.74509805, 0.34901962, 1)
 SourceNodeColor = Color(0.9411765, 0.5019608, 0.5019608, 1)
 AudioNodeColor = Color(0.20392157, 0.7058824, 0.5803922, 1)
 CompositeNodeColor = Color(0.85490197, 0.54901963, 0.8, 1)
-UIFont = ExtResource("1_470mv")
-MonoFont = ExtResource("2_mono")
+UIFont = ExtResource("2_33hwj")
+MonoFont = ExtResource("1_22qdm")
+UIFontLight = ExtResource("4_b3oqw")
+UIFontMedium = ExtResource("5_go4jo")
+UIFontBold = ExtResource("3_5f42q")

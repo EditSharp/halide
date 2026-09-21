@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://bupdexllo43at"
-path="res://.godot/imported/InterVariableNoOverlap.ttf-281c251cb2d14f65672ff83e3d2e737b.fontdata"
+uid="uid://bnjo0df5yi27i"
+path="res://.godot/imported/Inter-Bold.ttf-0434027fb92f993784fabefa67c767ef.fontdata"
 
 [deps]
 
-source_file="res://Fonts/InterVariableNoOverlap.ttf"
-dest_files=["res://.godot/imported/InterVariableNoOverlap.ttf-281c251cb2d14f65672ff83e3d2e737b.fontdata"]
+source_file="res://Fonts/Inter-Bold.ttf"
+dest_files=["res://.godot/imported/Inter-Bold.ttf-0434027fb92f993784fabefa67c767ef.fontdata"]
 
 [params]
 

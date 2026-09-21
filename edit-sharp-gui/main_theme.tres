@@ -1,10 +1,11 @@
 [gd_resource type="Theme" script_class="EditSharpTheme" format=3 uid="uid://bu7vjupfj1of3"]
 
-[ext_resource type="FontFile" uid="uid://bupdexllo43at" path="res://Fonts/InterVariableNoOverlap.ttf" id="1_470mv"]
-[ext_resource type="FontFile" uid="uid://ba7hs46686des" path="res://Fonts/JetBrainsMonoNoOverlap.ttf" id="2_mono"]
+[ext_resource type="FontFile" uid="uid://dtj7dnwrh6jfx" path="res://Fonts/JetBrainsMono-Regular.ttf" id="4_rt4o7"]
+[ext_resource type="FontFile" uid="uid://vummfd7daq78" path="res://Fonts/Inter-Medium.ttf" id="7_7hjjl"]
+[ext_resource type="FontFile" uid="uid://c0m26h66ify6n" path="res://Fonts/Inter-Regular.ttf" id="7_sxwih"]
 [ext_resource type="Script" uid="uid://mpo5c2dkc1ut" path="res://Scripts/UI/Theme/ColorBinding.cs" id="color"]
 [ext_resource type="Script" uid="uid://i6m88dkt6dtk" path="res://Scripts/UI/Theme/FontBinding.cs" id="font"]
-[ext_resource type="Resource" path="res://Themes/Dark.tres" id="palette"]
+[ext_resource type="Resource" uid="uid://cnq2prsb4vowi" path="res://Themes/Dark.tres" id="palette"]
 [ext_resource type="Script" uid="uid://c7s6yy67elfm0" path="res://Scripts/UI/Theme/ThemeStyle.cs" id="style"]
 [ext_resource type="Script" uid="uid://3xudhujeaxtx" path="res://Scripts/UI/Theme/EditSharpTheme.cs" id="theme"]
 [ext_resource type="Script" uid="uid://dv1xorpp4he7j" path="res://Scripts/UI/Theme/ThemedStyleBox.cs" id="themed"]
@@ -1349,6 +1350,7 @@ Family = 2
 script = ExtResource("font")
 ThemeType = "InspectorSection"
 Family = 1
+Weight = 2
 Size = 3
 
 [sub_resource type="Resource" id="Resource_06nl8"]
@@ -1364,7 +1366,6 @@ Size = 1
 [sub_resource type="Resource" id="Resource_52mx2"]
 script = ExtResource("font")
 ThemeType = "LineEdit"
-Family = 2
 
 [sub_resource type="Resource" id="Resource_py0i1"]
 script = ExtResource("font")
@@ -1733,12 +1734,6 @@ script = ExtResource("themed")
 Style = SubResource("ThemeStyle_InspectorField_normal")
 State = 3
 
-[sub_resource type="FontVariation" id="FontVariation_7hjjl"]
-base_font = ExtResource("1_470mv")
-variation_opentype = {
-2003265652: 400
-}
-
 [sub_resource type="Resource" id="ThemeStyle_InspectorSection_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -1805,6 +1800,7 @@ content_margin_right = 4.0
 content_margin_bottom = 4.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_InspectorSection_normal")
+State = 1
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_InspectorSection_pressed"]
 resource_local_to_scene = false
@@ -2990,7 +2986,7 @@ script = ExtResource("themed")
 Style = SubResource("ThemeStyle_ViewBackground_panel")
 
 [resource]
-default_font = SubResource("FontVariation_7hjjl")
+default_font = ExtResource("7_sxwih")
 default_font_size = 14
 AngleKnob/colors/fill = Color(0.12, 0.12, 0.12, 1)
 AngleKnob/colors/pointer = Color(0.6901961, 0.21960784, 0.12941177, 1)
@@ -3080,7 +3076,7 @@ ClipShell/styles/panel = SubResource("Empty")
 ClipSpeed/base_type = &"Label"
 ClipSpeed/colors/font_color = Color(1, 1, 1, 1)
 ClipSpeed/font_sizes/font_size = 12
-ClipSpeed/fonts/font = ExtResource("2_mono")
+ClipSpeed/fonts/font = ExtResource("4_rt4o7")
 ClipThumbnail/base_type = &"Panel"
 ClipThumbnail/styles/panel = SubResource("ThemedStyleBox_ClipThumbnail_panel")
 ClipVBox/base_type = &"VBoxContainer"
@@ -3151,7 +3147,7 @@ InspectorEditorSlot/constants/margin_left = 0
 InspectorEditorSlot/constants/margin_right = 0
 InspectorEditorSlot/constants/margin_top = 0
 InspectorField/base_type = &"LineEdit"
-InspectorField/fonts/font = ExtResource("2_mono")
+InspectorField/fonts/font = ExtResource("4_rt4o7")
 InspectorField/styles/disabled = SubResource("ThemedStyleBox_InspectorField_disabled")
 InspectorField/styles/focus = SubResource("ThemedStyleBox_InspectorField_focus")
 InspectorField/styles/hover = SubResource("ThemedStyleBox_InspectorField_hover")
@@ -3205,7 +3201,7 @@ InspectorRows/base_type = &"VBoxContainer"
 InspectorRows/constants/separation = 2
 InspectorSection/base_type = &"Button"
 InspectorSection/font_sizes/font_size = 16
-InspectorSection/fonts/font = SubResource("FontVariation_7hjjl")
+InspectorSection/fonts/font = ExtResource("7_7hjjl")
 InspectorSection/styles/disabled = SubResource("ThemedStyleBox_InspectorSection_disabled")
 InspectorSection/styles/focus = SubResource("ThemedStyleBox_InspectorSection_focus")
 InspectorSection/styles/hover = SubResource("ThemedStyleBox_InspectorSection_hover")
@@ -3245,7 +3241,7 @@ LineEdit/colors/font_readonly_color = Color(0.537, 0.537, 0.537, 1)
 LineEdit/colors/font_selected_color = Color(0.92, 0.92, 0.92, 1)
 LineEdit/colors/font_uneditable_color = Color(0.537, 0.537, 0.537, 1)
 LineEdit/colors/selection_color = Color(0.6901961, 0.21960784, 0.12941177, 0.45)
-LineEdit/fonts/font = ExtResource("2_mono")
+LineEdit/fonts/font = ExtResource("7_sxwih")
 LineEdit/styles/disabled = SubResource("ThemedStyleBox_LineEdit_disabled")
 LineEdit/styles/focus = SubResource("ThemedStyleBox_LineEdit_focus")
 LineEdit/styles/hover = SubResource("ThemedStyleBox_LineEdit_hover")
@@ -3338,7 +3334,7 @@ SpinSlider/colors/font = Color(0.92, 0.92, 0.92, 1)
 SpinSlider/colors/mixed = Color(0.537, 0.537, 0.537, 1)
 SpinSlider/colors/range_fill = Color(0.6901961, 0.21960784, 0.12941177, 0.35)
 SpinSlider/colors/unit = Color(0.537, 0.537, 0.537, 1)
-SpinSlider/fonts/font = ExtResource("2_mono")
+SpinSlider/fonts/font = ExtResource("4_rt4o7")
 SpinSlider/styles/disabled = SubResource("ThemedStyleBox_SpinSlider_disabled")
 SpinSlider/styles/focus = SubResource("ThemedStyleBox_SpinSlider_focus")
 SpinSlider/styles/hover = SubResource("ThemedStyleBox_SpinSlider_hover")
@@ -3371,7 +3367,7 @@ Timeline/colors/snap_line = Color(1, 1, 1, 0.6)
 TimelineSpacer/base_type = &"Panel"
 TimelineSpacer/styles/panel = SubResource("ThemedStyleBox_TimelineSpacer_panel")
 Timestamp/base_type = &"Label"
-Timestamp/fonts/font = ExtResource("2_mono")
+Timestamp/fonts/font = ExtResource("4_rt4o7")
 ToolbarBackground/base_type = &"Panel"
 ToolbarBackground/styles/panel = SubResource("ThemedStyleBox_ToolbarBackground_panel")
 TooltipLabel/colors/font_color = Color(0.92, 0.92, 0.92, 1)

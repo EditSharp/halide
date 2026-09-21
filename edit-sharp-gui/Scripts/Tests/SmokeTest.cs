@@ -73,7 +73,22 @@ public partial class SmokeTest : Node
 			Check(theme.GetColor("video", "Clip") == palette.VideoClipColor, "the named clip colour follows its definition");
 			Check(theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X >= 6f, $"the scroll bar has a width: {theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X}");
 			Check(theme.ColorBindings.Count > 30 && theme.FontBindings.Count > 3, $"bindings present: {theme.ColorBindings.Count} colours, {theme.FontBindings.Count} fonts");
-			Check(theme.GetFont("font", "ClipName") is FontVariation, "a font binding serves a weighted variation");
+			FontBinding clipName = theme.FindFontBinding("ClipName");
+			Check(clipName is not null && theme.GetFont("font", "ClipName") == palette.ResolveFont(clipName.Family, clipName.Weight), $"a font binding serves the palette font for its weight ({clipName?.Weight})");
+
+			// the UI font is a variable font: its weight axis must change the glyphs
+			Font regular = palette.ResolveFont(ThemeFontFamily.UI, ThemeFontWeight.Regular);
+			Font bold = palette.ResolveFont(ThemeFontFamily.UI, ThemeFontWeight.Bold);
+			Font light = palette.ResolveFont(ThemeFontFamily.UI, ThemeFontWeight.Light);
+			var axes = palette.UIFont.GetSupportedVariationList();
+			GD.Print("UI font axes: " + string.Join(", ", axes.Keys.Select(k => $"{k}={axes[k]}")));
+			float wRegular = regular.GetStringSize("Weight check", HorizontalAlignment.Left, -1f, 16).X;
+			float wBold = bold.GetStringSize("Weight check", HorizontalAlignment.Left, -1f, 16).X;
+			float wLight = light.GetStringSize("Weight check", HorizontalAlignment.Left, -1f, 16).X;
+			if (palette.UIFontIsVariable || palette.UIFontBold is not null)
+				Check(wBold > wRegular && wLight < wRegular, $"weights change the UI font: light {wLight}, regular {wRegular}, bold {wBold}");
+			else
+				GD.PushWarning($"the UI font {palette.UIFont?.ResourcePath} has no weight axis and no static weights are set, so every weight looks the same");
 
 			ThemedStyleBox box = (ThemedStyleBox)theme.GetStylebox("normal", "Button");
 			Color wasButton = palette.ButtonColor;
