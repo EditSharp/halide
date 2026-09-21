@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c1i8nor2b260k" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
 [ext_resource type="Script" uid="uid://dm13tw25uql6d" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
-[ext_resource type="Texture2D" uid="uid://sujct8dt324u" path="res://Images/Icons/Down Arrow.png" id="3_byunj"]
+[ext_resource type="Texture2D" uid="uid://sujct8dt324u" path="res://Images/Icons/ArrowDown.png" id="3_byunj"]
 
 [node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
 offset_right = 420.0

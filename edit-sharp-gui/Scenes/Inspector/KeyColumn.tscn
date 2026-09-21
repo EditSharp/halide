@@ -1,12 +1,17 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cjcpgaftge5rv"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/KeyColumn.cs" id="1_keys"]
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
+[ext_resource type="Script" uid="uid://cq5u4byvgmnfu" path="res://Scripts/UI/Inspector/KeyColumn.cs" id="1_keys"]
+[ext_resource type="Texture2D" uid="uid://c12y7jmru7j4u" path="res://Images/Icons/ArrowBack.png" id="2_b6yod"]
+[ext_resource type="Script" uid="uid://dysowe54dg5rd" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
+[ext_resource type="Texture2D" uid="uid://ck2pulqb5qhsy" path="res://Images/Icons/Key.png" id="3_nfx4r"]
+[ext_resource type="Texture2D" uid="uid://dcud1bq023qlx" path="res://Images/Icons/KeyActive.png" id="4_ay76e"]
+[ext_resource type="Texture2D" uid="uid://bcamidfcxh24w" path="res://Images/Icons/KeyRemove.png" id="5_ay76e"]
+[ext_resource type="Texture2D" uid="uid://57f5tphwuqon" path="res://Images/Icons/ArrowForward.png" id="6_p80ug"]
 
-[node name="KeyColumn" type="HBoxContainer" node_paths=PackedStringArray("prev", "key", "next", "resetTrack")]
+[node name="KeyColumn" type="HBoxContainer" unique_id=821843578 node_paths=PackedStringArray("prev", "key", "next", "resetTrack")]
+custom_minimum_size = Vector2(78, 0)
 offset_right = 78.0
 offset_bottom = 18.0
-custom_minimum_size = Vector2(78, 0)
 theme_type_variation = &"TightHBox"
 alignment = 2
 script = ExtResource("1_keys")
@@ -15,38 +20,66 @@ key = NodePath("Key")
 next = NodePath("Next")
 resetTrack = NodePath("ResetTrack")
 
-[node name="Prev" type="Button" parent="."]
+[node name="Prev" type="Button" parent="." unique_id=844623738]
+visible = false
+texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 tooltip_text = "Previous keyframe"
 focus_mode = 0
 theme_type_variation = &"InspectorKeyButton"
+disabled = true
+icon = ExtResource("2_b6yod")
+icon_alignment = 1
+expand_icon = true
 script = ExtResource("2_glyph")
-Shape = 0
+IconImage = ExtResource("2_b6yod")
 
-[node name="Key" type="Button" parent="."]
+[node name="Key" type="Button" parent="." unique_id=1384199451]
+visible = false
+texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 tooltip_text = "Add or remove a keyframe here"
 focus_mode = 0
 theme_type_variation = &"InspectorKeyButton"
+icon = ExtResource("3_nfx4r")
+icon_alignment = 1
+expand_icon = true
 script = ExtResource("2_glyph")
 Shape = 1
+IconImage = ExtResource("3_nfx4r")
+IconActive = ExtResource("3_nfx4r")
+IconKeyed = ExtResource("4_ay76e")
 
-[node name="Next" type="Button" parent="."]
+[node name="Next" type="Button" parent="." unique_id=1264258869]
+visible = false
+texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 tooltip_text = "Next keyframe"
 focus_mode = 0
 theme_type_variation = &"InspectorKeyButton"
+disabled = true
+icon = ExtResource("6_p80ug")
+icon_alignment = 1
+expand_icon = true
 script = ExtResource("2_glyph")
 Shape = 2
+IconImage = ExtResource("6_p80ug")
 
-[node name="ResetTrack" type="Button" parent="."]
+[node name="ResetTrack" type="Button" parent="." unique_id=1230629271]
+visible = false
+texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 tooltip_text = "Remove every keyframe, keeping the value at the playhead"
 focus_mode = 0
 theme_type_variation = &"InspectorKeyButton"
+disabled = true
+icon = ExtResource("5_ay76e")
+icon_alignment = 1
+expand_icon = true
 script = ExtResource("2_glyph")
 Shape = 4
+IconImage = ExtResource("5_ay76e")

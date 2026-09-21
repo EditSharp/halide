@@ -16,7 +16,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 public partial class InspectorRow : HBoxContainer
 {
 	[Export] Label nameLabel;
-	[Export] Button reset;
+	[Export] InspectorGlyph reset;
 	[Export] Container editorSlot;
 	[Export] Container trailing;
 	[Export] KeyColumn keys;

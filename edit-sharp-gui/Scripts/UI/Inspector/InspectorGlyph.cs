@@ -39,7 +39,6 @@ public partial class InspectorGlyph : Button
 	{
 		baseVariation = ThemeTypeVariation;
 		IconAlignment = HorizontalAlignment.Center;
-		ExpandIcon = false;
 		Apply();
 	}
 
