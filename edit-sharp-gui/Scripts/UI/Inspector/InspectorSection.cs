@@ -25,7 +25,7 @@ public partial class InspectorSection : VBoxContainer
 
 	public string Title
 	{
-		get => header.Title;
+		get => header.Title ?? string.Empty;
 		set => header.Title = value;
 	}
 

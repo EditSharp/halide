@@ -12,16 +12,21 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 public partial class SectionHeader : Button
 {
 	[ExportGroup("Icons")]
-	[Export] public Texture2D IconExpanded { get; set; }
-	[Export] public Texture2D IconCollapsed { get; set; }
+	[Export] public TextureRect ExpandedIcon { get; set; }
+	[Export] public Label titleLabel { get; set; }
 
 	[ExportGroup("Parts")]
 	[Export] ColorRect accentStrip;
 
+	// the title label when the scene has one, else the button's own text
 	public string Title
 	{
-		get => Text;
-		set => Text = value;
+		get => (titleLabel is not null ? titleLabel.Text : Text) ?? string.Empty;
+		set
+		{
+			if (titleLabel is not null) titleLabel.Text = value;
+			else Text = value;
+		}
 	}
 
 	Color? accent;
@@ -41,7 +46,6 @@ public partial class SectionHeader : Button
 	public override void _Ready()
 	{
 		IconAlignment = HorizontalAlignment.Left;
-		ExpandIcon = false;
 		Accent = accent;
 		Apply();
 	}
@@ -50,8 +54,7 @@ public partial class SectionHeader : Button
 
 	void Apply()
 	{
-		Icon = ButtonPressed
-			? IconExpanded ?? IconRaster.Get(IconRaster.Shape.ArrowDown, 14)
-			: IconCollapsed ?? IconRaster.Get(IconRaster.Shape.ArrowRight, 14);
+		if (ExpandedIcon is null) return;
+		ExpandedIcon.RotationDegrees = ButtonPressed ? 0 : 270;
 	}
 }

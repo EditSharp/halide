@@ -2,18 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c1i8nor2b260k" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
 [ext_resource type="Script" uid="uid://dm13tw25uql6d" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
-
-[sub_resource type="Image" id="Image_u7too"]
-data = {
-"data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 143, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 15, 255, 255, 255, 239, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 239, 255, 255, 255, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 95, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 191, 255, 255, 255, 191, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 47, 255, 255, 255, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-"format": "RGBA8",
-"height": 14,
-"mipmaps": false,
-"width": 14
-}
-
-[sub_resource type="ImageTexture" id="ImageTexture_byunj"]
-image = SubResource("Image_u7too")
+[ext_resource type="Texture2D" uid="uid://sujct8dt324u" path="res://Images/Icons/Down Arrow.png" id="3_byunj"]
 
 [node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
 offset_right = 420.0
@@ -30,7 +19,7 @@ toggle = NodePath("Header Section/Header/HeaderControls/Switch")
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 
-[node name="Header" type="Button" parent="Header Section" unique_id=64130244 node_paths=PackedStringArray("accentStrip")]
+[node name="Header" type="Button" parent="Header Section" unique_id=64130244 node_paths=PackedStringArray("ExpandedIcon", "titleLabel", "accentStrip")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -43,12 +32,12 @@ focus_mode = 0
 theme_type_variation = &"InspectorSection"
 toggle_mode = true
 button_pressed = true
-text = "Section"
-icon = SubResource("ImageTexture_byunj")
 alignment = 0
 text_overrun_behavior = 3
 clip_text = true
 script = ExtResource("2_header")
+ExpandedIcon = NodePath("Icon")
+titleLabel = NodePath("Title")
 accentStrip = NodePath("Header Accent/Accent")
 
 [node name="Header Accent" type="Panel" parent="Header Section/Header" unique_id=1084868771]
@@ -63,6 +52,7 @@ offset_top = -9.0
 offset_right = 24.0
 offset_bottom = 9.0
 grow_vertical = 2
+mouse_filter = 1
 theme_type_variation = &"HeaderAccent"
 
 [node name="Accent" type="ColorRect" parent="Header Section/Header/Header Accent" unique_id=2022253076]
@@ -74,6 +64,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="Header Section/Header" unique_id=740240135]
+texture_filter = 4
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 27.0
+offset_top = -4.0
+offset_right = 37.0
+offset_bottom = 5.0
+grow_vertical = 2
+rotation = 4.712389
+pivot_offset = Vector2(5, 4.5)
+texture = ExtResource("3_byunj")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="Header Section/Header" unique_id=426413587]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 53.0
+offset_top = -9.0
+offset_right = 103.0
+offset_bottom = 9.0
+grow_vertical = 2
+theme_type_variation = &"HeaderLabel"
+text = "Section"
 
 [node name="HeaderControls" type="HBoxContainer" parent="Header Section/Header" unique_id=1783387064]
 layout_mode = 1
