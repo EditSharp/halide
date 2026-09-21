@@ -1,53 +1,102 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://djmkk4fn8x5ip"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
+[ext_resource type="Script" uid="uid://c1i8nor2b260k" path="res://Scripts/UI/Inspector/InspectorSection.cs" id="1_section"]
+[ext_resource type="Script" uid="uid://dm13tw25uql6d" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
 
-[node name="Section" type="VBoxContainer" node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
+[sub_resource type="Image" id="Image_u7too"]
+data = {
+"data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 143, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 15, 255, 255, 255, 239, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 239, 255, 255, 255, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 95, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 191, 255, 255, 255, 191, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 47, 255, 255, 255, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+"format": "RGBA8",
+"height": 14,
+"mipmaps": false,
+"width": 14
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_byunj"]
+image = SubResource("Image_u7too")
+
+[node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
+offset_right = 420.0
+offset_bottom = 160.0
 theme_type_variation = &"TightVBox"
 script = ExtResource("1_section")
-header = NodePath("Header")
-headerControls = NodePath("Header/HeaderControls")
+header = NodePath("Header Section/Header")
+headerControls = NodePath("Header Section/Header/HeaderControls")
 indent = NodePath("Indent")
 body = NodePath("Indent/Body")
-toggle = NodePath("Header/HeaderControls/Switch")
+toggle = NodePath("Header Section/Header/HeaderControls/Switch")
 
-[node name="Header" type="Button" parent="."]
+[node name="Header Section" type="Control" parent="." unique_id=39646476]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+
+[node name="Header" type="Button" parent="Header Section" unique_id=64130244 node_paths=PackedStringArray("accentStrip")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_right = -3.0
+grow_horizontal = 2
+grow_vertical = 2
 focus_mode = 0
 theme_type_variation = &"InspectorSection"
 toggle_mode = true
 button_pressed = true
 text = "Section"
+icon = SubResource("ImageTexture_byunj")
 alignment = 0
-clip_text = true
 text_overrun_behavior = 3
+clip_text = true
 script = ExtResource("2_header")
+accentStrip = NodePath("Header Accent/Accent")
 
-[node name="HeaderControls" type="HBoxContainer" parent="Header"]
+[node name="Header Accent" type="Panel" parent="Header Section/Header" unique_id=1084868771]
+clip_children = 1
+clip_contents = true
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 6.0
+offset_top = -9.0
+offset_right = 24.0
+offset_bottom = 9.0
+grow_vertical = 2
+theme_type_variation = &"HeaderAccent"
+
+[node name="Accent" type="ColorRect" parent="Header Section/Header/Header Accent" unique_id=2022253076]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HeaderControls" type="HBoxContainer" parent="Header Section/Header" unique_id=1783387064]
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -200.0
-offset_right = -4.0
+offset_right = -6.0
 grow_horizontal = 0
 grow_vertical = 2
-mouse_filter = 1
 theme_type_variation = &"InspectorEditor"
 alignment = 2
 
-[node name="Switch" type="CheckButton" parent="Header/HeaderControls"]
+[node name="Switch" type="CheckButton" parent="Header Section/Header/HeaderControls" unique_id=1303976148]
 visible = false
 layout_mode = 2
 tooltip_text = "Enabled"
 focus_mode = 0
 
-[node name="Indent" type="MarginContainer" parent="."]
+[node name="Indent" type="MarginContainer" parent="." unique_id=1525351770]
 layout_mode = 2
 theme_type_variation = &"InspectorNoIndent"
 
-[node name="Body" type="VBoxContainer" parent="Indent"]
+[node name="Body" type="VBoxContainer" parent="Indent" unique_id=1179121604]
 layout_mode = 2
 theme_type_variation = &"InspectorRows"

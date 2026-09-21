@@ -2,22 +2,26 @@ using Godot;
 
 namespace EditSharpGUI.Scripts.UI.Theming;
 
-// a theme type's font and font size, by role: the UI or mono font, and
-// the small, normal or title size. None leaves that item as it is
+// a theme type's font and size: the family (UI or mono), the weight of the
+// UI font, and the size role. godot reads font items directly, so the
+// theme writes them from this when the palette or the binding changes.
+// None for the family leaves the font item alone, None for the size the
+// size item
 [Tool, GlobalClass]
 public partial class FontBinding : Resource
 {
 	[Export] public string ThemeType { get; set; } = "";
-	[Export] public ThemeFontRole Font { get; set; }
+	[Export] public ThemeFontFamily Family { get; set; }
+	[Export] public ThemeFontWeight Weight { get; set; } = ThemeFontWeight.Regular;
 	[Export] public ThemeFontSizeRole Size { get; set; }
 
-	public bool Apply(EditSharpTheme theme)
+	public bool Apply(Theme theme, ThemePalette palette)
 	{
-		if (string.IsNullOrEmpty(ThemeType)) return false;
+		if (palette is null || string.IsNullOrEmpty(ThemeType)) return false;
 
 		bool changed = false;
 
-		if (Font != ThemeFontRole.None && theme.ResolveFont(Font) is Godot.Font font)
+		if (Family != ThemeFontFamily.None && palette.ResolveFont(Family, Weight) is Font font)
 		{
 			if (!theme.HasFont("font", ThemeType) || theme.GetFont("font", ThemeType) != font)
 			{
@@ -28,7 +32,7 @@ public partial class FontBinding : Resource
 
 		if (Size != ThemeFontSizeRole.None)
 		{
-			int size = theme.ResolveFontSize(Size);
+			int size = palette.ResolveFontSize(Size);
 
 			if (!theme.HasFontSize("font_size", ThemeType) || theme.GetFontSize("font_size", ThemeType) != size)
 			{

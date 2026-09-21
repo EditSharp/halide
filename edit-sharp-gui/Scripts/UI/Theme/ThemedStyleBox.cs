@@ -2,94 +2,140 @@ using Godot;
 
 namespace EditSharpGUI.Scripts.UI.Theming;
 
-// a flat stylebox whose colours come from the theme's definitions. its
-// shape - corners, borders, margins, shadow size - is edited in godot's
-// theme editor or the theme tool like any stylebox and is never touched by
-// the theme; only the background, border and shadow colours are written,
-// from whichever definitions are picked here, whenever the definitions
-// change. a pick of None leaves that colour alone
+// a stylebox that draws a ThemeStyle in one state, resolving its colours
+// through the style's palette when it draws. nothing is written into the
+// theme: a type's six state items are six of these over the same style,
+// and a change to the style or the palette shows the next time they draw.
+// the drawing itself is done by a private flat stylebox kept in step with
+// the style, so it looks exactly as a StyleBoxFlat would
 [Tool, GlobalClass]
-public partial class ThemedStyleBox : StyleBoxFlat
+public partial class ThemedStyleBox : StyleBox
 {
-	ThemeDefinition _background = ThemeDefinition.BackgroundColor1;
-	ThemeShade _backgroundShade;
-	float _backgroundAlpha = 1f;
-	ThemeDefinition _border = ThemeDefinition.None;
-	ThemeShade _borderShade;
-	float _borderAlpha = 1f;
-	ThemeDefinition _shadow = ThemeDefinition.None;
-	ThemeShade _shadowShade;
-	float _shadowAlpha = 1f;
+	ThemeStyle _style;
+	StyleState _state;
 
-	[ExportGroup("Definitions")]
-	[Export] public ThemeDefinition Background { get => _background; set { _background = value; EmitChanged(); } }
-	[Export] public ThemeShade BackgroundShade { get => _backgroundShade; set { _backgroundShade = value; EmitChanged(); } }
-	[Export(PropertyHint.Range, "0,1,0.01")] public float BackgroundAlpha { get => _backgroundAlpha; set { _backgroundAlpha = value; EmitChanged(); } }
-	[Export] public ThemeDefinition Border { get => _border; set { _border = value; EmitChanged(); } }
-	[Export] public ThemeShade BorderShade { get => _borderShade; set { _borderShade = value; EmitChanged(); } }
-	[Export(PropertyHint.Range, "0,1,0.01")] public float BorderAlpha { get => _borderAlpha; set { _borderAlpha = value; EmitChanged(); } }
-	[Export] public ThemeDefinition Shadow { get => _shadow; set { _shadow = value; EmitChanged(); } }
-	[Export] public ThemeShade ShadowShade { get => _shadowShade; set { _shadowShade = value; EmitChanged(); } }
-	[Export(PropertyHint.Range, "0,1,0.01")] public float ShadowAlpha { get => _shadowAlpha; set { _shadowAlpha = value; EmitChanged(); } }
-
-	// writes the colours the definitions resolve to. returns whether
-	// anything changed, so a theme re-applying itself can stop when
-	// nothing does
-	public bool Apply(EditSharpTheme theme)
+	[Export] public ThemeStyle Style
 	{
-		bool changed = false;
-
-		if (_background != ThemeDefinition.None)
+		get => _style;
+		set
 		{
-			Color background = theme.Resolve(_background, _backgroundShade, _backgroundAlpha);
-			if (BgColor != background) { BgColor = background; changed = true; }
+			if (_style == value) return;
+			Callable on = new(this, MethodName.OnStyleChanged);
+			if (_style is not null && _style.IsConnected(Resource.SignalName.Changed, on)) _style.Disconnect(Resource.SignalName.Changed, on);
+			_style = value;
+			if (_style is not null && !_style.IsConnected(Resource.SignalName.Changed, on)) _style.Connect(Resource.SignalName.Changed, on);
+			synced = -1;
+			QueueEmit();
 		}
-
-		if (_border != ThemeDefinition.None)
-		{
-			Color border = theme.Resolve(_border, _borderShade, _borderAlpha);
-			if (BorderColor != border) { BorderColor = border; changed = true; }
-		}
-
-		if (_shadow != ThemeDefinition.None)
-		{
-			Color shadow = theme.Resolve(_shadow, _shadowShade, _shadowAlpha);
-			if (ShadowColor != shadow) { ShadowColor = shadow; changed = true; }
-		}
-
-		return changed;
 	}
 
-	// takes the shape of another flat stylebox - a plain one being made
-	// themed keeps everything it had, colours included, until picks are made
-	public void CopyShapeFrom(StyleBoxFlat other)
+	[Export] public StyleState State
 	{
-		BgColor = other.BgColor;
-		BorderColor = other.BorderColor;
-		ShadowColor = other.ShadowColor;
-		DrawCenter = other.DrawCenter;
-		BorderBlend = other.BorderBlend;
-		CornerRadiusTopLeft = other.CornerRadiusTopLeft;
-		CornerRadiusTopRight = other.CornerRadiusTopRight;
-		CornerRadiusBottomRight = other.CornerRadiusBottomRight;
-		CornerRadiusBottomLeft = other.CornerRadiusBottomLeft;
-		CornerDetail = other.CornerDetail;
-		BorderWidthLeft = other.BorderWidthLeft;
-		BorderWidthTop = other.BorderWidthTop;
-		BorderWidthRight = other.BorderWidthRight;
-		BorderWidthBottom = other.BorderWidthBottom;
-		ContentMarginLeft = other.ContentMarginLeft;
-		ContentMarginTop = other.ContentMarginTop;
-		ContentMarginRight = other.ContentMarginRight;
-		ContentMarginBottom = other.ContentMarginBottom;
-		ExpandMarginLeft = other.ExpandMarginLeft;
-		ExpandMarginTop = other.ExpandMarginTop;
-		ExpandMarginRight = other.ExpandMarginRight;
-		ExpandMarginBottom = other.ExpandMarginBottom;
-		ShadowSize = other.ShadowSize;
-		ShadowOffset = other.ShadowOffset;
-		Skew = other.Skew;
-		AntiAliasing = other.AntiAliasing;
-		AntiAliasingSize = other.AntiAliasingSize;
+		get => _state;
+		set
+		{
+			if (_state == value) return;
+			_state = value;
+			synced = -1;
+			QueueEmit();
+		}
 	}
+
+	readonly StyleBoxFlat flat = new();
+	int synced = -1;
+	int syncedPalette = -1;
+
+	void OnStyleChanged()
+	{
+		synced = -1;
+		QueueEmit();
+	}
+
+	// the change goes to the theme at the end of the frame, by object and
+	// method name: a setter runs while a file loads and while the editor
+	// restores every script instance after a build, when the theme listening
+	// may not exist yet
+	bool emitQueued;
+
+	void QueueEmit()
+	{
+		if (emitQueued) return;
+		emitQueued = true;
+		new Callable(this, MethodName.EmitPending).CallDeferred();
+	}
+
+	void EmitPending()
+	{
+		emitQueued = false;
+		EmitChanged();
+	}
+
+	// brings the flat box up to the style and palette, when either moved
+	void Sync()
+	{
+		if (_style is null) return;
+
+		int palette = _style.Palette?.Version ?? -1;
+		if (synced == _style.Version && syncedPalette == palette) return;
+
+		_style.Resolve(flat, _state);
+
+		// content margins are read off this box by every control, not off
+		// what it draws with, so they are mirrored here
+		if (ContentMarginLeft != _style.ContentMarginLeft) ContentMarginLeft = _style.ContentMarginLeft;
+		if (ContentMarginTop != _style.ContentMarginTop) ContentMarginTop = _style.ContentMarginTop;
+		if (ContentMarginRight != _style.ContentMarginRight) ContentMarginRight = _style.ContentMarginRight;
+		if (ContentMarginBottom != _style.ContentMarginBottom) ContentMarginBottom = _style.ContentMarginBottom;
+
+		synced = _style.Version;
+		syncedPalette = palette;
+	}
+
+	public override void _Draw(Rid toCanvasItem, Rect2 rect)
+	{
+		if (_style is null) return;
+		Sync();
+		flat.Draw(toCanvasItem, rect);
+	}
+
+	public override Vector2 _GetMinimumSize()
+	{
+		if (_style is null) return Vector2.Zero;
+		Sync();
+		return flat.GetMinimumSize();
+	}
+
+	public override Rect2 _GetDrawRect(Rect2 rect)
+	{
+		if (_style is null) return rect;
+		Sync();
+		Rect2 drawn = rect.GrowIndividual(flat.ExpandMarginLeft, flat.ExpandMarginTop, flat.ExpandMarginRight, flat.ExpandMarginBottom);
+		if (flat.ShadowSize > 0) drawn = drawn.Merge(new Rect2(drawn.Position + flat.ShadowOffset, drawn.Size).Grow(flat.ShadowSize));
+		return drawn;
+	}
+
+	public override bool _TestMask(Vector2 point, Rect2 rect)
+	{
+		if (_style is null) return rect.HasPoint(point);
+		Sync();
+		return flat.TestMask(point, rect);
+	}
+
+	// ---- for code that needs a plain box ----
+
+	// the colour this box draws its background with right now
+	public Color ResolvedBackground
+	{
+		get { Sync(); return flat.BgColor; }
+	}
+
+	// a flat copy of what this box draws, for code that wants to tint one
+	// instance - a clip in its own colour
+	public StyleBoxFlat MakeFlat()
+	{
+		Sync();
+		return (StyleBoxFlat)flat.Duplicate();
+	}
+
+	public int MinCornerRadius => _style?.MinCornerRadius ?? 0;
 }

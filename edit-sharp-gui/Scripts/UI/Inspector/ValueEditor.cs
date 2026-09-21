@@ -13,6 +13,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // each kind is a scene under Scenes/Inspector/Editors, chosen by the
 // inspector for the property's editor, and its script wires the scene's
 // controls in Build
+[Tool]
 public abstract partial class ValueEditor : HBoxContainer
 {
 	public event Action EditBegan;

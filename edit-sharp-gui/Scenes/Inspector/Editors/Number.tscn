@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
 
 [node name="NumberEditor" type="HBoxContainer" node_paths=PackedStringArray("spin")]
+offset_right = 260.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 theme_type_variation = &"InspectorEditor"
 script = ExtResource("1_editor")

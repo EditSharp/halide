@@ -3,6 +3,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/PathEditor.cs" id="1_editor"]
 
 [node name="PathEditor" type="HBoxContainer" node_paths=PackedStringArray("entry", "browse", "dialog")]
+offset_right = 260.0
+offset_bottom = 24.0
 size_flags_horizontal = 3
 theme_type_variation = &"InspectorEditor"
 script = ExtResource("1_editor")

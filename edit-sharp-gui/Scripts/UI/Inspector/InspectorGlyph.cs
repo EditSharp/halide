@@ -1,3 +1,4 @@
+using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 
 namespace EditSharpGUI.Scripts.UI.Inspecting;
@@ -5,25 +6,20 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // a small icon button: keyframe arrows and diamond, the reset arrow, the
 // chain link. the icons are images assigned in the scene - one for the
 // plain look, and for the diamond and the link the looks they take when
-// something is keyed or linked. the button's theme variation switches to
-// the active one for those states, so their tint is the theme's. until an
-// icon is assigned the shape is drawn by hand, so nothing goes blank
+// something is keyed or linked - shown through the button's own icon. a
+// glyph given no image gets one rasterised once and shared. the button's
+// theme variation switches to the active one for active states, so their
+// tint is the theme's
+[Tool]
 public partial class InspectorGlyph : Button
 {
 	public enum Kind { Prev, Diamond, Next, Reset, ResetTrack, Link }
 
 	[Export] public Kind Shape { get; set; }
 
-	// the image for the plain state: an arrow, the reset, the hollow
-	// diamond of an unkeyed property, the open link
 	[ExportGroup("Icons")]
 	[Export] public Texture2D IconImage { get; set; }
-
-	// the diamond when the property is animated but not keyed here; the
-	// link when it is on
 	[Export] public Texture2D IconActive { get; set; }
-
-	// the diamond when there is a keyframe under the playhead
 	[Export] public Texture2D IconKeyed { get; set; }
 
 	// the variation worn while active - a keyed diamond, a link that is on
@@ -63,7 +59,7 @@ public partial class InspectorGlyph : Button
 		string variation = Active && !string.IsNullOrEmpty(ActiveVariation) ? ActiveVariation : baseVariation;
 		if (ThemeTypeVariation != variation) ThemeTypeVariation = variation;
 
-		Icon = Shape switch
+		Texture2D icon = Shape switch
 		{
 			Kind.Diamond => state switch
 			{
@@ -75,68 +71,17 @@ public partial class InspectorGlyph : Button
 			_ => IconImage
 		};
 
-		QueueRedraw();
+		Icon = icon ?? Fallback();
 	}
 
-	// ---- the fallback, for a glyph with no icon yet ----
-
-	public override void _Draw()
+	Texture2D Fallback() => IconRaster.Get(Shape switch
 	{
-		if (Icon is not null) return;
-
-		Vector2 c = Size / 2f;
-		Color accent = GetThemeColor("key", "Inspector");
-		Color dim = GetThemeColor("key_dim", "Inspector");
-		Color arrow = Disabled ? dim : GetThemeColor("arrow", "Inspector");
-		Color reset = Disabled ? dim : GetThemeColor("reset", "Inspector");
-
-		switch (Shape)
-		{
-			case Kind.Diamond:
-			{
-				const float r = 5f;
-				Vector2[] points = [c + new Vector2(0f, -r), c + new Vector2(r, 0f), c + new Vector2(0f, r), c + new Vector2(-r, 0f)];
-
-				if (state == KeyState.Keyed) DrawColoredPolygon(points, accent);
-				else DrawPolyline([.. points, points[0]], state == KeyState.Animated ? accent : dim, 1.5f, true);
-
-				break;
-			}
-
-			case Kind.Prev:
-				DrawColoredPolygon([c + new Vector2(2.5f, -4f), c + new Vector2(2.5f, 4f), c + new Vector2(-3f, 0f)], arrow);
-				break;
-
-			case Kind.Next:
-				DrawColoredPolygon([c + new Vector2(-2.5f, -4f), c + new Vector2(-2.5f, 4f), c + new Vector2(3f, 0f)], arrow);
-				break;
-
-			case Kind.Reset:
-			{
-				const float r = 4.5f;
-				DrawArc(c, r, Mathf.DegToRad(-60f), Mathf.DegToRad(210f), 20, reset, 1.5f, true);
-				Vector2 tip = c + new Vector2(Mathf.Cos(Mathf.DegToRad(-60f)), Mathf.Sin(Mathf.DegToRad(-60f))) * r;
-				DrawColoredPolygon([tip + new Vector2(-3f, -2.5f), tip + new Vector2(2f, -2f), tip + new Vector2(0.5f, 3f)], reset);
-				break;
-			}
-
-			case Kind.ResetTrack:
-			{
-				const float r = 5f;
-				Vector2[] points = [c + new Vector2(0f, -r), c + new Vector2(r, 0f), c + new Vector2(0f, r), c + new Vector2(-r, 0f)];
-				DrawPolyline([.. points, points[0]], reset, 1.5f, true);
-				DrawLine(c + new Vector2(-5f, 5f), c + new Vector2(5f, -5f), reset, 1.5f, true);
-				break;
-			}
-
-			case Kind.Link:
-			{
-				Color colour = ButtonPressed ? accent : dim;
-				float gap = ButtonPressed ? 2.5f : 4f;
-				DrawArc(c + new Vector2(-gap, 0f), 3.5f, 0f, Mathf.Tau, 16, colour, 1.5f, true);
-				DrawArc(c + new Vector2(gap, 0f), 3.5f, 0f, Mathf.Tau, 16, colour, 1.5f, true);
-				break;
-			}
-		}
-	}
+		Kind.Diamond => state == KeyState.Keyed ? IconRaster.Shape.Diamond : IconRaster.Shape.DiamondOutline,
+		Kind.Prev => IconRaster.Shape.ArrowLeft,
+		Kind.Next => IconRaster.Shape.ArrowRight,
+		Kind.Reset => IconRaster.Shape.Reset,
+		Kind.ResetTrack => IconRaster.Shape.ResetTrack,
+		Kind.Link => ButtonPressed ? IconRaster.Shape.LinkOn : IconRaster.Shape.LinkOff,
+		_ => IconRaster.Shape.Dot
+	});
 }

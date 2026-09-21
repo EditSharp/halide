@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- one line of text, committed on enter or on leaving (Text.tscn) ----
 
+[Tool]
 public partial class TextEditor : ValueEditor
 {
 	[Export] protected LineEdit entry;

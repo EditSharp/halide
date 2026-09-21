@@ -7,6 +7,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // a swatch that opens a picker, with the hex beside it (Color.tscn). the
 // picker's changes are live - the value moves while the user drags around
 // the wheel - and settle when the popup closes
+[Tool]
 public partial class ColorEditor : ValueEditor
 {
 	[Export] Button swatch;

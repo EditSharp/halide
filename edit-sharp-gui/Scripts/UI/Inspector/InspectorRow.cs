@@ -12,6 +12,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // an edit writes to every object - to a keyframe at the playhead on the
 // ones that are animated, to the static value on the rest - inside one
 // history entry. Row.tscn lays it out
+[Tool]
 public partial class InspectorRow : HBoxContainer
 {
 	[Export] Label nameLabel;
@@ -184,8 +185,14 @@ public partial class InspectorRow : HBoxContainer
 
 	Transaction.Scope scope;
 
+	// what each binding held when the edit began, and the last value
+	// written, so the commit can say what it replaced
+	object[] before;
+	object last;
+
 	void BeginEdit()
 	{
+		if (scope is null) before = Snapshot();
 		scope ??= inspector.BeginChange($"Set {Label}");
 	}
 
@@ -196,7 +203,12 @@ public partial class InspectorRow : HBoxContainer
 		scope.Commit();
 		scope.Dispose();
 		scope = null;
+
+		if (before is not null) inspector.NotifyCommitted(new InspectorEditArgs(Label, Bindings, before, last));
+		before = null;
 	}
+
+	object[] Snapshot() => [.. Bindings.Select(b => b.Get())];
 
 	// write a value as if the user had entered it: to every object, as a
 	// keyframe where the property is keyed, in one history entry
@@ -207,7 +219,8 @@ public partial class InspectorRow : HBoxContainer
 		if (Spec.ReadOnly) return;
 
 		bool own = scope is null;
-		if (own) scope = inspector.BeginChange(description ?? $"Set {Label}");
+		if (own) { before = Snapshot(); scope = inspector.BeginChange(description ?? $"Set {Label}"); }
+		last = value;
 
 		try
 		{

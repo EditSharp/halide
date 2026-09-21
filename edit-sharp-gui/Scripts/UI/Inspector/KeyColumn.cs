@@ -19,6 +19,7 @@ public enum KeyState
 // row can be animated: arrows to the neighbouring keyframes, a diamond that
 // adds or removes one at the playhead, and a reset that drops the track.
 // laid out in KeyColumn.tscn
+[Tool]
 public partial class KeyColumn : HBoxContainer
 {
 	public event Action PrevPressed;

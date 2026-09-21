@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- a number, in a spin slider (Number.tscn) ----
 
+[Tool]
 public partial class NumberEditor : ValueEditor
 {
 	[Export] SpinSlider spin;
@@ -17,7 +18,7 @@ public partial class NumberEditor : ValueEditor
 		spin.Min = Spec.Min;
 		spin.Max = Spec.Max;
 		spin.Step = Spec.Step ?? (Spec.ValueType == typeof(int) || Spec.ValueType == typeof(long) ? 1d : 0.01d);
-		spin.Scale = percent ? 100d : 1d;
+		spin.Multiplier = percent ? 100d : 1d;
 		spin.Unit = percent ? "%" : Spec.Unit;
 		spin.Decimals = percent ? Math.Max(0, Spec.Decimals - 2) : Spec.Decimals;
 		spin.ReadOnly = ReadOnly;

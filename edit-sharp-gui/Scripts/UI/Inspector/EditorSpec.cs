@@ -15,7 +15,8 @@ public sealed record EditorSpec(
 	string Unit,
 	bool ReadOnly,
 	bool Nullable,
-	string Tooltip)
+	string Tooltip,
+	string[] Choices = null)
 {
 	public static EditorSpec Of(PropertyDescriptor d)
 		=> new(d.Editor, d.ValueType, d.Min, d.Max, d.Step, d.Unit, d.IsReadOnly, d.IsNullable, d.Tooltip);

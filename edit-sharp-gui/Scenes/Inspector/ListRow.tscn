@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/Subsection.tscn" id="2_subsection"]
 
 [node name="ListRow" type="VBoxContainer" node_paths=PackedStringArray("section", "add")]
+offset_right = 420.0
+offset_bottom = 100.0
 theme_type_variation = &"TightVBox"
 script = ExtResource("1_list")
 section = NodePath("Section")

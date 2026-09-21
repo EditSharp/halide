@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- a check box (Toggle.tscn) ----
 
+[Tool]
 public partial class ToggleEditor : ValueEditor
 {
 	[Export] CheckBox box;

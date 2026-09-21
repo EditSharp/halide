@@ -1,5 +1,6 @@
 using EditSharp.Components.Clips;
 using EditSharp.Editing;
+using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using System;
 
@@ -43,8 +44,15 @@ public partial class ThumbnailStrip : Control
 
 		float radius = 0f;
 
-		if (GetParent() is Control panel && panel.GetThemeStylebox("panel") is StyleBoxFlat box)
-			radius = Mathf.Min(Mathf.Min(box.CornerRadiusTopLeft, box.CornerRadiusTopRight), Mathf.Min(box.CornerRadiusBottomLeft, box.CornerRadiusBottomRight));
+		if (GetParent() is Control panel)
+		{
+			radius = panel.GetThemeStylebox("panel") switch
+			{
+				ThemedStyleBox themed => themed.MinCornerRadius,
+				StyleBoxFlat box => Mathf.Min(Mathf.Min(box.CornerRadiusTopLeft, box.CornerRadiusTopRight), Mathf.Min(box.CornerRadiusBottomLeft, box.CornerRadiusBottomRight)),
+				_ => 0
+			};
+		}
 
 		mask.SetShaderParameter("size", Size);
 		mask.SetShaderParameter("radius", radius);

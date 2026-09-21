@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="ThemePalette" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Theme/ThemePalette.cs" id="1_palette"]
+[ext_resource type="FontFile" uid="uid://bupdexllo43at" path="res://Fonts/InterVariableNoOverlap.ttf" id="1_470mv"]
+[ext_resource type="FontFile" uid="uid://ba7hs46686des" path="res://Fonts/JetBrainsMonoNoOverlap.ttf" id="2_mono"]
+
+[resource]
+script = ExtResource("1_palette")
+BackgroundColor1 = Color(0.94, 0.94, 0.94, 1)
+BackgroundColor2 = Color(0.88, 0.88, 0.88, 1)
+PopupBackgroundColor = Color(0.97, 0.97, 0.97, 1)
+AccentColor = Color(0.6901961, 0.21960784, 0.12941177, 1)
+FontColor1 = Color(0.1, 0.1, 0.1, 1)
+FontColor2 = Color(0.4, 0.4, 0.4, 1)
+TextFieldColor = Color(1, 1, 1, 1)
+ButtonColor = Color(0.82, 0.82, 0.82, 1)
+HyperlinkColor = Color(0.1, 0.4, 0.8, 1)
+StrokeColor = Color(0.72, 0.72, 0.72, 1)
+WhiteColor = Color(1, 1, 1, 1)
+BlackColor = Color(0, 0, 0, 1)
+VideoClipColor = Color(0.102, 0.373, 0.706, 1)
+AudioClipColor = Color(0.267, 0.561, 0.392, 1)
+TextClipColor = Color(0.55, 0.35, 0.7, 1)
+GeneratorVideoClipColor = Color(0.7, 0.45, 0.15, 1)
+GeneratorAudioClipColor = Color(0.2, 0.55, 0.55, 1)
+EffectNodeColor = Color(0.4, 0.6392157, 1, 1)
+MaskNodeColor = Color(0.9098039, 0.7529412, 0.3137255, 1)
+MathNodeColor = Color(0.6, 0.5882353, 0.9882353, 1)
+KeyingNodeColor = Color(0.45490196, 0.74509805, 0.34901962, 1)
+SourceNodeColor = Color(0.9411765, 0.5019608, 0.5019608, 1)
+AudioNodeColor = Color(0.20392157, 0.7058824, 0.5803922, 1)
+CompositeNodeColor = Color(0.85490197, 0.54901963, 0.8, 1)
+UIFont = ExtResource("1_470mv")
+MonoFont = ExtResource("2_mono")

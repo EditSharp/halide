@@ -4,8 +4,9 @@ namespace EditSharpGUI.Scripts.UI.Theming;
 
 // a plain colour item of the theme - a font colour, one of the named
 // Clip or Node colours - and the definition it takes its value from.
-// colour items are bare colours, not resources, so unlike a stylebox
-// they cannot carry their own pick; these live in a list on the theme
+// godot reads a colour item as a bare value, so unlike a stylebox it
+// cannot resolve itself; the theme writes it from this when the palette
+// or the binding changes
 [Tool, GlobalClass]
 public partial class ColorBinding : Resource
 {
@@ -15,11 +16,11 @@ public partial class ColorBinding : Resource
 	[Export] public ThemeShade Shade { get; set; }
 	[Export(PropertyHint.Range, "0,1,0.01")] public float Alpha { get; set; } = 1f;
 
-	public bool Apply(EditSharpTheme theme)
+	public bool Apply(Theme theme, ThemePalette palette)
 	{
-		if (Definition == ThemeDefinition.None || string.IsNullOrEmpty(ThemeType) || string.IsNullOrEmpty(Item)) return false;
+		if (palette is null || Definition == ThemeDefinition.None || string.IsNullOrEmpty(ThemeType) || string.IsNullOrEmpty(Item)) return false;
 
-		Color colour = theme.Resolve(Definition, Shade, Alpha);
+		Color colour = palette.Resolve(Definition, Shade, Alpha);
 
 		if (theme.HasColor(Item, ThemeType) && theme.GetColor(Item, ThemeType) == colour) return false;
 

@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- several lines, committed on leaving (Multiline.tscn) ----
 
+[Tool]
 public partial class MultilineEditor : ValueEditor
 {
 	[Export] TextEdit entry;

@@ -7,22 +7,25 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // a number the way godot's inspector shows one: drag across it to scrub
 // the value by its step - a tenth of that with ctrl, ten times with shift -
 // click to type one in, and a fill along the bottom shows where it sits in
-// its range when it has one. it works in model units and shows scaled
-// ones, so a fraction can read as a percentage. SpinSlider.tscn holds the
-// text entry it shows while typing
-public partial class SpinSlider : Control, IDragCancellable
+// its range when it has one. it is a button, so its normal, hover, pressed,
+// focus and disabled looks are the theme's; the value and unit are its
+// text, the fill a ColorRect child, the typing field a LineEdit child -
+// SpinSlider.tscn. it works in model units and shows scaled ones, so a
+// fraction can read as a percentage
+[Tool]
+public partial class SpinSlider : Button
 {
 	public double? Min;
 	public double? Max;
 	public double Step = 0.01d;
-	public double Scale = 1d;
+	public double Multiplier = 1d;
 	public string Unit;
 	public int Decimals = 3;
 
 	public bool ReadOnly
 	{
 		get;
-		set { field = value; MouseDefaultCursorShape = value ? CursorShape.Arrow : CursorShape.Hsize; }
+		set { field = value; Disabled = value; MouseDefaultCursorShape = value ? CursorShape.Arrow : CursorShape.Hsize; }
 	}
 
 	public event Action DragBegan;
@@ -31,9 +34,9 @@ public partial class SpinSlider : Control, IDragCancellable
 	public event Action DragEnded;
 
 	[Export] LineEdit entry;
+	[Export] ColorRect fill;
 
 	double? value;
-	bool hovered;
 
 	bool dragging;
 	double dragValue;
@@ -44,74 +47,59 @@ public partial class SpinSlider : Control, IDragCancellable
 	public override void _Ready()
 	{
 		MouseDefaultCursorShape = ReadOnly ? CursorShape.Arrow : CursorShape.Hsize;
+		Alignment = HorizontalAlignment.Left;
+		ClipText = true;
 
 		entry.Visible = false;
-		entry.TextSubmitted += _ => { CommitText(); entry.ReleaseFocus(); };
-		entry.FocusExited += () => { CommitText(); StopTyping(); };
+		Callable submitted = new(this, MethodName.OnEntrySubmitted);
+		if (!entry.IsConnected(LineEdit.SignalName.TextSubmitted, submitted)) entry.Connect(LineEdit.SignalName.TextSubmitted, submitted);
+		Callable left = new(this, MethodName.OnEntryFocusExited);
+		if (!entry.IsConnected(Control.SignalName.FocusExited, left)) entry.Connect(Control.SignalName.FocusExited, left);
+
+		Refresh();
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationThemeChanged && IsNodeReady()) Refresh();
 	}
 
 	public void Display(double? model)
 	{
 		value = model;
-		if (!dragging) QueueRedraw();
+		if (!dragging) Refresh();
 	}
 
-	// ---- drawing ----
+	// ---- showing ----
 
-	public override void _Notification(int what)
+	void Refresh()
 	{
-		if (what == NotificationMouseEnter) { hovered = true; QueueRedraw(); }
-		else if (what == NotificationMouseExit) { hovered = false; QueueRedraw(); }
-	}
-
-	public override void _Draw()
-	{
-		Rect2 rect = new(Vector2.Zero, Size);
-		StyleBox box = GetThemeStylebox(IsEditing ? "focus" : hovered && !ReadOnly ? "hover" : "normal", "SpinSlider");
-		DrawStyleBox(box, rect);
-
-		if (IsEditing) return;
-
-		// the type's own font and size when the theme binds them - the mono
-		// font for values, say - else the theme's default
-		Font font = HasThemeFont("font", "SpinSlider") ? GetThemeFont("font", "SpinSlider") : GetThemeDefaultFont();
-		int fontSize = HasThemeFontSize("font_size", "SpinSlider") ? GetThemeFontSize("font_size", "SpinSlider") : GetThemeDefaultFontSize();
-		float left = box.GetMargin(Side.Left);
-		float right = Size.X - box.GetMargin(Side.Right);
-		float baseline = (Size.Y + font.GetAscent(fontSize) - font.GetDescent(fontSize)) / 2f;
-
-		if (value is null)
+		if (fill is not null)
 		{
-			DrawString(font, new Vector2(left, baseline), "—", HorizontalAlignment.Left, -1f, fontSize, GetThemeColor("mixed", "SpinSlider"));
-			return;
+			fill.Color = HasThemeColor("range_fill", "SpinSlider") ? GetThemeColor("range_fill", "SpinSlider") : new Color(1f, 1f, 1f, 0.2f);
+
+			bool ranged = value is double && Min is double min && Max is double max && max > min;
+			fill.Visible = ranged && !IsEditing;
+
+			if (ranged)
+			{
+				float fraction = (float)Math.Clamp((value.Value - Min.Value) / (Max.Value - Min.Value), 0d, 1d);
+				fill.AnchorRight = fraction;
+			}
 		}
 
-		double v = value.Value;
-
-		if (Min is double min && Max is double max && max > min)
-		{
-			float fraction = (float)Math.Clamp((v - min) / (max - min), 0d, 1d);
-			float inset = box.GetMargin(Side.Left) * 0.5f;
-			DrawRect(new Rect2(inset, Size.Y - 3f - inset, (Size.X - inset * 2f) * fraction, 3f), GetThemeColor("range_fill", "SpinSlider"));
-		}
-
-		string text = ValueEditor.FormatNumber(v * Scale, Decimals);
-		Color fontColor = GetThemeColor("font", "SpinSlider");
-
-		DrawString(font, new Vector2(left, baseline), text, HorizontalAlignment.Left, right - left, fontSize, fontColor);
-
-		if (!string.IsNullOrEmpty(Unit))
-		{
-			float used = font.GetStringSize(text, HorizontalAlignment.Left, -1f, fontSize).X;
-			DrawString(font, new Vector2(left + used + 3f, baseline), Unit, HorizontalAlignment.Left, right - left - used, fontSize, GetThemeColor("unit", "SpinSlider"));
-		}
+		Text = value is double shown ? ValueEditor.FormatNumber(shown * Multiplier, Decimals) + (string.IsNullOrEmpty(Unit) ? "" : " " + Unit) : "—";
 	}
 
 	// ---- dragging and clicking ----
 
-	public override void _GuiInput(InputEvent _)
+	public override void _GuiInput(InputEvent @event)
 	{
 		if (ReadOnly || IsEditing) return;
+
+		// outside the app - in the editor's theme tabs - there is no input
+		// manager, so the mouse is read straight off the events
+		if (InputManager.Singleton is null) { RawInput(@event); return; }
 
 		Mouse mouse = InputManager.Singleton.Mouse;
 		MouseButtonState left = mouse.LeftButton;
@@ -148,6 +136,48 @@ public partial class SpinSlider : Control, IDragCancellable
 		}
 	}
 
+	bool rawPressed;
+	Vector2 rawStart;
+
+	void RawInput(InputEvent @event)
+	{
+		switch (@event)
+		{
+			case InputEventMouseButton { ButtonIndex: MouseButton.Left } button:
+				if (button.Pressed)
+				{
+					rawPressed = true;
+					rawStart = GetGlobalMousePosition();
+				}
+				else if (rawPressed)
+				{
+					rawPressed = false;
+					if (dragging) FinishDrag();
+					else StartTyping();
+				}
+				AcceptEvent();
+				break;
+
+			case InputEventMouseMotion motion when rawPressed:
+			{
+				Vector2 at = GetGlobalMousePosition();
+
+				if (!dragging)
+				{
+					if (at.DistanceTo(rawStart) < 3f) break;
+					dragging = true;
+					dragValue = value ?? Min ?? 0d;
+					lastX = at.X;
+					DragBegan?.Invoke();
+				}
+
+				Drag(at.X, motion.CtrlPressed, motion.ShiftPressed);
+				AcceptEvent();
+				break;
+			}
+		}
+	}
+
 	void Drag(float x, bool fine, bool coarse)
 	{
 		float dx = x - lastX;
@@ -160,7 +190,7 @@ public partial class SpinSlider : Control, IDragCancellable
 		value = dragValue;
 
 		Changed?.Invoke(dragValue);
-		QueueRedraw();
+		Refresh();
 	}
 
 	void FinishDrag()
@@ -170,11 +200,8 @@ public partial class SpinSlider : Control, IDragCancellable
 		dragging = false;
 		Committed?.Invoke(dragValue);
 		DragEnded?.Invoke();
-		QueueRedraw();
+		Refresh();
 	}
-
-	// the drag lost its release: keep what it reached and close it out
-	public void CancelDrag(MouseButtonState button) => FinishDrag();
 
 	double Clamp(double v)
 	{
@@ -189,17 +216,29 @@ public partial class SpinSlider : Control, IDragCancellable
 
 	void StartTyping()
 	{
-		entry.Text = value is double v ? ValueEditor.FormatNumber(v * Scale, Decimals) : "";
+		entry.Text = value is double v ? ValueEditor.FormatNumber(v * Multiplier, Decimals) : "";
 		entry.Visible = true;
 		entry.GrabFocus();
 		entry.SelectAll();
-		QueueRedraw();
+		if (fill is not null) fill.Visible = false;
+	}
+
+	void OnEntrySubmitted(string text)
+	{
+		CommitText();
+		entry.ReleaseFocus();
+	}
+
+	void OnEntryFocusExited()
+	{
+		CommitText();
+		StopTyping();
 	}
 
 	void StopTyping()
 	{
 		entry.Visible = false;
-		QueueRedraw();
+		Refresh();
 	}
 
 	bool committing;
@@ -213,7 +252,7 @@ public partial class SpinSlider : Control, IDragCancellable
 		{
 			if (ValueEditor.TryParseNumber(entry.Text, out double typed))
 			{
-				double model = Clamp(typed / Scale);
+				double model = Clamp(typed / Multiplier);
 
 				if (value != model)
 				{

@@ -4,6 +4,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="2_glyph"]
 
 [node name="KeyColumn" type="HBoxContainer" node_paths=PackedStringArray("prev", "key", "next", "resetTrack")]
+offset_right = 78.0
+offset_bottom = 18.0
 custom_minimum_size = Vector2(78, 0)
 theme_type_variation = &"TightHBox"
 alignment = 2

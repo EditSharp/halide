@@ -6,6 +6,7 @@ using EditSharp;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes.Sources;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Theming;
 using EditSharpGUI.Scripts.UI.Thumbnails;
 using static UIClipsView;
 using EditSharpGUI.Scripts.UI;
@@ -62,7 +63,10 @@ public partial class UIClip : PanelContainer, IDragCancellable
         get;
         set
 		{
-			if (GetThemeStylebox("panel", "ClipContent").Duplicate() is StyleBoxFlat style)
+			StyleBox box = GetThemeStylebox("panel", "ClipContent");
+			StyleBoxFlat style = box is ThemedStyleBox themed ? themed.MakeFlat() : box.Duplicate() as StyleBoxFlat;
+
+			if (style is not null)
 			{
 				style.BgColor = value;
 				content.AddThemeStyleboxOverride("panel", style);

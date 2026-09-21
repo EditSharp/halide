@@ -16,6 +16,10 @@ public sealed record InspectorTarget(object Object, Clip Clip = null);
 // shown once and an edit writes to all of them
 public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorTarget> Targets, Color? Accent = null);
 
+// a value committed on a row: what it wrote, to which bindings, and what
+// each held before - enough to undo it from outside
+public sealed record InspectorEditArgs(string Label, IReadOnlyList<Binding> Bindings, object[] Before, object After);
+
 // the property editor. it is handed sections of objects and shows their
 // editable properties - found through the model's Editable metadata - as
 // rows with a reset and a keyframe column, godot-inspector style. every
@@ -25,6 +29,7 @@ public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorT
 // where a new keyframe goes, and asks to move it when a keyframe arrow is
 // pressed. it never sees the timeline or the playback: whoever wires the
 // page feeds it
+[Tool]
 public partial class Inspector : Control
 {
 	[ExportGroup("Parts")]
@@ -94,6 +99,9 @@ public partial class Inspector : Control
 	// something was edited here - live, during a drag, as much as on a
 	// commit. the page may need to redraw what it shows of the same objects
 	public event EventHandler Edited;
+
+	// a value settled on a row, with what it replaced
+	public event EventHandler<InspectorEditArgs> ValueCommitted;
 
 	public override void _ExitTree()
 	{
@@ -288,7 +296,13 @@ public partial class Inspector : Control
 			return section;
 		}
 
-		return CreateRow(descriptor.DisplayName, EditorSpec.Of(descriptor), [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
+		EditorSpec spec = EditorSpec.Of(descriptor);
+
+		// a string the object offers choices for is a dropdown of them
+		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<string> choices)
+			spec = spec with { Editor = PropertyEditor.Dropdown, Choices = [.. choices] };
+
+		return CreateRow(descriptor.DisplayName, spec, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
 	}
 
 	// ---- keeping up with the data ----
@@ -335,6 +349,8 @@ public partial class Inspector : Control
 	internal Transaction.Scope BeginChange(string description) => History?.Begin(description);
 
 	internal void NotifyEdited() => Edited?.Invoke(this, EventArgs.Empty);
+
+	internal void NotifyCommitted(InspectorEditArgs e) => ValueCommitted?.Invoke(this, e);
 
 	internal void RequestSeek(TimeSpan time) => SeekRequested?.Invoke(this, time);
 }

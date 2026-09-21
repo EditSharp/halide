@@ -11,6 +11,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // items that are objects fold inline. one object at a time - lists on
 // several objects at once have no sensible shared edit. ListRow.tscn
 // holds the fold and its add button
+[Tool]
 public partial class ListRow : VBoxContainer
 {
 	[Export] InspectorSection section;

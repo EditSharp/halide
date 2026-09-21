@@ -4,8 +4,17 @@ using EditSharp.Editing;
 using EditSharp.History;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace EditSharpGUI.Scripts.UI.Inspecting;
+
+// an object that offers the values a string property may take, shown as
+// a dropdown rather than typed: a node's theme variation, say
+public interface IChoiceProvider
+{
+	// null when the property is free text
+	IReadOnlyList<string> ChoicesFor(string property);
+}
 
 // one value on one object, as the inspector reaches it: how to read it,
 // write it, and animate it. a row holds one of these per object it edits,

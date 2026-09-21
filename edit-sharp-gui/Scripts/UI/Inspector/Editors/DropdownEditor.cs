@@ -6,10 +6,11 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- one of an enum's values (Dropdown.tscn) ----
 
+[Tool]
 public partial class DropdownEditor : ValueEditor
 {
 	[Export] OptionButton options;
-	Array values;
+	object[] values;
 
 	protected override void Build()
 	{
@@ -17,16 +18,24 @@ public partial class DropdownEditor : ValueEditor
 		options.TooltipText = Spec.Tooltip ?? "";
 		options.Clear();
 
-		values = Spec.ValueType.IsEnum ? Enum.GetValues(Spec.ValueType) : Array.Empty<object>();
+		// the choices the object offers, or the enum's values
+		if (Spec.Choices is not null)
+		{
+			values = [.. Spec.Choices];
+			foreach (object value in values) options.AddItem(value.ToString());
+		}
+		else
+		{
+			values = Spec.ValueType.IsEnum ? Enum.GetValues(Spec.ValueType).Cast<object>().ToArray() : [];
+			foreach (object value in values) options.AddItem(Humanize(value.ToString()));
+		}
 
-		foreach (object value in values) options.AddItem(Humanize(value.ToString()));
-
-		options.ItemSelected += index => { if (index >= 0 && index < values.Length) RaiseCommitted(values.GetValue(index)); };
+		options.ItemSelected += index => { if (index >= 0 && index < values.Length) RaiseCommitted(values[index]); };
 	}
 
 	public override void Display(object value, bool mixed)
 	{
-		int index = mixed || value is null || values is null ? -1 : Array.IndexOf(values.Cast<object>().ToArray(), value);
+		int index = mixed || value is null || values is null ? -1 : Array.IndexOf(values, value);
 
 		options.Selected = index;
 		if (index < 0) options.Text = "—";

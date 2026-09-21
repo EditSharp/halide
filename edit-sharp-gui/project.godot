@@ -25,10 +25,15 @@ InputManager="*res://Scenes/InputManager.tscn"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/stretch/aspect="expand"
+window/per_pixel_transparency/allowed=true
 
 [dotnet]
 
 project/assembly_name="EditSharp GUI"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/edit_sharp_theme/plugin.cfg")
 
 [gui]
 

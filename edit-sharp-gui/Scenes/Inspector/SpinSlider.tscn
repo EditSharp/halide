@@ -2,14 +2,36 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/SpinSlider.cs" id="1_spin"]
 
-[node name="SpinSlider" type="Control" node_paths=PackedStringArray("entry")]
+[node name="SpinSlider" type="Button" node_paths=PackedStringArray("entry", "fill")]
+offset_right = 140.0
+offset_bottom = 24.0
 custom_minimum_size = Vector2(48, 24)
 layout_mode = 3
 anchors_preset = 0
 focus_mode = 0
 mouse_default_cursor_shape = 10
+theme_type_variation = &"SpinSlider"
+text = "0.000"
+alignment = 0
+clip_text = true
 script = ExtResource("1_spin")
 entry = NodePath("Entry")
+fill = NodePath("Fill")
+
+[node name="Fill" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = -5.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.2)
 
 [node name="Entry" type="LineEdit" parent="."]
 visible = false

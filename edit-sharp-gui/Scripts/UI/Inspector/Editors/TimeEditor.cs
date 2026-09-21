@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- a time, as frames or as a clock, whichever the inspector is showing (Time.tscn) ----
 
+[Tool]
 public partial class TimeEditor : ValueEditor
 {
 	[Export] SpinSlider frames;

@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/edit_sharp_theme/ThemeMockPage.cs" id="1_mock"]
+[ext_resource type="PackedScene" path="res://Scenes/Views/Inspector.tscn" id="2_inspector"]
+
+[node name="ThemeMock" type="Control" node_paths=PackedStringArray("content")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mock")
+content = NodePath("Scroll/Margin/Content")
+inspectorScene = ExtResource("2_inspector")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ViewBackground"
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorNoIndent"
+
+[node name="Content" type="VBoxContainer" parent="Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorSections"

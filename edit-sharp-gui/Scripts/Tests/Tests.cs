@@ -132,7 +132,7 @@ public static class Tests
                 videos.Add(video);
             }
 
-            timeline.Link(videos);
+            //timeline.Link(videos);
 
             // clip further out so i can test my gui
             VideoClip extraVideo = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));

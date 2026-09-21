@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- a file path, typed or browsed for (Path.tscn) ----
 
+[Tool]
 public partial class PathEditor : TextEditor
 {
 	[Export] Button browse;

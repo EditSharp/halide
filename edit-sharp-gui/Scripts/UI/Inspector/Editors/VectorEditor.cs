@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- a vector: x and y side by side, linkable (Vector.tscn) ----
 
+[Tool]
 public partial class VectorEditor : ValueEditor
 {
 	[Export] SpinSlider x;

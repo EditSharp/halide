@@ -4,6 +4,8 @@
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
 
 [node name="Subsection" type="VBoxContainer" node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
+offset_right = 420.0
+offset_bottom = 120.0
 theme_type_variation = &"TightVBox"
 script = ExtResource("1_section")
 header = NodePath("Header")
@@ -23,7 +25,16 @@ alignment = 0
 clip_text = true
 text_overrun_behavior = 3
 script = ExtResource("2_header")
+accentStrip = NodePath("Accent")
 
+[node name="Accent" type="ColorRect" parent="Header"]
+visible = false
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 3.0
+grow_vertical = 2
+mouse_filter = 2
 [node name="HeaderControls" type="HBoxContainer" parent="Header"]
 layout_mode = 1
 anchors_preset = 11

@@ -6,6 +6,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 
 // ---- an angle: a knob to turn, and the degrees beside it (Angle.tscn) ----
 
+[Tool]
 public partial class AngleEditor : ValueEditor
 {
 	[Export] AngleKnob knob;

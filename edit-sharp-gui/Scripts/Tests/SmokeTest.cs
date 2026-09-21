@@ -1,4 +1,3 @@
-using EditSharpGUI.Scripts.Tools.ThemeEditing;
 using EditSharpGUI.Scripts.UI;
 using EditSharpGUI.Scripts.UI.Inspecting;
 using EditSharpGUI.Scripts.UI.Theming;
@@ -60,27 +59,51 @@ public partial class SmokeTest : Node
 		Check(inspector is not null, "inspector is in the page");
 		Check(timeline.Thumbnails is ThumbnailCache, "thumbnail cache is wired");
 
-		// ---- the theme: every item themed, every bound colour resolved
+		// ---- the theme: styles resolved through the palette, bindings written from it
 		EditSharpTheme theme = ThemeDB.GetProjectTheme() as EditSharpTheme;
-		Check(theme is not null, "the project theme is an EditSharpTheme");
+		Check(theme is not null && theme.Palette is not null, "the project theme is an EditSharpTheme with a palette");
 
-		if (theme is not null)
+		if (theme is not null && theme.Palette is ThemePalette palette)
 		{
-			Check(theme.GetStylebox("normal", "Button") is ThemedStyleBox, "buttons wear themed styleboxes");
-			Check(theme.GetStylebox("panel", "ClipContent") is ThemedStyleBox content && content.CornerRadiusTopLeft == 5, "clip content keeps its rounded corners");
-			Check(theme.GetColor("video", "Clip") == theme.VideoClipColor, "the named clip colour follows its definition");
+			Check(theme.GetStylebox("normal", "Button") is ThemedStyleBox normal && normal.Style is not null && normal.State == StyleState.Normal, "buttons wear themed styleboxes over a style");
+			Check(theme.GetStylebox("hover", "Button") is ThemedStyleBox hover && hover.State == StyleState.Hover && hover.Style == ((ThemedStyleBox)theme.GetStylebox("normal", "Button")).Style, "hover shares the base style with its state");
+			Check(theme.GetStylebox("focus", "Button") is ThemedStyleBox focus && focus.State == StyleState.Focus, "focus is the same style in the focus state");
+			Check(theme.GetStylebox("panel", "ClipContent") is ThemedStyleBox content && content.MinCornerRadius == 5, "clip content keeps its rounded corners");
+			Check(theme.GetStylebox("hover", "CheckBox") is StyleBoxEmpty, "an empty base leaves empty states");
+			Check(theme.GetColor("video", "Clip") == palette.VideoClipColor, "the named clip colour follows its definition");
 			Check(theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X >= 6f, $"the scroll bar has a width: {theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X}");
 			Check(theme.ColorBindings.Count > 30 && theme.FontBindings.Count > 3, $"bindings present: {theme.ColorBindings.Count} colours, {theme.FontBindings.Count} fonts");
+			Check(theme.GetFont("font", "ClipName") is FontVariation, "a font binding serves a weighted variation");
 
-			Color before = theme.GetColor("font_color", "Label");
-			Color was = theme.FontColor1;
-			theme.FontColor1 = new Color(0.5f, 0.25f, 0.75f);
-			Check(theme.GetColor("font_color", "Label") == theme.FontColor1 && theme.GetColor("font_color", "Label") != before, "changing a definition recolours a bound item at once");
-			ThemedStyleBox normal = (ThemedStyleBox)theme.GetStylebox("normal", "Button");
-			theme.ButtonColor = new Color(0.1f, 0.6f, 0.2f);
-			Check(normal.BgColor == theme.ButtonColor && normal.CornerRadiusTopLeft == 3, "changing a definition recolours a stylebox and keeps its shape");
-			theme.FontColor1 = was;
-			theme.ApplyPreset(EditSharpTheme.ColorPreset.Dark);
+			ThemedStyleBox box = (ThemedStyleBox)theme.GetStylebox("normal", "Button");
+			Color wasButton = palette.ButtonColor;
+			Color wasFont = palette.FontColor1;
+			palette.ButtonColor = new Color(0.1f, 0.6f, 0.2f);
+			Check(box.ResolvedBackground == palette.Resolve(box.Style.Background, ThemeShade.None, box.Style.BackgroundAlpha), "a stylebox resolves the new palette colour when it next draws");
+			Check(((ThemedStyleBox)theme.GetStylebox("hover", "Button")).ResolvedBackground == palette.Resolve(box.Style.Background, ThemeShade.Hover, box.Style.BackgroundAlpha), "and its hover state shifts it by the palette rule");
+			palette.FontColor1 = new Color(0.5f, 0.25f, 0.75f);
+			theme.ApplyBindings();
+			Check(theme.GetColor("font_color", "Label") == palette.FontColor1, "a bound colour item is rewritten from the palette");
+			palette.ButtonColor = wasButton;
+			palette.FontColor1 = wasFont;
+			theme.ApplyBindings();
+
+			StyleBoxFlat tinted = box.MakeFlat();
+			Check(tinted is not null && tinted.CornerRadiusTopLeft == box.Style.CornerRadiusTopLeft, "a flat copy carries the style shape");
+
+			// a style edit must reach the controls wearing it: their minimum size follows the margins
+			Button probe = new() { Text = "probe" };
+			AddChild(probe);
+			await Frames(1);
+			float before = probe.GetCombinedMinimumSize().X;
+			float marginWas = box.Style.ContentMarginLeft;
+			box.Style.ContentMarginLeft = marginWas + 40f;
+			await Frames(2);
+			Check(probe.GetCombinedMinimumSize().X >= before + 39f, $"a style edit re-themes controls: {before} -> {probe.GetCombinedMinimumSize().X}");
+			box.Style.ContentMarginLeft = marginWas;
+			await Frames(2);
+			Check(Mathf.IsEqualApprox(probe.GetCombinedMinimumSize().X, before), "and back");
+			probe.QueueFree();
 		}
 
 		Check(Find<ThumbnailStrip>(clipsView.UIClips[0]).Count == 1 && Find<ThumbnailStrip>(clipsView.UIClips[0])[0].Material is ShaderMaterial, "the clip's strip comes from the scene with its rounding mask");
@@ -215,43 +238,16 @@ public partial class SmokeTest : Node
 			Check(animatable.Keyframes.Count == 0, $"five undos clear the keyframes: {animatable.Keyframes.Count}");
 		}
 
-		// ---- the theme tool: every type's preview and pages build without complaint
+		// ---- the mock scene builds every editor and control under the palette
 		{
-			ThemeEditor tool = GD.Load<PackedScene>("res://Scenes/Tools/ThemeEditor.tscn").Instantiate<ThemeEditor>();
-			AddChild(tool);
+			ThemeMockPage mock = GD.Load<PackedScene>("res://Scenes/Tools/ThemeMock.tscn").Instantiate<ThemeMockPage>();
+			AddChild(mock);
 			await Frames(2);
-
-			Inspector pages = tool.GetNode<Inspector>("Layout/Split/Right/Properties");
-			Check(Find<InspectorRow>(pages).Count > 20, $"the definitions page has rows: {Find<InspectorRow>(pages).Count}");
-			Check(Find<ThemeSwatch>(tool).Count > 20, $"the definitions page has swatches: {Find<ThemeSwatch>(tool).Count}");
-
-			int shown = 0;
-			foreach (string type in theme.GetTypeList())
-			{
-				tool.Select(type);
-				await Frames(1);
-				shown++;
-			}
-
-			tool.Select("Button");
-			await Frames(2);
-			Check(Find<InspectorRow>(pages).Count > 40, $"a button's pages have rows: {Find<InspectorRow>(pages).Count}");
-			Check(Find<ThemeSwatch>(tool).Count >= 16, $"a button's items have swatches: {Find<ThemeSwatch>(tool).Count}");
-			Check(Find<Button>(tool.GetNode("Layout/Split/Right/PreviewScroll")).Count >= 1, "a button's live sample is a button");
-			Check(shown == theme.GetTypeList().Length, $"every type showed: {shown}");
-
-			// a pick made through the tool lands on the theme
-			InspectorSection normalSection = Find<InspectorSection>(pages).Find(x => x.Title == "normal");
-			InspectorRow background = normalSection is null ? null : Find<InspectorRow>(normalSection).Find(r => r.Label == "Background");
-			Check(background is not null, "the normal stylebox's background pick is there");
-			if (background is not null)
-			{
-				background.Apply(ThemeDefinition.AccentColor);
-				await Frames(2);
-				Check(theme.GetStylebox("normal", "Button") is ThemedStyleBox b && b.Background == ThemeDefinition.AccentColor && b.BgColor == theme.AccentColor, "picking a definition recolours the stylebox");
-			}
-
-			tool.QueueFree();
+			Check(Find<InspectorRow>(mock).Count > 40, $"the mock scene builds a live inspector: {Find<InspectorRow>(mock).Count} rows");
+			Check(Find<Button>(mock).Count > 10, "the mock scene has live controls");
+			Check(Find<SpinSlider>(mock).Count > 0 && Find<SpinSlider>(mock).All(x => x.GetThemeStylebox("normal") is ThemedStyleBox), "spin sliders are buttons wearing the theme");
+			Check(Find<InspectorGlyph>(mock).All(g => g.Icon is not null), "every glyph shows an icon");
+			mock.QueueFree();
 			await Frames(1);
 		}
 

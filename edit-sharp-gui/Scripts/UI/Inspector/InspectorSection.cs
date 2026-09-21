@@ -12,6 +12,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // its header - a node's Enabled - bound to a bool property of every object
 // it shows. Section.tscn and Subsection.tscn lay the two kinds out; the
 // inspector instantiates whichever fits
+[Tool]
 public partial class InspectorSection : VBoxContainer
 {
 	[Export] SectionHeader header;
@@ -24,15 +25,15 @@ public partial class InspectorSection : VBoxContainer
 
 	public string Title
 	{
-		get => header.Text;
-		set => header.Text = value;
+		get => header.Title;
+		set => header.Title = value;
 	}
 
 	// a strip of colour down the header's left: a node's category
 	public Color? Accent
 	{
 		get => header.Accent;
-		set { header.Accent = value; header.QueueRedraw(); }
+		set => header.Accent = value;
 	}
 
 	public bool Collapsed

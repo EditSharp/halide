@@ -20,7 +20,37 @@ public partial class ProjectManager : Node
 
 		// the project theme is ours; the user's preset and accent go on top of
 		// whatever the file says, and the whole tree restyles from it
-		if (ThemeDB.GetProjectTheme() is EditSharpTheme theme) theme.LoadUserSettings();
+		if (ThemeDB.GetProjectTheme() is EditSharpTheme theme)
+		{
+			theme.LoadUserSettings();
+			themeFile = ProjectSettings.GlobalizePath("res://main_theme.tres");
+			themeStamp = FileAccess.GetModifiedTime(themeFile);
+		}
+	}
+
+	// ---- the theme file, watched while the app runs ----
+
+	// a save from the editor's Theme tab restyles the running app: the file
+	// is checked once a second and reloaded in place when it changed. debug
+	// builds only - a release has no editor beside it
+	string themeFile;
+	ulong themeStamp;
+	double themePoll;
+
+	public override void _Process(double delta)
+	{
+		if (Singleton != this || themeFile is null || !OS.IsDebugBuild()) return;
+
+		themePoll += delta;
+		if (themePoll < 1d) return;
+		themePoll = 0d;
+
+		ulong stamp = FileAccess.GetModifiedTime(themeFile);
+		if (stamp == themeStamp) return;
+		themeStamp = stamp;
+
+		if (ThemeDB.GetProjectTheme() is EditSharpTheme theme && theme.ReloadFrom("res://main_theme.tres"))
+			GD.Print("Theme reloaded from disk.");
 	}
 
 	public Project CurrentProject = new()

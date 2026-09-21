@@ -1,16 +1,20 @@
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using System;
 
 namespace EditSharpGUI.Scripts.UI.Inspecting;
 
-// a dial showing an angle as an angle: a pointer on a circle, turned by
-// dragging - right or up to add degrees, left or down to take them away -
-// so a turn is a turn and any number of degrees can be reached, past a
-// full circle and back. a degree a pixel; a tenth with ctrl, ten with
-// shift. zero points right and positive turns clockwise, the way the
-// compositor reads rotation
-public partial class AngleKnob : Control, IDragCancellable
+// a dial showing an angle as an angle, from nodes in AngleKnob.tscn: a
+// ring, a pointer that rotates with the value, a radial progress showing
+// how far round the current turn has gone, and a count of whole turns.
+// turned by dragging - right or up to add degrees, left or down to take
+// them away - so a turn is a turn and any number of degrees can be
+// reached. a degree a pixel; a tenth with ctrl, ten with shift. zero
+// points right and positive turns clockwise, the way the compositor reads
+// rotation. each part takes an icon; one given none gets one rasterised
+[Tool]
+public partial class AngleKnob : Control
 {
 	public bool ReadOnly
 	{
@@ -23,53 +27,91 @@ public partial class AngleKnob : Control, IDragCancellable
 	public event Action<double> Committed;
 	public event Action DragEnded;
 
+	[ExportGroup("Parts")]
+	[Export] TextureRect ring;
+	[Export] TextureRect pointer;
+	[Export] TextureProgressBar progress;
+	[Export] Label turns;
+
+	[ExportGroup("Icons")]
+	[Export] public Texture2D RingIcon { get; set; }
+	[Export] public Texture2D PointerIcon { get; set; }
+	[Export] public Texture2D ProgressIcon { get; set; }
+
 	double? degrees;
 	bool dragging;
-	bool hovered;
 	Vector2 last;
 	double dragValue;
 
 	public override void _Ready()
 	{
 		MouseDefaultCursorShape = ReadOnly ? CursorShape.Arrow : CursorShape.PointingHand;
+
+		int size = Mathf.RoundToInt(Mathf.Min(CustomMinimumSize.X, CustomMinimumSize.Y));
+		if (size < 8) size = 26;
+
+		if (ring is not null) ring.Texture = RingIcon ?? IconRaster.Get(IconRaster.Shape.Ring, size);
+		if (pointer is not null) pointer.Texture = PointerIcon ?? IconRaster.Get(IconRaster.Shape.Pointer, size);
+
+		if (progress is not null)
+		{
+			progress.TextureProgress = ProgressIcon ?? IconRaster.Get(IconRaster.Shape.Ring, size);
+			progress.FillMode = (int)TextureProgressBar.FillModeEnum.Clockwise;
+			progress.MinValue = 0;
+			progress.MaxValue = 360;
+			progress.RadialInitialAngle = 90f;
+		}
+
+		Refresh();
 	}
 
 	public void Display(double? value)
 	{
 		degrees = value;
-		if (!dragging) QueueRedraw();
+		if (!dragging) Refresh();
+	}
+
+	void Refresh()
+	{
+		bool known = degrees is double;
+		double d = degrees ?? 0d;
+
+		if (pointer is not null)
+		{
+			pointer.Visible = known;
+			pointer.PivotOffset = pointer.Size / 2f;
+			pointer.Rotation = Mathf.DegToRad((float)d);
+		}
+
+		if (progress is not null)
+		{
+			progress.Visible = known;
+			double within = d % 360d;
+			if (within < 0d) within += 360d;
+			progress.Value = within;
+		}
+
+		if (turns is not null)
+		{
+			int whole = (int)Math.Truncate(d / 360d);
+			turns.Visible = known && whole != 0;
+			turns.Text = whole > 0 ? $"+{whole}" : whole.ToString();
+		}
 	}
 
 	public override void _Notification(int what)
 	{
-		if (what == NotificationMouseEnter) { hovered = true; QueueRedraw(); }
-		else if (what == NotificationMouseExit) { hovered = false; QueueRedraw(); }
+		if (what == NotificationResized && pointer is not null) pointer.PivotOffset = pointer.Size / 2f;
 	}
 
-	public override void _Draw()
-	{
-		Vector2 centre = Size / 2f;
-		float radius = Mathf.Min(Size.X, Size.Y) / 2f - 1.5f;
+	// ---- turning ----
 
-		Color track = GetThemeColor("track", "AngleKnob");
-		Color fill = GetThemeColor("fill", "AngleKnob");
-		Color pointer = GetThemeColor("pointer", "AngleKnob");
-
-		DrawCircle(centre, radius, fill);
-		DrawArc(centre, radius, 0f, Mathf.Tau, 48, hovered && !ReadOnly ? pointer : track, 1.5f, true);
-
-		if (degrees is not double d) return;
-
-		float angle = Mathf.DegToRad((float)d);
-		Vector2 tip = centre + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (radius - 2f);
-
-		DrawLine(centre, tip, pointer, 2f, true);
-		DrawCircle(centre, 2f, pointer);
-	}
-
-	public override void _GuiInput(InputEvent _)
+	public override void _GuiInput(InputEvent @event)
 	{
 		if (ReadOnly) return;
+
+		// outside the app there is no input manager: read the events directly
+		if (InputManager.Singleton is null) { RawInput(@event); return; }
 
 		Mouse mouse = InputManager.Singleton.Mouse;
 		MouseButtonState left = mouse.LeftButton;
@@ -101,6 +143,36 @@ public partial class AngleKnob : Control, IDragCancellable
 		}
 	}
 
+	bool rawPressed;
+
+	void RawInput(InputEvent @event)
+	{
+		switch (@event)
+		{
+			case InputEventMouseButton { ButtonIndex: MouseButton.Left } button:
+				if (button.Pressed)
+				{
+					rawPressed = true;
+					dragging = true;
+					dragValue = degrees ?? 0d;
+					last = GetGlobalMousePosition();
+					DragBegan?.Invoke();
+				}
+				else if (rawPressed)
+				{
+					rawPressed = false;
+					FinishDrag();
+				}
+				AcceptEvent();
+				break;
+
+			case InputEventMouseMotion motion when rawPressed && dragging:
+				Drag(GetGlobalMousePosition(), motion.CtrlPressed, motion.ShiftPressed);
+				AcceptEvent();
+				break;
+		}
+	}
+
 	void Drag(Vector2 position, bool fine, bool coarse)
 	{
 		Vector2 delta = position - last;
@@ -114,7 +186,7 @@ public partial class AngleKnob : Control, IDragCancellable
 		degrees = dragValue;
 
 		Changed?.Invoke(dragValue);
-		QueueRedraw();
+		Refresh();
 	}
 
 	void FinishDrag()
@@ -124,7 +196,7 @@ public partial class AngleKnob : Control, IDragCancellable
 		dragging = false;
 		Committed?.Invoke(dragValue);
 		DragEnded?.Invoke();
-		QueueRedraw();
+		Refresh();
 	}
 
 	public void CancelDrag(MouseButtonState button) => FinishDrag();

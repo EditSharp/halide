@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/edit_sharp_theme/NodeThemeDock.cs" id="1_dock"]
+
+[node name="Node Theme" type="VBoxContainer" node_paths=PackedStringArray("header", "scroll", "pages")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 400.0
+offset_bottom = 600.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dock")
+header = NodePath("Header")
+scroll = NodePath("Scroll")
+pages = NodePath("Scroll/Pages")
+
+[node name="Header" type="Label" parent="."]
+layout_mode = 2
+text = "Select a control"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Pages" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

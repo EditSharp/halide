@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [node name="Remove" type="Button"]
+offset_right = 22.0
+offset_bottom = 22.0
 custom_minimum_size = Vector2(22, 0)
 tooltip_text = "Remove"
 focus_mode = 0

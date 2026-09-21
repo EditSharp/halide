@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/KeyColumn.tscn" id="3_keys"]
 
 [node name="Row" type="HBoxContainer" node_paths=PackedStringArray("nameLabel", "reset", "editorSlot", "trailing", "keys")]
+offset_right = 420.0
+offset_bottom = 26.0
 theme_type_variation = &"InspectorRow"
 script = ExtResource("1_row")
 nameLabel = NodePath("Name")

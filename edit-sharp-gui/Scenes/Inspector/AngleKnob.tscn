@@ -2,10 +2,68 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/AngleKnob.cs" id="1_knob"]
 
-[node name="AngleKnob" type="Control"]
+[node name="AngleKnob" type="Control" node_paths=PackedStringArray("ring", "pointer", "progress", "turns")]
+offset_right = 26.0
+offset_bottom = 26.0
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 3
 anchors_preset = 0
 focus_mode = 0
 mouse_default_cursor_shape = 2
 script = ExtResource("1_knob")
+ring = NodePath("Ring")
+pointer = NodePath("Pointer")
+progress = NodePath("Progress")
+turns = NodePath("Turns")
+
+[node name="Ring" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Progress" type="TextureProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+max_value = 360.0
+fill_mode = 4
+radial_initial_angle = 90.0
+nine_patch_stretch = true
+
+[node name="Pointer" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Turns" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -14.0
+offset_top = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"InspectorAxis"
+text = "+1"
+horizontal_alignment = 2
