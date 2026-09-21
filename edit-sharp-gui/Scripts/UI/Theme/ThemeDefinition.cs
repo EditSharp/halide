@@ -33,7 +33,12 @@ public enum ThemeDefinition
 	KeyingNodeColor,
 	SourceNodeColor,
 	AudioNodeColor,
-	CompositeNodeColor
+	CompositeNodeColor,
+
+	// the colour of everything to do with time and motion: the playhead,
+	// keyframes, the play button. appended so the numbers the theme file
+	// stores stay valid
+	PlaybackColor
 }
 
 // how a definition is shifted before use: the same colour, or the shade

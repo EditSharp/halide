@@ -9,7 +9,8 @@
 
 [resource]
 script = ExtResource("1_palette")
-AccentColor = Color(0.6901961, 0.21960784, 0.12941177, 1)
+AccentColor = Color(0.827451, 0.95686275, 0.38431373, 1)
+PlaybackColor = Color(0.6901961, 0.21960784, 0.12941177, 1)
 EffectNodeColor = Color(0.4, 0.6392157, 1, 1)
 MaskNodeColor = Color(0.9098039, 0.7529412, 0.3137255, 1)
 MathNodeColor = Color(0.6, 0.5882353, 0.9882353, 1)

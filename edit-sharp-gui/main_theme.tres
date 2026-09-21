@@ -219,10 +219,10 @@ State = 3
 script = ExtResource("style")
 Palette = ExtResource("palette")
 Background = 14
-CornerRadiusTopLeft = 5
-CornerRadiusTopRight = 5
-CornerRadiusBottomRight = 5
-CornerRadiusBottomLeft = 5
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_ClipContent_panel"]
 resource_local_to_scene = false
@@ -246,10 +246,10 @@ BorderWidthTop = 3
 BorderWidthRight = 3
 BorderWidthBottom = 3
 DrawCenter = false
-CornerRadiusTopLeft = 5
-CornerRadiusTopRight = 5
-CornerRadiusBottomRight = 5
-CornerRadiusBottomLeft = 5
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_ClipInnerShadow_panel"]
 resource_local_to_scene = false
@@ -265,17 +265,16 @@ Style = SubResource("ThemeStyle_ClipInnerShadow_panel")
 script = ExtResource("style")
 Palette = ExtResource("palette")
 Background = 0
-Border = 5
-BorderBlend = true
-BorderWidthLeft = 3
-BorderWidthTop = 3
-BorderWidthRight = 3
-BorderWidthBottom = 3
+Border = 26
+BorderWidthLeft = 5
+BorderWidthTop = 5
+BorderWidthRight = 5
+BorderWidthBottom = 5
 DrawCenter = false
-CornerRadiusTopLeft = 5
-CornerRadiusTopRight = 5
-CornerRadiusBottomRight = 5
-CornerRadiusBottomLeft = 5
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_ClipOutline_panel"]
 resource_local_to_scene = false
@@ -286,6 +285,56 @@ content_margin_right = -1.0
 content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_ClipOutline_panel")
+
+[sub_resource type="Resource" id="Resource_kc251"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Border = 13
+BorderWidthLeft = 1
+BorderWidthTop = 1
+BorderWidthRight = 1
+BorderWidthBottom = 1
+DrawCenter = false
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+
+[sub_resource type="StyleBox" id="StyleBox_sri2u"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_kc251")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_igq5l"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Border = 13
+BorderWidthLeft = 1
+BorderWidthTop = 1
+BorderWidthRight = 1
+BorderWidthBottom = 1
+DrawCenter = false
+CornerRadiusTopLeft = 1
+CornerRadiusTopRight = 1
+CornerRadiusBottomRight = 1
+CornerRadiusBottomLeft = 1
+
+[sub_resource type="StyleBox" id="StyleBox_0dpan"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_igq5l")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
 
 [sub_resource type="Resource" id="ThemeStyle_ClipThumbnail_panel"]
 script = ExtResource("style")
@@ -988,7 +1037,7 @@ Definition = 5
 script = ExtResource("color")
 ThemeType = "Inspector"
 Item = "key"
-Definition = 5
+Definition = 27
 
 [sub_resource type="Resource" id="Resource_5phew"]
 script = ExtResource("color")
@@ -1102,7 +1151,7 @@ Alpha = 0.6
 script = ExtResource("color")
 ThemeType = "Timeline"
 Item = "playhead"
-Definition = 5
+Definition = 27
 
 [sub_resource type="Resource" id="Resource_1i34x"]
 script = ExtResource("color")
@@ -1145,37 +1194,37 @@ Shade = 3
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_normal_color"
-Definition = 5
+Definition = 26
 
 [sub_resource type="Resource" id="Resource_tpkcg"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_hover_color"
-Definition = 5
+Definition = 26
 
 [sub_resource type="Resource" id="Resource_xxa0j"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_pressed_color"
-Definition = 5
+Definition = 26
 
 [sub_resource type="Resource" id="Resource_70bsv"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_hover_pressed_color"
-Definition = 5
+Definition = 26
 
 [sub_resource type="Resource" id="Resource_hr40q"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_focus_color"
-Definition = 5
+Definition = 26
 
 [sub_resource type="Resource" id="Resource_a24hu"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_disabled_color"
-Definition = 5
+Definition = 26
 Shade = 3
 
 [sub_resource type="Resource" id="Resource_dfltk"]
@@ -1228,6 +1277,43 @@ Item = "icon_pressed_color"
 script = ExtResource("color")
 ThemeType = "CheckButton"
 Item = "icon_disabled_color"
+Shade = 3
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_color"
+Definition = 26
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_hover_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_hover_color"
+Definition = 26
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_pressed_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_pressed_color"
+Definition = 26
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_hover_pressed_color"
+Definition = 26
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_focus_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_focus_color"
+Definition = 26
+
+[sub_resource type="Resource" id="ColorBinding_PlayButton_font_disabled_color"]
+script = ExtResource("color")
+ThemeType = "PlayButton"
+Item = "font_disabled_color"
+Definition = 27
 Shade = 3
 
 [sub_resource type="Resource" id="ThemeStyle_ColorPickerButton_normal"]
@@ -1392,6 +1478,12 @@ Family = 1
 Weight = 2
 Size = 2
 
+[sub_resource type="Resource" id="Resource_vi2x8"]
+script = ExtResource("font")
+ThemeType = "PlayButton"
+Family = 1
+Size = 2
+
 [sub_resource type="Resource" id="ThemeStyle_HScrollBar_grabber"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -1419,10 +1511,10 @@ Style = SubResource("ThemeStyle_HScrollBar_grabber")
 [sub_resource type="StyleBox" id="ThemedStyleBox_HScrollBar_grabber_highlight"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = -1.0
-content_margin_top = -1.0
-content_margin_right = -1.0
-content_margin_bottom = -1.0
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_HScrollBar_grabber")
 State = 1
@@ -1499,10 +1591,10 @@ Style = SubResource("ThemeStyle_HSlider_grabber_area")
 [sub_resource type="StyleBox" id="ThemedStyleBox_HSlider_grabber_area_highlight"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = -1.0
-content_margin_top = -1.0
-content_margin_right = -1.0
-content_margin_bottom = -1.0
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_HSlider_grabber_area")
 State = 1
@@ -2418,7 +2510,7 @@ Style = SubResource("ThemeStyle_PanelContainer_panel")
 [sub_resource type="Resource" id="ThemeStyle_PlayheadBody_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
-Background = 5
+Background = 26
 Border = 13
 BorderAlpha = 0.35
 BorderBlend = true
@@ -2439,7 +2531,7 @@ Style = SubResource("ThemeStyle_PlayheadBody_panel")
 [sub_resource type="Resource" id="ThemeStyle_PlayheadHead_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
-Background = 5
+Background = 26
 Border = 13
 BorderAlpha = 0.35
 BorderBlend = true
@@ -2564,6 +2656,32 @@ content_margin_right = -1.0
 content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_RulerBackground_panel")
+
+[sub_resource type="Resource" id="ThemeStyle_SelectionBox_panel"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 5
+BackgroundAlpha = 0.15
+Border = 5
+BorderAlpha = 0.8
+BorderWidthLeft = 1
+BorderWidthTop = 1
+BorderWidthRight = 1
+BorderWidthBottom = 1
+CornerRadiusTopLeft = 2
+CornerRadiusTopRight = 2
+CornerRadiusBottomRight = 2
+CornerRadiusBottomLeft = 2
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_SelectionBox_panel"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_SelectionBox_panel")
 
 [sub_resource type="Resource" id="ThemeStyle_SpinSlider_normal"]
 script = ExtResource("style")
@@ -3004,7 +3122,7 @@ Style = SubResource("ThemeStyle_ViewBackground_panel")
 default_font = ExtResource("7_sxwih")
 default_font_size = 14
 AngleKnob/colors/fill = Color(0.12, 0.12, 0.12, 1)
-AngleKnob/colors/pointer = Color(0.6901961, 0.21960784, 0.12941177, 1)
+AngleKnob/colors/pointer = Color(0.827451, 0.95686275, 0.38431373, 1)
 AngleKnob/colors/track = Color(0.92, 0.92, 0.92, 0.3)
 Button/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 Button/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
@@ -3078,7 +3196,7 @@ ClipButton/styles/read_only = SubResource("ThemedStyleBox_ClipButton_read_only")
 ClipContent/base_type = &"Panel"
 ClipContent/styles/panel = SubResource("ThemedStyleBox_ClipContent_panel")
 ClipHBox/base_type = &"HBoxContainer"
-ClipHBox/constants/separation = 3
+ClipHBox/constants/separation = 6
 ClipInnerShadow/base_type = &"Panel"
 ClipInnerShadow/styles/panel = SubResource("ThemedStyleBox_ClipInnerShadow_panel")
 ClipName/base_type = &"Label"
@@ -3086,6 +3204,10 @@ ClipName/colors/font_color = Color(1, 1, 1, 1)
 ClipName/font_sizes/font_size = 16
 ClipOutline/base_type = &"Panel"
 ClipOutline/styles/panel = SubResource("ThemedStyleBox_ClipOutline_panel")
+ClipOutlineInner/base_type = &"Panel"
+ClipOutlineInner/styles/panel = SubResource("StyleBox_sri2u")
+ClipOutlineOuter/base_type = &"Panel"
+ClipOutlineOuter/styles/panel = SubResource("StyleBox_0dpan")
 ClipShell/base_type = &"PanelContainer"
 ClipShell/styles/panel = SubResource("Empty")
 ClipSpeed/base_type = &"Label"
@@ -3095,14 +3217,14 @@ ClipSpeed/fonts/font = ExtResource("4_rt4o7")
 ClipThumbnail/base_type = &"Panel"
 ClipThumbnail/styles/panel = SubResource("ThemedStyleBox_ClipThumbnail_panel")
 ClipVBox/base_type = &"VBoxContainer"
-ClipVBox/constants/separation = 3
+ClipVBox/constants/separation = 6
 CodeEdit/colors/caret_color = Color(0.92, 0.92, 0.92, 1)
 CodeEdit/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 CodeEdit/colors/font_placeholder_color = Color(0.537, 0.537, 0.537, 1)
 CodeEdit/colors/font_readonly_color = Color(0.537, 0.537, 0.537, 1)
 CodeEdit/colors/font_selected_color = Color(0.92, 0.92, 0.92, 1)
 CodeEdit/colors/font_uneditable_color = Color(0.537, 0.537, 0.537, 1)
-CodeEdit/colors/selection_color = Color(0.6901961, 0.21960784, 0.12941177, 0.45)
+CodeEdit/colors/selection_color = Color(0.827451, 0.95686275, 0.38431373, 0.45)
 CodeEdit/styles/disabled = SubResource("ThemedStyleBox_CodeEdit_disabled")
 CodeEdit/styles/focus = SubResource("ThemedStyleBox_CodeEdit_focus")
 CodeEdit/styles/hover = SubResource("ThemedStyleBox_CodeEdit_hover")
@@ -3142,7 +3264,7 @@ HeaderLabel/base_type = &"Label"
 HeaderLabel/font_sizes/font_size = 16
 HeaderLabel/fonts/font = ExtResource("7_7hjjl")
 Inspector/colors/arrow = Color(0.92, 0.92, 0.92, 1)
-Inspector/colors/key = Color(0.6901961, 0.21960784, 0.12941177, 1)
+Inspector/colors/key = Color(1, 0, 1, 1)
 Inspector/colors/key_dim = Color(0.537, 0.537, 0.537, 1)
 Inspector/colors/reset = Color(0.537, 0.537, 0.537, 1)
 InspectorAxis/base_type = &"Label"
@@ -3245,6 +3367,8 @@ InspectorSwatch/styles/hover_pressed = SubResource("ThemedStyleBox_InspectorSwat
 InspectorSwatch/styles/normal = SubResource("ThemedStyleBox_InspectorSwatch_normal")
 InspectorSwatch/styles/pressed = SubResource("ThemedStyleBox_InspectorSwatch_pressed")
 InspectorSwatch/styles/read_only = SubResource("ThemedStyleBox_InspectorSwatch_read_only")
+InspectorVBox/base_type = &"TightVBox"
+InspectorVBox/constants/separation = 3
 InspectorValue/base_type = &"Label"
 InspectorValue/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 Label/colors/font_color = Color(0.92, 0.92, 0.92, 1)
@@ -3258,7 +3382,7 @@ LineEdit/colors/font_placeholder_color = Color(0.537, 0.537, 0.537, 1)
 LineEdit/colors/font_readonly_color = Color(0.537, 0.537, 0.537, 1)
 LineEdit/colors/font_selected_color = Color(0.92, 0.92, 0.92, 1)
 LineEdit/colors/font_uneditable_color = Color(0.537, 0.537, 0.537, 1)
-LineEdit/colors/selection_color = Color(0.6901961, 0.21960784, 0.12941177, 0.45)
+LineEdit/colors/selection_color = Color(0.827451, 0.95686275, 0.38431373, 0.45)
 LineEdit/fonts/font = ExtResource("7_sxwih")
 LineEdit/styles/disabled = SubResource("ThemedStyleBox_LineEdit_disabled")
 LineEdit/styles/focus = SubResource("ThemedStyleBox_LineEdit_focus")
@@ -3327,6 +3451,15 @@ OptionButton/styles/pressed = SubResource("ThemedStyleBox_OptionButton_pressed")
 OptionButton/styles/read_only = SubResource("ThemedStyleBox_OptionButton_read_only")
 Panel/styles/panel = SubResource("ThemedStyleBox_Panel_panel")
 PanelContainer/styles/panel = SubResource("ThemedStyleBox_PanelContainer_panel")
+PlayButton/base_type = &"Button"
+PlayButton/colors/font_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
+PlayButton/colors/font_disabled_color = Color(1, 0, 1, 0.5)
+PlayButton/colors/font_focus_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
+PlayButton/colors/font_hover_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
+PlayButton/colors/font_hover_pressed_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
+PlayButton/colors/font_pressed_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
+PlayButton/font_sizes/font_size = 14
+PlayButton/fonts/font = ExtResource("7_sxwih")
 PlayheadBody/base_type = &"Panel"
 PlayheadBody/styles/panel = SubResource("ThemedStyleBox_PlayheadBody_panel")
 PlayheadHead/base_type = &"Panel"
@@ -3345,12 +3478,14 @@ Ruler/colors/submark = Color(0.537, 0.537, 0.537, 1)
 RulerBackground/base_type = &"Panel"
 RulerBackground/styles/panel = SubResource("ThemedStyleBox_RulerBackground_panel")
 ScrollContainer/styles/panel = SubResource("Empty")
+SelectionBox/base_type = &"Panel"
+SelectionBox/styles/panel = SubResource("ThemedStyleBox_SelectionBox_panel")
 SpacedHBox/base_type = &"HBoxContainer"
 SpacedHBox/constants/separation = 20
 SpinSlider/base_type = &"Button"
 SpinSlider/colors/font = Color(0.92, 0.92, 0.92, 1)
 SpinSlider/colors/mixed = Color(0.537, 0.537, 0.537, 1)
-SpinSlider/colors/range_fill = Color(0.6901961, 0.21960784, 0.12941177, 0.35)
+SpinSlider/colors/range_fill = Color(0.827451, 0.95686275, 0.38431373, 0.35)
 SpinSlider/colors/unit = Color(0.537, 0.537, 0.537, 1)
 SpinSlider/fonts/font = ExtResource("4_rt4o7")
 SpinSlider/styles/disabled = SubResource("ThemedStyleBox_SpinSlider_disabled")
@@ -3371,7 +3506,7 @@ TextEdit/colors/font_placeholder_color = Color(0.537, 0.537, 0.537, 1)
 TextEdit/colors/font_readonly_color = Color(0.537, 0.537, 0.537, 1)
 TextEdit/colors/font_selected_color = Color(0.92, 0.92, 0.92, 1)
 TextEdit/colors/font_uneditable_color = Color(0.537, 0.537, 0.537, 1)
-TextEdit/colors/selection_color = Color(0.6901961, 0.21960784, 0.12941177, 0.45)
+TextEdit/colors/selection_color = Color(0.827451, 0.95686275, 0.38431373, 0.45)
 TextEdit/styles/disabled = SubResource("ThemedStyleBox_TextEdit_disabled")
 TextEdit/styles/focus = SubResource("ThemedStyleBox_TextEdit_focus")
 TextEdit/styles/hover = SubResource("ThemedStyleBox_TextEdit_hover")
@@ -3383,7 +3518,7 @@ TightHBox/base_type = &"HBoxContainer"
 TightHBox/constants/separation = 0
 TightVBox/base_type = &"VBoxContainer"
 TightVBox/constants/separation = 0
-Timeline/colors/playhead = Color(0.6901961, 0.21960784, 0.12941177, 1)
+Timeline/colors/playhead = Color(1, 0, 1, 1)
 Timeline/colors/snap_line = Color(1, 1, 1, 0.6)
 TimelineSpacer/base_type = &"Panel"
 TimelineSpacer/styles/panel = SubResource("ThemedStyleBox_TimelineSpacer_panel")
@@ -3407,5 +3542,5 @@ ViewBackground/base_type = &"Panel"
 ViewBackground/styles/panel = SubResource("ThemedStyleBox_ViewBackground_panel")
 script = ExtResource("theme")
 Palette = ExtResource("palette")
-ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5")])
-FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn")])
+ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color")])
+FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8")])

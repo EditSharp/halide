@@ -58,6 +58,7 @@ alignment = 1
 
 [node name="Play" type="Button" parent="VBoxContainer/Controls" unique_id=364320425]
 layout_mode = 2
+theme_type_variation = &"PlayButton"
 text = "Play"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=630759231]

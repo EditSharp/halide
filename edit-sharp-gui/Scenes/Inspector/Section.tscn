@@ -7,7 +7,7 @@
 [node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
 offset_right = 420.0
 offset_bottom = 160.0
-theme_type_variation = &"TightVBox"
+theme_type_variation = &"InspectorVBox"
 script = ExtResource("1_section")
 header = NodePath("Header Section/Header")
 headerControls = NodePath("Header Section/Header/HeaderControls")

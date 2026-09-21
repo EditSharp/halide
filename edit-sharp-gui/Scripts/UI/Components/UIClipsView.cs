@@ -25,8 +25,13 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 
 	// a captured drag can end without a release - the window lost focus, or the
-	// os swallowed the button. the pan cursor would otherwise stay stuck on
-	public void CancelDrag(MouseButtonState button) => MouseDefaultCursorShape = CursorShape.Arrow;
+	// os swallowed the button. the pan cursor would otherwise stay stuck on,
+	// and a box would keep following a cursor that let go
+	public void CancelDrag(MouseButtonState button)
+	{
+		MouseDefaultCursorShape = CursorShape.Arrow;
+		CancelBox();
+	}
 
 	// ---- keyboard ----
 
@@ -289,21 +294,41 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
 		MouseButtonState middle = InputManager.Singleton.Mouse.MiddleButton;
 
-        switch (left.Action)
-        {
-            case MouseAction.Press:
-            case MouseAction.DoubleClick:
-                if (!left.Capture(this)) break;
+		switch (left.Action)
+		{
+			case MouseAction.Press:
+			case MouseAction.DoubleClick:
+				if (!left.Capture(this)) break;
 
-                ClaimKeyboard();
-                MarkTarget(GetChannelAtPoint(InputManager.Singleton.Mouse.CurrentPosition));
+				ClaimKeyboard();
+				MarkTarget(GetChannelAtPoint(InputManager.Singleton.Mouse.CurrentPosition));
 
-                if (left.PressModifiers.Shift) SelectAll();
-                // ctrl on empty space deliberately does nothing - it is the
-                // "remove from selection" modifier and there is nothing here
-                else if (!left.PressModifiers.Control) DeselectAll();
-                break;
-        }
+				// remembered in content space, so a box that starts after the
+				// view has scrolled still opens where the press actually landed
+				pressedAt = UITimeline.ToViewContent(InputManager.Singleton.Mouse.CurrentPosition);
+
+				// shift and control are the add and remove modifiers, and on
+				// empty space there is nothing to add or remove - the box that
+				// may follow does that. a plain press starts over
+				if (!left.PressModifiers.Shift && !left.PressModifiers.Control) DeselectAll();
+				break;
+
+			case MouseAction.DragStart:
+				if (!left.HasCapture(this)) break;
+				BeginBox(left);
+				// fall through so the frame that started the box also draws it
+				goto case MouseAction.DragMove;
+
+			case MouseAction.DragMove:
+				if (!left.HasCapture(this) || !box.Active) break;
+				UpdateBox();
+				break;
+
+			case MouseAction.DragEnd:
+				if (!left.HasCapture(this) || !box.Active) break;
+				FinishBox();
+				break;
+		}
 
 		switch (middle.Action)
 		{
@@ -353,11 +378,93 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 				AcceptEvent();
 			}
 		}
-
-		// rubber-band selection goes on left DragStart/DragMove here
 	}
 
-	
+	// ---- rubber-band selection: a drag on empty space ----
+
+	// the driver decides what the box does to the selection; the overlay is
+	// only ever told where to be. both live here rather than in the scene so
+	// the view carries them wherever it is instanced
+	BoxSelect<UIClip> box;
+	UISelectionBox selectionBox;
+
+	// where the press landed, in content space
+	Vector2 pressedAt;
+
+	public override void _Ready()
+	{
+		box = new(Selection);
+		selectionBox = new();
+		clipsControl.AddChild(selectionBox);
+	}
+
+	void BeginBox(MouseButtonState left)
+	{
+		UITimeline.FlushScrollEase();
+		UITimeline.BeginViewScroll();
+
+		box.Begin(pressedAt, BoxSelect<UIClip>.ModeFor(left.PressModifiers));
+	}
+
+	// the box follows the cursor in content space, so any scrolling since it
+	// began counts as reach - the anchor stays put while the view moves under
+	// the cursor
+	void UpdateBox()
+	{
+		box.Update(UITimeline.ToViewContent(InputManager.Singleton.Mouse.CurrentPosition));
+
+		Rect2 rect = box.Rect;
+		selectionBox.Cover(rect);
+
+		// the selected clips go to the back of the tree to win the hit test,
+		// which would put them over the box - so the box goes behind them again
+		clipsControl.MoveChild(selectionBox, -1);
+
+		// a boxed clip brings its linked clips with it, as a click on it does
+		List<UIClip> hits = [.. UIClips.Where(c => rect.Intersects(c.GetRect()))];
+		HashSet<Guid> groups = [.. hits.Where(c => c.Clip.LinkGroupId is not null).Select(c => c.Clip.LinkGroupId.Value)];
+
+		hits.AddRange([.. UIClips.Where(c => !hits.Contains(c) && c.Clip.LinkGroupId is Guid id && groups.Contains(id))]);
+
+		if (box.Apply(hits)) UpdateSelection();
+	}
+
+	void FinishBox()
+	{
+		box.End();
+		selectionBox.Hide();
+	}
+
+	// the box never got its release, so the selection goes back to what it
+	// was before the box began
+	void CancelBox()
+	{
+		if (box is null || !box.Active) return;
+
+		if (box.Cancel()) UpdateSelection();
+		selectionBox.Hide();
+	}
+
+	// driven every frame, like a clip drag: the view scrolls while the cursor
+	// pushes against an edge, and the box has to follow the view even on
+	// frames where the cursor never moved
+	void ProcessBox(double delta)
+	{
+		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
+
+		// belt and braces: if the gesture ended by any route that did not come
+		// back through FinishBox or CancelBox, stop driving it
+		if (!left.HasCapture(this) || left.ClickState == MouseButtonClickState.Released)
+		{
+			CancelBox();
+			return;
+		}
+
+		Vector2 push = UITimeline.GetEdgePush(InputManager.Singleton.Mouse.CurrentPosition);
+		if (push != Vector2.Zero) UITimeline.ScrollView(push * (float)delta);
+
+		UpdateBox();
+	}
 
 	enum ChannelType { Video, Audio }
 	(ChannelType type, int index, bool exists) GetChannelAtPoint(Vector2 globalPosition)
@@ -444,6 +551,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	{
 		UIClips.Remove(c);
 		if (c == handleClip) handleClip = null;
+		box?.Forget(c);
 		c.QueueFree();
 	}
 
@@ -601,7 +709,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// a drag, since a handle in the middle of one must not vanish
 	void FollowCursorWithHandles()
 	{
-		if (Selection.Count < 2 || dragClip is not null || edgeDrag is not null) return;
+		if (Selection.Count < 2 || dragClip is not null || edgeDrag is not null || box.Active) return;
 
 		Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
 		if (!UITimeline.ViewContains(cursor)) return;
@@ -674,6 +782,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 		FollowCursorWithHandles();
 		NotifySelection();
+
+		if (box.Active)
+		{
+			ProcessBox(delta);
+			return;
+		}
 
 		if (edgeDrag is not null)
 		{

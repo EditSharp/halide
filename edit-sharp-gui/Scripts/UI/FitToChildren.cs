@@ -1,3 +1,4 @@
+using EditSharpGUI.Scripts.UI;
 using Godot;
 using System;
 
@@ -28,7 +29,8 @@ public partial class FitToChildren : Control
 		float height = 0f;
 		foreach (var child in GetChildren())
 		{
-			if (child is Control c)
+			// overlays sit on the content without being part of it
+			if (child is Control c && child is not IContentOverlay)
 			{
 				width = c.GetRect().End.X > width ? c.GetRect().End.X : width;
 				height = c.GetRect().End.Y > height ? c.GetRect().End.Y : height;

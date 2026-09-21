@@ -21,7 +21,6 @@ next = NodePath("Next")
 resetTrack = NodePath("ResetTrack")
 
 [node name="Prev" type="Button" parent="." unique_id=844623738]
-visible = false
 texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
@@ -36,7 +35,6 @@ script = ExtResource("2_glyph")
 IconImage = ExtResource("2_b6yod")
 
 [node name="Key" type="Button" parent="." unique_id=1384199451]
-visible = false
 texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
@@ -53,7 +51,6 @@ IconActive = ExtResource("3_nfx4r")
 IconKeyed = ExtResource("4_ay76e")
 
 [node name="Next" type="Button" parent="." unique_id=1264258869]
-visible = false
 texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
@@ -69,7 +66,6 @@ Shape = 2
 IconImage = ExtResource("6_p80ug")
 
 [node name="ResetTrack" type="Button" parent="." unique_id=1230629271]
-visible = false
 texture_filter = 4
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
