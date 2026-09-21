@@ -6,8 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://p3ldo02ctj21" path="res://Images/Icons/Extend.png" id="5_b2xat"]
 [ext_resource type="Texture2D" uid="uid://cu8ts4x8xkhe2" path="res://Images/Icons/Time.png" id="6_3pjoj"]
 [ext_resource type="Script" uid="uid://cl65r35xlwikt" path="res://Scripts/UI/Components/UIDragHandle.cs" id="6_fdvya"]
-[ext_resource type="Script" path="res://Scripts/UI/Thumbnails/ThumbnailStrip.cs" id="7_strip"]
-[ext_resource type="Shader" path="res://Shaders/RoundedMask.gdshader" id="8_mask"]
+[ext_resource type="Script" uid="uid://cvvbnvm2uvt6e" path="res://Scripts/UI/Thumbnails/ThumbnailStrip.cs" id="7_strip"]
+[ext_resource type="Shader" uid="uid://drirp0g11rs8c" path="res://Shaders/RoundedMask.gdshader" id="8_mask"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_strip"]
 resource_local_to_scene = true
@@ -15,7 +15,7 @@ shader = ExtResource("8_mask")
 shader_parameter/size = Vector2(100, 50)
 shader_parameter/radius = 2.0
 
-[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("strip", "content", "controlsBox", "clipName", "speed", "speedPercentage", "widthPriority", "thumbnail", "outline", "extends", "timeshifts", "startControls", "endControls")]
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "controlsBox", "clipName", "speed", "speedPercentage", "widthPriority", "thumbnail", "outline", "extends", "timeshifts", "startControls", "endControls", "strip")]
 oversampling_with_scale = 1
 offset_right = 300.0
 offset_bottom = 100.0
@@ -29,12 +29,12 @@ speed = NodePath("Content/VBoxContainer/HBoxContainer/Speed")
 speedPercentage = NodePath("Content/VBoxContainer/HBoxContainer/Speed/Percentage")
 widthPriority = [NodePath("Content/VBoxContainer/HBoxContainer/Name"), NodePath("Content/VBoxContainer/HBoxContainer/Speed"), NodePath("Content/VBoxContainer/HBoxContainer/Graph"), NodePath("Content/VBoxContainer/HBoxContainer/Options")]
 thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
-strip = NodePath("Content/VBoxContainer/Thumbnail/Strip")
 outline = NodePath("Content/Outline")
 extends = [NodePath("Clip Start Controls/Extend"), NodePath("Clip End Controls/Extend")]
 timeshifts = [NodePath("Clip Start Controls/Timeshift"), NodePath("Clip End Controls/Timeshift")]
 startControls = NodePath("Clip Start Controls")
 endControls = NodePath("Clip End Controls")
+strip = NodePath("Content/VBoxContainer/Thumbnail/Strip")
 
 [node name="Content" type="Panel" parent="." unique_id=1654615429]
 layout_mode = 2
@@ -132,8 +132,9 @@ size_flags_vertical = 3
 mouse_filter = 1
 theme_type_variation = &"ClipThumbnail"
 
-[node name="Strip" type="Control" parent="Content/VBoxContainer/Thumbnail"]
+[node name="Strip" type="Control" parent="Content/VBoxContainer/Thumbnail" unique_id=38570286]
 material = SubResource("ShaderMaterial_strip")
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -141,7 +142,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-clip_contents = true
 script = ExtResource("7_strip")
 
 [node name="Inner Shadow" type="Panel" parent="Content" unique_id=1578119766]

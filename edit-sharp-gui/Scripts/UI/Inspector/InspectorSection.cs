@@ -23,23 +23,30 @@ public partial class InspectorSection : VBoxContainer
 
 	public VBoxContainer Body => body;
 
+	// these delegate to the header, an export. the C# hot-reload serialiser
+	// reads and writes public properties before it restores exported
+	// fields, so the header can be null here
 	public string Title
 	{
-		get => header.Title ?? string.Empty;
-		set => header.Title = value;
+		get => header?.Title ?? string.Empty;
+		set { if (header is not null) header.Title = value; }
 	}
 
 	// a strip of colour down the header's left: a node's category
 	public Color? Accent
 	{
-		get => header.Accent;
-		set => header.Accent = value;
+		get => header?.Accent;
+		set { if (header is not null) header.Accent = value; }
 	}
 
 	public bool Collapsed
 	{
-		get => !header.ButtonPressed;
-		set { header.ButtonPressed = !value; indent.Visible = !value; }
+		get => header is null || !header.ButtonPressed;
+		set
+		{
+			if (header is not null) header.ButtonPressed = !value;
+			if (indent is not null) indent.Visible = !value;
+		}
 	}
 
 	public override void _Ready()
