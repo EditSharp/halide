@@ -128,6 +128,7 @@ public partial class Inspector : Control
 	internal InspectorSection CreateSection(string title, Color? accent, bool nested)
 	{
 		InspectorSection section = (nested ? subsectionScene : sectionScene).Instantiate<InspectorSection>();
+		section.Nested = nested;
 		section.Title = title;
 		section.Accent = accent;
 		return section;
@@ -152,29 +153,43 @@ public partial class Inspector : Control
 
 	// ---- what is shown ----
 
+	// a show is planned as data first and then reconciled onto the tree:
+	// a part already there that would be built the same way is kept and
+	// only re-pointed at the new objects, so a selection that grows by a
+	// clip re-reads the rows instead of instantiating every scene again.
+	// that is the difference between a rubber-band that keeps up and one
+	// that stalls every time it takes in another clip
+
+	abstract record Plan;
+
+	// a section: what its header shows, the switch on it, and its body
+	sealed record SectionPlan(string Title, Color? Accent, bool Nested, PropertyDescriptor Toggle, IReadOnlyList<InspectorTarget> ToggleTargets, IReadOnlyList<Plan> Body) : Plan;
+
+	// a row is the same row whenever it edits the same kind of value under
+	// the same name - the objects behind it are only ever bindings
+	sealed record RowPlan(string Label, EditorSpec Spec, IReadOnlyList<Binding> Bindings) : Plan;
+
+	sealed record ListPlan(string Label, PropertyDescriptor Descriptor, PropertyBinding Binding) : Plan;
+
+	// a line of text where rows would go: "(none)"
+	sealed record NotePlan(string Text) : Plan;
+
 	public void Clear() => Show([]);
 
 	public void Show(IReadOnlyList<InspectorSectionSpec> sections)
 	{
-		foreach (Node child in content.GetChildren())
-		{
-			if (child != empty) child.QueueFree();
-		}
-
 		empty.Visible = sections.Count == 0;
 
-		foreach (InspectorSectionSpec spec in sections)
-		{
-			InspectorSection section = CreateSection(spec.Title, spec.Accent, nested: false);
-			content.AddChild(section);
+		Reconcile(content, [.. sections.Select(PlanSection)]);
+	}
 
-			// an Enabled shared by every object goes on the header as a
-			// switch rather than in the body as a row
-			PropertyDescriptor enabled = HeaderToggle(spec.Targets);
-			if (enabled is not null) section.BindToggle(this, enabled, spec.Targets);
+	SectionPlan PlanSection(InspectorSectionSpec spec)
+	{
+		// an Enabled shared by every object goes on the header as a
+		// switch rather than in the body as a row
+		PropertyDescriptor enabled = HeaderToggle(spec.Targets);
 
-			BuildRows(section.Body, spec.Targets, skip: enabled?.Name);
-		}
+		return new(spec.Title, spec.Accent, Nested: false, enabled, spec.Targets, PlanRows(spec.Targets, skip: enabled?.Name));
 	}
 
 	// the bool property named Enabled, when every object has one
@@ -225,12 +240,17 @@ public partial class Inspector : Control
 
 	Color ClipAccent(Clip clip) => GetThemeColor(clip is AudioClip ? "audio" : "video", "Clip");
 
-	// the rows for a set of objects edited together: one per property they
-	// all have, grouped as their attributes say, objects folded inline,
-	// lists as lists
+	// the rows for a set of objects edited together, built into a body that
+	// is already in the tree - a list's item, from ListRow
 	internal void BuildRows(VBoxContainer into, IReadOnlyList<InspectorTarget> targets, string skip = null)
+		=> Reconcile(into, PlanRows(targets, skip));
+
+	// one row per property they all have, grouped as their attributes say,
+	// objects folded inline, lists as lists
+	List<Plan> PlanRows(IReadOnlyList<InspectorTarget> targets, string skip = null)
 	{
-		if (targets.Count == 0) return;
+		List<Plan> plans = [];
+		if (targets.Count == 0) return plans;
 
 		// the descriptors of the first, kept only where every other object
 		// has one by the same name
@@ -242,37 +262,40 @@ public partial class Inspector : Control
 			shared.RemoveAll(d => !names.Contains(d.Name));
 		}
 
-		Dictionary<string, InspectorSection> groups = [];
+		// a group is a nested section, placed where its first member is
+		Dictionary<string, List<Plan>> groups = [];
 
 		foreach (PropertyDescriptor descriptor in shared.OrderBy(d => d.Order))
 		{
-			VBoxContainer parent = into;
+			List<Plan> into = plans;
 
 			if (!string.IsNullOrEmpty(descriptor.Group))
 			{
-				if (!groups.TryGetValue(descriptor.Group, out InspectorSection group))
+				if (!groups.TryGetValue(descriptor.Group, out List<Plan> body))
 				{
-					group = CreateSection(descriptor.Group, null, nested: true);
-					into.AddChild(group);
-					groups[descriptor.Group] = group;
+					body = [];
+					groups[descriptor.Group] = body;
+					plans.Add(new SectionPlan(descriptor.Group, null, Nested: true, null, null, body));
 				}
 
-				parent = group.Body;
+				into = body;
 			}
 
-			parent.AddChild(BuildRow(descriptor, targets));
+			into.Add(PlanRow(descriptor, targets));
 		}
+
+		return plans;
 	}
 
-	Control BuildRow(PropertyDescriptor descriptor, IReadOnlyList<InspectorTarget> targets)
+	Plan PlanRow(PropertyDescriptor descriptor, IReadOnlyList<InspectorTarget> targets)
 	{
 		// a list: one object at a time
 		if (descriptor.IsCollection)
 		{
 			if (targets.Count == 1)
-				return CreateListRow(descriptor.DisplayName, descriptor, new PropertyBinding(descriptor, targets[0].Object) { Clip = targets[0].Clip });
+				return new ListPlan(descriptor.DisplayName, descriptor, new PropertyBinding(descriptor, targets[0].Object) { Clip = targets[0].Clip });
 
-			return CreateRow(descriptor.DisplayName, EditorSpec.Of(descriptor) with { Editor = PropertyEditor.Auto, ReadOnly = true }, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
+			return new RowPlan(descriptor.DisplayName, EditorSpec.Of(descriptor) with { Editor = PropertyEditor.Auto, ReadOnly = true }, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
 		}
 
 		// an object with properties of its own: folded inline
@@ -288,12 +311,9 @@ public partial class Inspector : Control
 				if (child is not null) children.Add(new InspectorTarget(child, t.Clip));
 			}
 
-			InspectorSection section = CreateSection(descriptor.DisplayName, null, nested: true);
+			IReadOnlyList<Plan> body = children.Count == targets.Count ? PlanRows(children) : [new NotePlan("(none)")];
 
-			if (children.Count == targets.Count) BuildRows(section.Body, children);
-			else section.Body.AddChild(new Label { Text = "(none)", ThemeTypeVariation = "InspectorLabel" });
-
-			return section;
+			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body);
 		}
 
 		EditorSpec spec = EditorSpec.Of(descriptor);
@@ -302,7 +322,122 @@ public partial class Inspector : Control
 		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<string> choices)
 			spec = spec with { Editor = PropertyEditor.Dropdown, Choices = [.. choices] };
 
-		return CreateRow(descriptor.DisplayName, spec, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
+		return new RowPlan(descriptor.DisplayName, spec, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
+	}
+
+	// ---- putting a plan on the tree ----
+
+	// walks the plans against the children in order: a child that matches
+	// its plan is updated in place, one that does not is replaced, and
+	// whatever is left past the end goes. sections recurse into their
+	// bodies, so a clip joining the selection touches only the rows whose
+	// set of properties actually changed
+	void Reconcile(Node into, IReadOnlyList<Plan> plans)
+	{
+		// the children still standing - not the empty notice, not anything
+		// already on its way out
+		List<Node> existing = [.. into.GetChildren().Where(n => n != empty && !n.IsQueuedForDeletion())];
+
+		int i = 0;
+
+		for (; i < plans.Count; i++)
+		{
+			Plan plan = plans[i];
+
+			if (i < existing.Count && Matches(existing[i], plan))
+			{
+				Update(existing[i], plan);
+				continue;
+			}
+
+			Node node = Build(plan);
+
+			if (i < existing.Count)
+			{
+				Node old = existing[i];
+				int at = old.GetIndex();
+
+				// out of the tree now, not at the end of the frame, so the
+				// slot it held is really free for the new one
+				into.RemoveChild(old);
+				old.QueueFree();
+
+				into.AddChild(node);
+				into.MoveChild(node, at);
+				existing[i] = node;
+			}
+			else into.AddChild(node);
+		}
+
+		for (; i < existing.Count; i++)
+		{
+			into.RemoveChild(existing[i]);
+			existing[i].QueueFree();
+		}
+	}
+
+	// whether a part already built would be built the same way for this
+	// plan - the same scene with the same editor - so it can be kept
+	static bool Matches(Node node, Plan plan) => (node, plan) switch
+	{
+		(InspectorSection s, SectionPlan p) => s.Nested == p.Nested && (s.ToggleDescriptor is null) == (p.Toggle is null),
+		(InspectorRow r, RowPlan p) => r.Label == p.Label && SameSpec(r.Spec, p.Spec),
+		(ListRow l, ListPlan p) => l.Descriptor == p.Descriptor && l.Label == p.Label,
+		(Label t, NotePlan p) => t.Text == p.Text,
+		_ => false
+	};
+
+	// records compare arrays by reference, and the choices are made anew
+	// for every plan
+	static bool SameSpec(EditorSpec a, EditorSpec b)
+		=> (a with { Choices = null }) == (b with { Choices = null })
+		&& (a.Choices is null ? b.Choices is null : b.Choices is not null && a.Choices.SequenceEqual(b.Choices));
+
+	void Update(Node node, Plan plan)
+	{
+		switch (node, plan)
+		{
+			case (InspectorSection s, SectionPlan p):
+				s.Title = p.Title;
+				s.Accent = p.Accent;
+				if (p.Toggle is not null) s.BindToggle(this, p.Toggle, p.ToggleTargets);
+				Reconcile(s.Body, p.Body);
+				break;
+
+			case (InspectorRow r, RowPlan p):
+				r.Rebind(p.Bindings);
+				break;
+
+			case (ListRow l, ListPlan p):
+				l.Rebind(p.Binding);
+				break;
+		}
+	}
+
+	Node Build(Plan plan)
+	{
+		switch (plan)
+		{
+			case SectionPlan p:
+			{
+				InspectorSection section = CreateSection(p.Title, p.Accent, p.Nested);
+				if (p.Toggle is not null) section.BindToggle(this, p.Toggle, p.ToggleTargets);
+				Reconcile(section.Body, p.Body);
+				return section;
+			}
+
+			case RowPlan p:
+				return CreateRow(p.Label, p.Spec, p.Bindings);
+
+			case ListPlan p:
+				return CreateListRow(p.Label, p.Descriptor, p.Binding);
+
+			case NotePlan p:
+				return new Label { Text = p.Text, ThemeTypeVariation = "InspectorLabel" };
+
+			default:
+				throw new ArgumentOutOfRangeException(nameof(plan));
+		}
 	}
 
 	// ---- keeping up with the data ----

@@ -42,6 +42,14 @@ public partial class InspectorRow : HBoxContainer
 		Bindings = bindings;
 	}
 
+	// the same property on other objects. the editor stays - it is the
+	// same kind of value - and only the reading changes
+	public void Rebind(IReadOnlyList<Binding> bindings)
+	{
+		Bindings = bindings;
+		Refresh();
+	}
+
 	// the key column, for a row placed by hand in a scene to show a state
 	public KeyColumn Keys => keys;
 

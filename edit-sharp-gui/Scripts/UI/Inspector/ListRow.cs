@@ -35,6 +35,21 @@ public partial class ListRow : VBoxContainer
 		this.binding = binding;
 	}
 
+	public string Label => label;
+	public PropertyDescriptor Descriptor => descriptor;
+
+	// the same list property on another object. its items are bound to
+	// the old list by index, so they are built again from the new one
+	public void Rebind(PropertyBinding binding)
+	{
+		bool same = ReferenceEquals(binding.Target, this.binding?.Target);
+
+		this.binding = binding;
+		if (!same) builtCount = -1;
+
+		Refresh();
+	}
+
 	public override void _Ready()
 	{
 		// placed in a scene by hand, with no list behind it: shown as laid out

@@ -23,6 +23,11 @@ public partial class InspectorSection : VBoxContainer
 
 	public VBoxContainer Body => body;
 
+	// which of the two scenes this is, so a rebuild can tell them apart
+	public bool Nested { get; internal set; }
+
+	public PropertyDescriptor ToggleDescriptor => toggleDescriptor;
+
 	// these delegate to the header, an export. the C# hot-reload serialiser
 	// reads and writes public properties before it restores exported
 	// fields, so the header can be null here
