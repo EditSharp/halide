@@ -8,10 +8,11 @@ using System.Linq;
 // theme pages of the variation it wears and of the class beneath it, each
 // in one of godot's own inspectors. a type's styleboxes share one
 // ThemeStyle, so that appears once, with its picks and shape; its colour
-// and font bindings and its constants come as one proxy object. edits are
-// undoable through the editor and the theme file is saved at once. every
-// signal here is connected by method name, so the connections survive
-// the assembly reload a build causes
+// and font bindings and its constants come as one proxy object. every page
+// is a foldable section that does not scroll on its own, so the whole dock
+// is one list under one scrollbar. edits are undoable through the editor
+// and the theme file is saved at once. every signal here is connected by
+// method name, so the connections survive the assembly reload a build causes
 [Tool]
 public partial class NodeThemeDock : VBoxContainer
 {
@@ -21,6 +22,10 @@ public partial class NodeThemeDock : VBoxContainer
 
 	readonly List<string> shownTypes = [];
 	readonly List<TypeThemeProxy> proxies = [];
+
+	// the sections the user folded away, by title: a page coming back under
+	// a title folded before comes back folded
+	readonly HashSet<string> folded = [];
 	string shownTitle;
 
 	// the theme the edited scene's controls are drawn with, so an edit shows
@@ -115,53 +120,114 @@ public partial class NodeThemeDock : VBoxContainer
 		}
 	}
 
-	static readonly string[] States = ["hover", "pressed", "hover_pressed", "disabled", "read_only", "focus"];
+	// ---- the families: the stylebox items that are one look ----
+
+	// a type's items that are one look worn in several states: the base item
+	// holds the style and the rest share it, each in its state. a type keeps
+	// whichever families it has a base item for; everything outside them - a
+	// panel, a separator, a slider's track - is a look of its own
+	static readonly (string Base, (string Item, StyleState State)[] Members)[] Families =
+	[
+		new("normal",
+		[
+			("hover", StyleState.Hover),
+			("pressed", StyleState.Pressed),
+			("hover_pressed", StyleState.Pressed),
+			("disabled", StyleState.Disabled),
+			("read_only", StyleState.Disabled),
+			("focus", StyleState.Focus)
+		]),
+
+		// a tab bar's tabs: the unselected tab is the look and the selected
+		// one wears it in the pressed shade, the way an on button does
+		new("tab_unselected",
+		[
+			("tab_hovered", StyleState.Hover),
+			("tab_selected", StyleState.Pressed),
+			("tab_disabled", StyleState.Disabled),
+			("tab_focus", StyleState.Focus)
+		]),
+
+		// a scrollbar's or slider's grabber, the filled part of a slider's
+		// track, and a scrollbar's track
+		new("grabber",
+		[
+			("grabber_highlight", StyleState.Hover),
+			("grabber_pressed", StyleState.Pressed),
+			("grabber_disabled", StyleState.Disabled)
+		]),
+		new("grabber_area", [("grabber_area_highlight", StyleState.Hover)]),
+		new("scroll", [("scroll_focus", StyleState.Focus)])
+	];
 
 	// a ThemedStyleBox added in the theme editor comes with no style inside
-	// and draws nothing; it gets one here so there is something to edit - the
-	// state items share the normal one, in their state
+	// and draws nothing; it gets one here so there is something to edit. a
+	// family's items are pointed at their base item's style, in their state,
+	// every time the type is shown - sharing one look is the invariant this
+	// dock keeps, not something the theme editor has to be told item by item
 	static void GiveStyles(EditSharpTheme theme, string type)
 	{
 		bool changed = false;
-		ThemeStyle shared = theme.GetStylebox("normal", type) is ThemedStyleBox n ? n.Style : null;
+		HashSet<string> present = [.. theme.GetStyleboxList(type)];
+		HashSet<string> familied = [];
 
-		foreach (string item in theme.GetStyleboxList(type))
+		foreach ((string head, (string Item, StyleState State)[] members) in Families)
 		{
-			if (theme.GetStylebox(item, type) is not ThemedStyleBox box || box.Style is not null) continue;
+			if (!present.Contains(head) || theme.GetStylebox(head, type) is not ThemedStyleBox shared) continue;
 
-			if (States.Contains(item) && shared is not null)
-			{
-				box.Style = shared;
-				box.State = item switch
-				{
-					"hover" => StyleState.Hover,
-					"pressed" or "hover_pressed" => StyleState.Pressed,
-					"disabled" or "read_only" => StyleState.Disabled,
-					"focus" => StyleState.Focus,
-					_ => StyleState.Normal
-				};
-			}
-			else
-			{
-				box.Style = new ThemeStyle { Palette = theme.Palette };
-				if (item == "normal") shared = box.Style;
-			}
+			familied.Add(head);
 
+			if (shared.Style is null) { shared.Style = new ThemeStyle { Palette = theme.Palette }; changed = true; }
+			if (shared.State != StyleState.Normal) { shared.State = StyleState.Normal; changed = true; }
+
+			foreach ((string item, StyleState state) in members)
+			{
+				if (!present.Contains(item) || theme.GetStylebox(item, type) is not ThemedStyleBox box) continue;
+
+				familied.Add(item);
+				if (box.Style != shared.Style) { box.Style = shared.Style; changed = true; }
+				if (box.State != state) { box.State = state; changed = true; }
+			}
+		}
+
+		foreach (string item in present)
+		{
+			if (familied.Contains(item) || theme.GetStylebox(item, type) is not ThemedStyleBox box || box.Style is not null) continue;
+			box.Style = new ThemeStyle { Palette = theme.Palette };
 			changed = true;
 		}
 
 		if (changed) Save(theme);
 	}
 
+	// ---- the pages ----
+
+	// the sections this dock holds, in the order they are shown
+	public IEnumerable<FoldableContainer> Sections => pages.GetChildren().OfType<FoldableContainer>();
+
 	// the inspectors this dock holds, for tests and for the plugin
-	public IEnumerable<EditorInspector> Inspectors => pages.GetChildren().OfType<EditorInspector>();
+	public IEnumerable<EditorInspector> Inspectors => Sections.SelectMany(section => section.GetChildren().OfType<EditorInspector>());
 
 	void AddPage(string title, GodotObject target)
 	{
-		pages.AddChild(new Label { Text = title });
+		FoldableContainer section = new()
+		{
+			Title = title,
+			Folded = folded.Contains(title),
+			TitleTextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
+		};
+		pages.AddChild(section);
 
-		EditorInspector inspector = new() { SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new(0f, 24f) };
-		pages.AddChild(inspector);
+		// the page is not a scroll view of its own: with scrolling off the
+		// inspector asks for the height of everything in it, and the one
+		// scrollbar outside does the scrolling
+		EditorInspector inspector = new()
+		{
+			VerticalScrollMode = ScrollContainer.ScrollMode.Disabled,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+			SizeFlagsVertical = SizeFlags.ShrinkBegin
+		};
+		section.AddChild(inspector);
 		inspector.Edit(target);
 
 		// every edit goes to the file at once; undo is the editor's own
@@ -170,8 +236,21 @@ public partial class NodeThemeDock : VBoxContainer
 
 	void OnPropertyEdited(string property) => Save(ProjectTheme);
 
+	// what is folded right now, so the next build can put it back. read off
+	// the sections rather than followed by signal: the dock is built afresh
+	// after every assembly reload, and this survives that
+	void RememberFolds()
+	{
+		foreach (FoldableContainer section in Sections)
+		{
+			if (section.Folded) folded.Add(section.Title);
+			else folded.Remove(section.Title);
+		}
+	}
+
 	void Clear()
 	{
+		RememberFolds();
 		shownTypes.Clear();
 		shownTitle = null;
 

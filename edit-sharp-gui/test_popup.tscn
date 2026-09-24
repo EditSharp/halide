@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://5wi3k253576m"]
+
+[ext_resource type="Script" uid="uid://2fxcrwa4vd4k" path="res://TestPopup.cs" id="1_dpne6"]
+[ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="3_dtgeo"]
+
+[node name="TestPopup" type="Control" unique_id=1342638072 node_paths=PackedStringArray("popup")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dpne6")
+popup = NodePath("PopupMenu")
+
+[node name="PopupMenu" type="PopupMenu" parent="." unique_id=239512985]
+prefer_native_menu = true
+item_count = 5
+item_0/text = "Cut Clip"
+item_0/id = 0
+item_1/text = "Copy Clip"
+item_1/id = 1
+item_2/text = "Paste Clip"
+item_2/id = 2
+item_3/icon = ExtResource("3_dtgeo")
+item_3/id = 4
+item_3/disabled = true
+item_3/separator = true
+item_4/text = "Linked"
+item_4/checkable = 1
+item_4/checked = true
+item_4/id = 3

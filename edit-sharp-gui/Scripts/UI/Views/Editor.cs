@@ -11,6 +11,11 @@ public partial class Editor : Control
 	[Export] UITimeline UITimeline;
 	[Export] UIPlayback UIPlayback;
 	[Export] Inspector Inspector;
+	[Export] TabsView TabsView;
+
+	[ExportGroup("Packed Scenes")]
+
+	[Export] PackedScene SourceViewer;
 
 	// the clips' frames. it owns a playback of its own, apart from the one
 	// the user watches, so the two never wait on each other
@@ -20,6 +25,8 @@ public partial class Editor : Control
 	public override void _Ready()
 	{
 		Project project = ProjectManager.Singleton.CurrentProject;
+
+		TabsView.AddTab(SourceViewer.Instantiate() as Control);
 
 		thumbnails = new ThumbnailCache(project.Timeline, project.RenderSettings, project.History);
 		UITimeline.Thumbnails = thumbnails;

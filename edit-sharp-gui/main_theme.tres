@@ -18,18 +18,14 @@ CornerRadiusTopLeft = 5
 CornerRadiusTopRight = 5
 CornerRadiusBottomRight = 5
 CornerRadiusBottomLeft = 5
-ContentMarginLeft = 4.0
-ContentMarginTop = 4.0
-ContentMarginRight = 4.0
-ContentMarginBottom = 4.0
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_Button_disabled"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 State = 3
@@ -48,10 +44,10 @@ State = 4
 [sub_resource type="StyleBox" id="ThemedStyleBox_Button_hover"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 State = 1
@@ -59,10 +55,10 @@ State = 1
 [sub_resource type="StyleBox" id="ThemedStyleBox_Button_hover_pressed"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 State = 2
@@ -70,20 +66,20 @@ State = 2
 [sub_resource type="StyleBox" id="ThemedStyleBox_Button_normal"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_Button_pressed"]
 resource_local_to_scene = false
 resource_name = ""
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 State = 2
@@ -1484,6 +1480,13 @@ ThemeType = "PlayButton"
 Family = 1
 Size = 2
 
+[sub_resource type="Resource" id="Resource_lsctt"]
+script = ExtResource("font")
+ThemeType = "TabContainer"
+Family = 1
+Weight = 2
+Size = 3
+
 [sub_resource type="Resource" id="ThemeStyle_HScrollBar_grabber"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -1907,7 +1910,6 @@ content_margin_right = 4.0
 content_margin_bottom = 4.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_InspectorSection_normal")
-State = 1
 
 [sub_resource type="StyleBox" id="ThemedStyleBox_InspectorSection_pressed"]
 resource_local_to_scene = false
@@ -2793,6 +2795,209 @@ content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_SplitContainer_split_bar_background")
 
+[sub_resource type="Resource" id="Resource_peony"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_risun"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_peony")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_mmpyb"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_ej11b"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_mmpyb")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_fgdli"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+CornerRadiusTopLeft = 5
+CornerRadiusTopRight = 5
+CornerRadiusBottomRight = 5
+CornerRadiusBottomLeft = 5
+ContentMarginLeft = 5.0
+ContentMarginTop = 5.0
+ContentMarginRight = 5.0
+ContentMarginBottom = 5.0
+
+[sub_resource type="StyleBox" id="StyleBox_ffi10"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+State = 3
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_t0v0c"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+State = 4
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_3p061"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+State = 1
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_grkis"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+State = 2
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_e8q7i"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_w0xme"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_3xcsf"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_w0xme")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_movio"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 9
+CornerRadiusTopLeft = 3
+CornerRadiusTopRight = 3
+CornerRadiusBottomRight = 3
+CornerRadiusBottomLeft = 3
+ContentMarginLeft = 5.0
+ContentMarginTop = 5.0
+ContentMarginRight = 5.0
+ContentMarginBottom = 5.0
+
+[sub_resource type="StyleBox" id="StyleBox_lsctt"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_movio")
+State = 3
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_peony"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_movio")
+State = 4
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_mmpyb"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_movio")
+State = 1
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_tn1lg"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_movio")
+State = 2
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_wc7hn"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+script = ExtResource("themed")
+Style = SubResource("Resource_movio")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_flev0"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_caist"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_flev0")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
 [sub_resource type="Resource" id="ThemeStyle_TextEdit_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -3428,7 +3633,7 @@ MenuButton/styles/read_only = SubResource("ThemedStyleBox_MenuButton_read_only")
 Node/colors/audio = Color(0.8117647, 0.3882353, 0.8117647, 1)
 Node/colors/composite = Color(1, 0.4, 0.5019608, 1)
 Node/colors/effect = Color(0.29803923, 0.5921569, 1, 1)
-Node/colors/keying = Color(0.29803923, 0.5921569, 1, 1)
+Node/colors/keying = Color(0.36078432, 0.69411767, 0.8392157, 1)
 Node/colors/mask = Color(0.6, 0.4, 1, 1)
 Node/colors/math = Color(0.34901962, 0.7529412, 0.34901962, 1)
 Node/colors/source = Color(1, 0.7490196, 0, 1)
@@ -3499,6 +3704,23 @@ SplitContainer/styles/split_bar_background = SubResource("ThemedStyleBox_SplitCo
 SubheaderLabel/base_type = &"Label"
 SubheaderLabel/font_sizes/font_size = 14
 SubheaderLabel/fonts/font = ExtResource("7_7hjjl")
+TabBar/constants/tab_separation = 5
+TabBar/styles/button_highlight = SubResource("StyleBox_risun")
+TabBar/styles/button_pressed = SubResource("StyleBox_ej11b")
+TabBar/styles/tab_disabled = SubResource("StyleBox_ffi10")
+TabBar/styles/tab_focus = SubResource("StyleBox_t0v0c")
+TabBar/styles/tab_hovered = SubResource("StyleBox_3p061")
+TabBar/styles/tab_selected = SubResource("StyleBox_grkis")
+TabBar/styles/tab_unselected = SubResource("StyleBox_e8q7i")
+TabContainer/font_sizes/font_size = 16
+TabContainer/fonts/font = ExtResource("7_7hjjl")
+TabContainer/styles/panel = SubResource("StyleBox_3xcsf")
+TabContainer/styles/tab_disabled = SubResource("StyleBox_lsctt")
+TabContainer/styles/tab_focus = SubResource("StyleBox_peony")
+TabContainer/styles/tab_hovered = SubResource("StyleBox_mmpyb")
+TabContainer/styles/tab_selected = SubResource("StyleBox_tn1lg")
+TabContainer/styles/tab_unselected = SubResource("StyleBox_wc7hn")
+TabContainer/styles/tabbar_background = SubResource("StyleBox_caist")
 TextEdit/colors/background_color = Color(0.12, 0.12, 0.12, 1)
 TextEdit/colors/caret_color = Color(0.92, 0.92, 0.92, 1)
 TextEdit/colors/font_color = Color(0.92, 0.92, 0.92, 1)
@@ -3543,4 +3765,4 @@ ViewBackground/styles/panel = SubResource("ThemedStyleBox_ViewBackground_panel")
 script = ExtResource("theme")
 Palette = ExtResource("palette")
 ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color")])
-FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8")])
+FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt")])

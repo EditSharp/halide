@@ -3,10 +3,11 @@
 [ext_resource type="Script" uid="uid://cik13faqv5l5b" path="res://Scripts/UI/Views/Editor.cs" id="1_ktno0"]
 [ext_resource type="PackedScene" uid="uid://byuamsawv1kcd" path="res://Scenes/Views/SourceViewer.tscn" id="2_gtnbc"]
 [ext_resource type="PackedScene" uid="uid://c3uao3qqjglxj" path="res://Scenes/Views/Playback.tscn" id="3_3xcsf"]
+[ext_resource type="PackedScene" uid="uid://ddl0543e6u2fc" path="res://Scenes/Views/TabsView.tscn" id="3_ffi10"]
 [ext_resource type="PackedScene" uid="uid://rmor8if075lh" path="res://Scenes/Views/Timeline.tscn" id="4_ffi10"]
 [ext_resource type="PackedScene" uid="uid://dm10ihadq0lji" path="res://Scenes/Views/Inspector.tscn" id="4_gtnbc"]
 
-[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "Inspector")]
+[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "Inspector", "TabsView")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,6 +18,8 @@ script = ExtResource("1_ktno0")
 UITimeline = NodePath("VSplitContainer/Timeline")
 UIPlayback = NodePath("VSplitContainer/HSplitContainer/Playback")
 Inspector = NodePath("VSplitContainer/HSplitContainer/Inspector")
+TabsView = NodePath("VSplitContainer/HSplitContainer/Tabs View")
+SourceViewer = ExtResource("2_gtnbc")
 
 [node name="Background" type="Panel" parent="." unique_id=1167067985]
 layout_mode = 1
@@ -40,7 +43,7 @@ layout_mode = 2
 size_flags_vertical = 3
 split_offsets = PackedInt32Array(0, 0)
 
-[node name="Source Viewer" parent="VSplitContainer/HSplitContainer" unique_id=861251413 instance=ExtResource("2_gtnbc")]
+[node name="Tabs View" parent="VSplitContainer/HSplitContainer" unique_id=1798555551 instance=ExtResource("3_ffi10")]
 layout_mode = 2
 
 [node name="Playback" parent="VSplitContainer/HSplitContainer" unique_id=1515650523 instance=ExtResource("3_3xcsf")]

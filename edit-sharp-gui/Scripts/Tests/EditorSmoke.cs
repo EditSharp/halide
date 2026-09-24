@@ -39,6 +39,12 @@ public static class EditorSmoke
 		EditorInspector[] inspectors = dock.Inspectors.ToArray();
 		Check(inspectors.Length == 2, $"the section type shows a style page and a bindings page: {inspectors.Length}");
 
+		// the pages are one list under the dock's own scrollbar, not a
+		// column of little scroll views sharing the height between them
+		Check(inspectors.All(i => i.VerticalScrollMode == ScrollContainer.ScrollMode.Disabled), "the pages do not scroll on their own");
+		Check(inspectors.All(i => i.GetCombinedMinimumSize().Y > 0f), $"so each page asks for the height of everything in it: {string.Join(", ", inspectors.Select(i => i.GetCombinedMinimumSize().Y))}");
+		Check(dock.Sections.Count() == inspectors.Length, $"and each sits in a foldable section: {dock.Sections.Count()}");
+
 		ThemedStyleBox normal = theme.GetStylebox("normal", "InspectorSection") as ThemedStyleBox;
 		ThemeStyle style = normal?.Style;
 		Check(style is not null, "the section's normal box has a style");
@@ -85,6 +91,30 @@ public static class EditorSmoke
 				theme.ApplyBindings();
 			}
 		}
+
+		// a section folded away comes back folded when the dock is rebuilt
+		FoldableContainer[] sections = dock.Sections.ToArray();
+
+		if (sections.Length == 2)
+		{
+			sections[1].Folded = true;
+			dock.ShowType("InspectorSection");
+			FoldableContainer[] again = dock.Sections.ToArray();
+			Check(again.Length == 2 && again[1].Folded && !again[0].Folded, "a folded section comes back folded and its neighbour does not");
+			again[1].Folded = false;
+		}
+
+		// the tab family is one look: the unselected tab holds the style and
+		// the rest of the tab items share it, each in its state
+		dock.ShowType("TabContainer");
+		ThemedStyleBox unselected = theme.GetStylebox("tab_unselected", "TabContainer") as ThemedStyleBox;
+		ThemedStyleBox selected = theme.GetStylebox("tab_selected", "TabContainer") as ThemedStyleBox;
+		ThemedStyleBox hovered = theme.GetStylebox("tab_hovered", "TabContainer") as ThemedStyleBox;
+		Check(unselected?.Style is not null && unselected.State == StyleState.Normal, "the unselected tab holds the tab family's style");
+		Check(selected?.Style == unselected?.Style && selected?.State == StyleState.Pressed, "the selected tab shares it, pressed");
+		Check(hovered?.Style == unselected?.Style && hovered?.State == StyleState.Hover, "the hovered tab shares it, hovered");
+		Check((theme.GetStylebox("panel", "TabContainer") as ThemedStyleBox)?.Style != unselected?.Style, "and the panel keeps a look of its own");
+		Check(dock.Inspectors.Count() == 4, $"so the type shows three style pages and a bindings page: {dock.Inspectors.Count()}");
 
 		// a box added in the theme editor has no style: showing its type gives it one, shared by its states
 		theme.SetStylebox("normal", "ProbeEmpty", new ThemedStyleBox());
