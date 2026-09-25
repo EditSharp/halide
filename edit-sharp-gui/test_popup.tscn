@@ -1,8 +1,231 @@
 [gd_scene format=3 uid="uid://5wi3k253576m"]
 
-[ext_resource type="Script" uid="uid://2fxcrwa4vd4k" path="res://TestPopup.cs" id="1_dpne6"]
+[ext_resource type="Script" uid="uid://2fxcrwa4vd4k" path="res://Scripts/UI/ContextMenu/TestPopup.cs" id="1_dpne6"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="2_rige3"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="3_680se"]
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="4_hm3qq"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="5_680se"]
+[ext_resource type="Script" uid="uid://b1pmqmfq84y1x" path="res://Scripts/UI/ContextMenu/Elements/ContextRadioList.cs" id="5_fplo5"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="6_s7qit"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="7_edvmg"]
+[ext_resource type="Texture2D" uid="uid://dkfp6hv7wgru7" path="res://Images/Icons/Graph.png" id="8_edvmg"]
+[ext_resource type="Texture2D" uid="uid://ccluhogtv2xb" path="res://Images/Icons/Reset.png" id="9_bt1ov"]
+[ext_resource type="Texture2D" uid="uid://c3w2vbjiw62bi" path="res://icon.svg" id="10_1o7u8"]
+[ext_resource type="Script" uid="uid://d3nkymp1v2xqp" path="res://Scripts/UI/ContextMenu/Elements/ContextCheckList.cs" id="11_2l6rf"]
 
-[node name="TestPopup" type="Control" unique_id=1342638072 node_paths=PackedStringArray("popup")]
+[sub_resource type="Resource" id="Resource_bt1ov"]
+script = ExtResource("3_680se")
+Text = "Ctrl+X"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_edvmg"]
+script = ExtResource("3_680se")
+Text = "Cut"
+TextWeight = 1
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_1pbih"]
+script = ExtResource("4_hm3qq")
+Text = SubResource("Resource_edvmg")
+ShortcutHint = SubResource("Resource_bt1ov")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_2l6rf"]
+script = ExtResource("3_680se")
+Text = "Ctrl+C"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_1o7u8"]
+script = ExtResource("3_680se")
+Text = "Copy"
+TextWeight = 1
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_yua82"]
+script = ExtResource("4_hm3qq")
+Text = SubResource("Resource_1o7u8")
+ShortcutHint = SubResource("Resource_2l6rf")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_swv2h"]
+script = ExtResource("3_680se")
+Text = "Ctrl+V"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_1oqds"]
+script = ExtResource("3_680se")
+Text = "Paste"
+TextWeight = 1
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_oy8tx"]
+script = ExtResource("4_hm3qq")
+Text = SubResource("Resource_1oqds")
+ShortcutHint = SubResource("Resource_swv2h")
+Enabled = false
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_544xi"]
+script = ExtResource("5_680se")
+metadata/_custom_type_script = "uid://ukpypwxfbgnv"
+
+[sub_resource type="Resource" id="Resource_nfvut"]
+script = ExtResource("3_680se")
+Text = "Linked"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_qiy74"]
+script = ExtResource("4_hm3qq")
+Type = 1
+Text = SubResource("Resource_nfvut")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_rt4o7"]
+script = ExtResource("5_680se")
+metadata/_custom_type_script = "uid://ukpypwxfbgnv"
+
+[sub_resource type="Gradient" id="Gradient_bt1ov"]
+offsets = PackedFloat32Array(1)
+colors = PackedColorArray(0.64, 0.24575996, 0.21759997, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_6o2gv"]
+gradient = SubResource("Gradient_bt1ov")
+
+[sub_resource type="Resource" id="Resource_2lch4"]
+script = ExtResource("3_680se")
+Text = "Red"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_3qijm"]
+script = ExtResource("4_hm3qq")
+Checked = true
+Type = 2
+Text = SubResource("Resource_2lch4")
+Icon = SubResource("GradientTexture2D_6o2gv")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Gradient" id="Gradient_1o7u8"]
+offsets = PackedFloat32Array(1)
+colors = PackedColorArray(0.64, 0.58368, 0.21759997, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_00vxr"]
+gradient = SubResource("Gradient_1o7u8")
+
+[sub_resource type="Resource" id="Resource_7y0bd"]
+script = ExtResource("3_680se")
+Text = "Yellow"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_b7006"]
+script = ExtResource("4_hm3qq")
+Type = 2
+Text = SubResource("Resource_7y0bd")
+Icon = SubResource("GradientTexture2D_00vxr")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Gradient" id="Gradient_2l6rf"]
+offsets = PackedFloat32Array(1)
+colors = PackedColorArray(0.21759997, 0.27391994, 0.64, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ssygi"]
+gradient = SubResource("Gradient_2l6rf")
+
+[sub_resource type="Resource" id="Resource_6o15v"]
+script = ExtResource("3_680se")
+Text = "Blue"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_gpmru"]
+script = ExtResource("4_hm3qq")
+Type = 2
+Text = SubResource("Resource_6o15v")
+Icon = SubResource("GradientTexture2D_ssygi")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_tx68w"]
+script = ExtResource("5_fplo5")
+Buttons = Array[ExtResource("4_hm3qq")]([SubResource("Resource_3qijm"), SubResource("Resource_b7006"), SubResource("Resource_gpmru")])
+metadata/_custom_type_script = "uid://b1pmqmfq84y1x"
+
+[sub_resource type="Resource" id="Resource_hiubg"]
+script = ExtResource("3_680se")
+Text = "Clip Color"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_imnaa"]
+script = ExtResource("6_s7qit")
+Elements = Array[ExtResource("2_rige3")]([SubResource("Resource_tx68w")])
+Text = SubResource("Resource_hiubg")
+metadata/_custom_type_script = "uid://bddqp37xsw1cm"
+
+[sub_resource type="Resource" id="Resource_hm3qq"]
+script = ExtResource("5_680se")
+metadata/_custom_type_script = "uid://ukpypwxfbgnv"
+
+[sub_resource type="Resource" id="Resource_t3pwh"]
+script = ExtResource("3_680se")
+Text = "Ctrl+A"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_rma17"]
+script = ExtResource("3_680se")
+Text = "Option 1"
+TextWeight = 1
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_s7qit"]
+script = ExtResource("4_hm3qq")
+Text = SubResource("Resource_rma17")
+ShortcutHint = SubResource("Resource_t3pwh")
+Icon = ExtResource("8_edvmg")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_fmmn7"]
+script = ExtResource("3_680se")
+Text = "Ctrl+B"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_by1on"]
+script = ExtResource("3_680se")
+Text = "Option 2"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_352le"]
+script = ExtResource("4_hm3qq")
+Checked = true
+Text = SubResource("Resource_by1on")
+ShortcutHint = SubResource("Resource_fmmn7")
+Icon = ExtResource("9_bt1ov")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_4wc7p"]
+script = ExtResource("3_680se")
+Text = "Ctrl+C"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_l1lrf"]
+script = ExtResource("3_680se")
+Text = "Option 3"
+metadata/_custom_type_script = "uid://dm8txjndldkki"
+
+[sub_resource type="Resource" id="Resource_k0jpb"]
+script = ExtResource("4_hm3qq")
+Text = SubResource("Resource_l1lrf")
+ShortcutHint = SubResource("Resource_4wc7p")
+Icon = ExtResource("10_1o7u8")
+metadata/_custom_type_script = "uid://dtijxaqwwjoeo"
+
+[sub_resource type="Resource" id="Resource_fplo5"]
+script = ExtResource("11_2l6rf")
+Buttons = Array[ExtResource("4_hm3qq")]([SubResource("Resource_s7qit"), SubResource("Resource_352le"), SubResource("Resource_k0jpb")])
+metadata/_custom_type_script = "uid://d3nkymp1v2xqp"
+
+[sub_resource type="Resource" id="Resource_u0ij2"]
+script = ExtResource("7_edvmg")
+Elements = Array[ExtResource("2_rige3")]([SubResource("Resource_1pbih"), SubResource("Resource_yua82"), SubResource("Resource_oy8tx"), SubResource("Resource_544xi"), SubResource("Resource_qiy74"), SubResource("Resource_rt4o7"), SubResource("Resource_imnaa"), SubResource("Resource_hm3qq"), SubResource("Resource_fplo5")])
+metadata/_custom_type_script = "uid://ce2x0x6d8yp2n"
+
+[node name="TestPopup" type="Control" unique_id=1342638072]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,20 +233,4 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_dpne6")
-popup = NodePath("PopupMenu")
-
-[node name="PopupMenu" type="PopupMenu" parent="." unique_id=239512985]
-hide_on_checkable_item_selection = false
-prefer_native_menu = true
-item_count = 5
-item_0/text = "Cut Clip"
-item_0/id = 0
-item_1/text = "Copy Clip"
-item_1/id = 1
-item_2/text = "Paste Clip"
-item_2/id = 2
-item_3/text = "Linked"
-item_3/checkable = 1
-item_3/checked = true
-item_3/id = 3
-item_4/id = 4
+popup = SubResource("Resource_u0ij2")
