@@ -10,6 +10,9 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 public partial class NumberEditor : ValueEditor
 {
 	[Export] SpinSlider spin;
+	[Export] Button frameToggle;
+
+	(double Multiplier, double Step, int Decimals, string Unit) fraction;
 
 	protected override void Build()
 	{
@@ -24,6 +27,9 @@ public partial class NumberEditor : ValueEditor
 		spin.ReadOnly = ReadOnly;
 		spin.TooltipText = Spec.Tooltip ?? "";
 
+		fraction = (spin.Multiplier, spin.Step, spin.Decimals, spin.Unit);
+		WireFrameToggle(frameToggle);
+
 		spin.DragBegan += RaiseBegan;
 		spin.Changed += v => RaiseChanged(Spec.Coerce(v));
 		spin.Committed += v => RaiseCommitted(Spec.Coerce(v));
@@ -33,5 +39,8 @@ public partial class NumberEditor : ValueEditor
 	public override bool IsEditing => spin.IsEditing;
 
 	public override void Display(object value, bool mixed)
-		=> spin.Display(mixed || value is null ? null : Convert.ToDouble(value));
+	{
+		if (Spec.Frame != EditSharp.Editing.FrameMeasure.None) ShowFrameUnits(spin, PixelScale.X, fraction, frameToggle);
+		spin.Display(mixed || value is null ? null : Convert.ToDouble(value));
+	}
 }

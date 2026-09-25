@@ -5,6 +5,8 @@ using System.Linq;
 using EditSharp;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes.Sources;
+using EditSharp.Components.Sources.Audio;
+using EditSharp.Components.Sources.Video;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI.Theming;
 using EditSharpGUI.Scripts.UI.Thumbnails;
@@ -82,8 +84,8 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		get
 		{
-			bool source = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode or AudioSourceNode or TimelineVideoInputNode or TimelineAudioInputNode);
-			bool text = Clip.Graph.AllNodes.Any(n => n is TextInputNode);
+			bool source = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode { Source: MediaVideoSource or TimelineVideoSource } or AudioSourceNode { Source: MediaAudioSource or TimelineAudioSource });
+			bool text = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode { Source: TextVideoSource });
 
 			if (Clip is AudioClip) return source ? "audio" : "generator_audio";
 			if (text && !source) return "text";
@@ -148,8 +150,8 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		}
 	}
 
-	// whether this clip is the one in the selection wearing the handles -
-	// the view picks one, the selected clip nearest the cursor
+	// whether this clip is the one wearing the handles - the view picks
+	// one, the clip nearest the cursor
 	bool handlesEnabled;
 
 	public void SetHandlesEnabled(bool enabled)
@@ -158,12 +160,30 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		UpdateHandles();
 	}
 
+	// whether a point (global) is over one of the handles this clip is
+	// showing, or the gap between it and the clip's edge that the cursor
+	// crosses on the way to it
+	public bool HandlesContain(Vector2 point)
+	{
+		Rect2 clip = GetGlobalRect();
+		return Reaches(startControls, clip, point) || Reaches(endControls, clip, point);
+	}
+
+	static bool Reaches(Control handles, Rect2 clip, Vector2 point)
+	{
+		if (handles is null || !handles.IsVisibleInTree()) return false;
+
+		Rect2 box = handles.GetGlobalRect();
+		float left = Mathf.Min(box.Position.X, clip.End.X < box.Position.X ? clip.End.X : box.Position.X);
+		float right = Mathf.Max(box.End.X, clip.Position.X > box.End.X ? clip.Position.X : box.End.X);
+
+		return point.X >= left && point.X <= right && point.Y >= box.Position.Y && point.Y <= box.End.Y;
+	}
+
 	void UpdateHandles()
 	{
-		bool selected = outline.Visible && handlesEnabled;
-
-		if (endControls is not null) endControls.Visible = selected;
-		if (startControls is not null) startControls.Visible = selected && Clip.Start > TimeSpan.Zero;
+		if (endControls is not null) endControls.Visible = handlesEnabled;
+		if (startControls is not null) startControls.Visible = handlesEnabled && Clip.Start > TimeSpan.Zero;
 	}
 
 	// ---- keeping the inner controls on screen ----

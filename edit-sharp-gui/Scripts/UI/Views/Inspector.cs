@@ -1,4 +1,5 @@
 using EditSharp.Components.Clips;
+using EditSharp.Components.Sources;
 using EditSharp.Editing;
 using EditSharp.History;
 using EditSharpGUI.Scripts.UI;
@@ -80,6 +81,17 @@ public partial class Inspector : Control
 		set { field = value; RefreshValues(); }
 	}
 
+	// the render resolution, for frame-relative values shown in pixels
+	public Vector2I FrameSize { get; set; } = new(1920, 1080);
+
+	// frame-relative values (positions, sizes, blur radii) in pixels rather
+	// than fractions of the frame. toggled from any of them, for all of them
+	public bool ShowPixels
+	{
+		get;
+		set { field = value; RefreshValues(); }
+	}
+
 	// timeline time. animated rows show their value here, and a keyframe
 	// added from a row goes here
 	public TimeSpan Playhead
@@ -102,6 +114,21 @@ public partial class Inspector : Control
 
 	// a value settled on a row, with what it replaced
 	public event EventHandler<InspectorEditArgs> ValueCommitted;
+
+	// a click on nothing in here - between rows, on a label, below the
+	// last section - takes focus out of the field being typed in, as a
+	// click on empty timeline drops the selection
+	public override void _Input(InputEvent e)
+	{
+		if (Engine.IsEditorHint() || e is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click) return;
+		if (!IsVisibleInTree() || !GetGlobalRect().HasPoint(click.Position)) return;
+
+		Control hovered = GetViewport().GuiGetHoveredControl();
+		if (hovered is null || !IsAncestorOf(hovered) && hovered != this) return;
+
+		if (hovered is Container or Label or Panel or ColorRect || hovered == this)
+			GetViewport().GuiReleaseFocus();
+	}
 
 	public override void _ExitTree()
 	{
@@ -162,8 +189,12 @@ public partial class Inspector : Control
 
 	abstract record Plan;
 
-	// a section: what its header shows, the switch on it, and its body
-	sealed record SectionPlan(string Title, Color? Accent, bool Nested, PropertyDescriptor Toggle, IReadOnlyList<InspectorTarget> ToggleTargets, IReadOnlyList<Plan> Body) : Plan;
+	// a section: what its header shows, the switch and kind picker on it,
+	// and its body
+	sealed record SectionPlan(string Title, Color? Accent, bool Nested, PropertyDescriptor Toggle, IReadOnlyList<InspectorTarget> ToggleTargets, IReadOnlyList<Plan> Body, KindPlan Kind = null) : Plan;
+
+	// a source property's kind picker: the property, the objects holding it, the kinds offered
+	sealed record KindPlan(PropertyDescriptor Descriptor, IReadOnlyList<InspectorTarget> Targets, IReadOnlyList<SourceKindInfo> Kinds);
 
 	// a row is the same row whenever it edits the same kind of value under
 	// the same name - the objects behind it are only ever bindings
@@ -176,8 +207,11 @@ public partial class Inspector : Control
 
 	public void Clear() => Show([]);
 
+	IReadOnlyList<InspectorSectionSpec> shown = [];
+
 	public void Show(IReadOnlyList<InspectorSectionSpec> sections)
 	{
+		shown = sections;
 		empty.Visible = sections.Count == 0;
 
 		Reconcile(content, [.. sections.Select(PlanSection)]);
@@ -245,16 +279,21 @@ public partial class Inspector : Control
 	internal void BuildRows(VBoxContainer into, IReadOnlyList<InspectorTarget> targets, string skip = null)
 		=> Reconcile(into, PlanRows(targets, skip));
 
+	// the same objects again, for when what they have has changed shape -
+	// a source switched to another kind, or back by an undo
+	internal void Replan() => Show(shown);
+
 	// one row per property they all have, grouped as their attributes say,
-	// objects folded inline, lists as lists
-	List<Plan> PlanRows(IReadOnlyList<InspectorTarget> targets, string skip = null)
+	// objects folded inline, lists as lists. `only`, when given, keeps just
+	// those names
+	List<Plan> PlanRows(IReadOnlyList<InspectorTarget> targets, string skip = null, IReadOnlySet<string> only = null)
 	{
 		List<Plan> plans = [];
 		if (targets.Count == 0) return plans;
 
 		// the descriptors of the first, kept only where every other object
 		// has one by the same name
-		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object).Where(d => d.Name != skip)];
+		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object).Where(d => d.Name != skip && (only is null || only.Contains(d.Name)))];
 
 		for (int i = 1; i < targets.Count; i++)
 		{
@@ -299,7 +338,7 @@ public partial class Inspector : Control
 		}
 
 		// an object with properties of its own: folded inline
-		bool objectLike = descriptor.Editor is PropertyEditor.Object or PropertyEditor.Media or PropertyEditor.Timeline;
+		bool objectLike = descriptor.Editor is PropertyEditor.Object or PropertyEditor.Source or PropertyEditor.Timeline;
 
 		if (objectLike && Inspect.Of(descriptor.ValueType).Count > 0)
 		{
@@ -311,15 +350,28 @@ public partial class Inspector : Control
 				if (child is not null) children.Add(new InspectorTarget(child, t.Clip));
 			}
 
-			IReadOnlyList<Plan> body = children.Count == targets.Count ? PlanRows(children) : [new NotePlan("(none)")];
+			// a source: a kind picker on the header, and while the kinds
+			// differ only what every source has
+			KindPlan kind = null;
+			IReadOnlySet<string> only = null;
 
-			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body);
+			if (typeof(Source).IsAssignableFrom(descriptor.ValueType))
+			{
+				kind = new KindPlan(descriptor, targets, SourceKinds.For(descriptor.ValueType));
+
+				if (children.Select(c => c.Object.GetType()).Distinct().Count() > 1)
+					only = Inspect.Of(descriptor.ValueType).Select(d => d.Name).ToHashSet();
+			}
+
+			IReadOnlyList<Plan> body = children.Count == targets.Count ? PlanRows(children, only: only) : [new NotePlan("(none)")];
+
+			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body, kind);
 		}
 
 		EditorSpec spec = EditorSpec.Of(descriptor);
 
 		// a string the object offers choices for is a dropdown of them
-		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<string> choices)
+		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<Choice> choices)
 			spec = spec with { Editor = PropertyEditor.Dropdown, Choices = [.. choices] };
 
 		return new RowPlan(descriptor.DisplayName, spec, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
@@ -380,7 +432,7 @@ public partial class Inspector : Control
 	// plan - the same scene with the same editor - so it can be kept
 	static bool Matches(Node node, Plan plan) => (node, plan) switch
 	{
-		(InspectorSection s, SectionPlan p) => s.Nested == p.Nested && (s.ToggleDescriptor is null) == (p.Toggle is null),
+		(InspectorSection s, SectionPlan p) => s.Nested == p.Nested && (s.ToggleDescriptor is null) == (p.Toggle is null) && (s.KindDescriptor is null) == (p.Kind is null),
 		(InspectorRow r, RowPlan p) => r.Label == p.Label && SameSpec(r.Spec, p.Spec),
 		(ListRow l, ListPlan p) => l.Descriptor == p.Descriptor && l.Label == p.Label,
 		(Label t, NotePlan p) => t.Text == p.Text,
@@ -401,6 +453,7 @@ public partial class Inspector : Control
 				s.Title = p.Title;
 				s.Accent = p.Accent;
 				if (p.Toggle is not null) s.BindToggle(this, p.Toggle, p.ToggleTargets);
+				if (p.Kind is not null) s.BindKindPicker(this, p.Kind.Descriptor, p.Kind.Targets, p.Kind.Kinds);
 				Reconcile(s.Body, p.Body);
 				break;
 
@@ -422,6 +475,7 @@ public partial class Inspector : Control
 			{
 				InspectorSection section = CreateSection(p.Title, p.Accent, p.Nested);
 				if (p.Toggle is not null) section.BindToggle(this, p.Toggle, p.ToggleTargets);
+				if (p.Kind is not null) section.BindKindPicker(this, p.Kind.Descriptor, p.Kind.Targets, p.Kind.Kinds);
 				Reconcile(section.Body, p.Body);
 				return section;
 			}
@@ -460,7 +514,7 @@ public partial class Inspector : Control
 		{
 			case InspectorRow row: row.Refresh(); break;
 			case ListRow list: list.Refresh(); break;
-			case InspectorSection section: section.RefreshToggle(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
+			case InspectorSection section: section.RefreshToggle(); section.RefreshKindPicker(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
 		}
 	}
 
@@ -474,10 +528,29 @@ public partial class Inspector : Control
 		}
 	}
 
-	// an undo, a redo, or a change made somewhere else: re-read everything.
-	// a commit made here re-reads too - the row that made it is already
-	// showing the value, and the rest may depend on it
-	void OnHistoryChanged(object sender, HistoryEventArgs e) => RefreshValues();
+	// an undo, a redo, or a change made somewhere else: re-read everything,
+	// re-planning first only if a source shown was replaced (changes can
+	// come a primitive at a time, too often to re-plan on each). a commit
+	// made here re-reads too - the row that made it is already showing the
+	// value, and the rest may depend on it
+	void OnHistoryChanged(object sender, HistoryEventArgs e)
+	{
+		if (content is not null && (SourcesReplaced(content) || ChoicesStale(content))) Replan();
+		RefreshValues();
+	}
+
+	static bool ChoicesStale(Node node) => node switch
+	{
+		InspectorRow row => row.ChoicesStale(),
+		InspectorSection section => section.Body.GetChildren().Any(ChoicesStale),
+		_ => node.GetChildren().Any(ChoicesStale)
+	};
+
+	static bool SourcesReplaced(Node node) => node switch
+	{
+		InspectorSection section => section.SourcesReplaced() || section.Body.GetChildren().Any(SourcesReplaced),
+		_ => node.GetChildren().Any(SourcesReplaced)
+	};
 
 	// a history scope for an edit made here; null when there is no history
 	// to record into, in which case the edit still happens, unrecorded

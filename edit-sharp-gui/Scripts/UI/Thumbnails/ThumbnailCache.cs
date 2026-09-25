@@ -1,5 +1,7 @@
 using EditSharp.Components;
+using EditSharp.Caching.Proxy;
 using EditSharp.Components.Clips;
+using EditSharp.Components.Sources;
 using EditSharp.Editing;
 using EditSharp.History;
 using EditSharp.Playback;
@@ -81,10 +83,10 @@ public sealed class ThumbnailCache : IDisposable
 		playback = new Playback
 		{
 			Timeline = timeline,
-			RenderSettings = settings with { Resolution = new(Mathf.RoundToInt(largest * Aspect), largest) }
+			RenderSettings = settings with { Resolution = new(Mathf.RoundToInt(largest * Aspect), largest), SourceMode = SourceMode.ProxiesOnly }
 		};
 
-		playback.ScrubProxyReady += OnProxyReady;
+		ProxyCache.StatusChanged += OnProxyStatusChanged;
 		history.Changed += OnHistoryChanged;
 	}
 
@@ -319,9 +321,9 @@ public sealed class ThumbnailCache : IDisposable
 		}
 	}
 
-	// a media proxy finished building: frames rendered with the offline
-	// placeholder in its place can be rendered for real now
-	void OnProxyReady(object sender, EventArgs e) => Callable.From(() =>
+	// a proxy grew or finished: frames rendered with a placeholder in its
+	// place may be renderable for real now
+	void OnProxyStatusChanged(object sender, ProxyStatusChangedEventArgs e) => Callable.From(() =>
 	{
 		if (disposed) return;
 
@@ -344,7 +346,7 @@ public sealed class ThumbnailCache : IDisposable
 		disposed = true;
 
 		history.Changed -= OnHistoryChanged;
-		playback.ScrubProxyReady -= OnProxyReady;
+		ProxyCache.StatusChanged -= OnProxyStatusChanged;
 
 		cancel.Cancel();
 

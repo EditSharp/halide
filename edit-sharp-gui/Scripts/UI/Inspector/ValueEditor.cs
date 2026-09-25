@@ -76,6 +76,50 @@ public abstract partial class ValueEditor : HBoxContainer
 
 	// ---- shared helpers ----
 
+	// ---- frame-relative values in pixels ----
+
+	protected bool ShowingPixels => Spec.Frame != FrameMeasure.None && (Inspector?.ShowPixels ?? false);
+
+	// pixels per stored unit along each axis
+	protected (double X, double Y) PixelScale
+	{
+		get
+		{
+			Godot.Vector2I size = Inspector?.FrameSize ?? new(1920, 1080);
+
+			return Spec.Frame switch
+			{
+				FrameMeasure.Width => (size.X, size.X),
+				FrameMeasure.Frame => (size.X, size.Y),
+				FrameMeasure.HalfFrame => (size.X / 2d, size.Y / 2d),
+				_ => (1d, 1d),
+			};
+		}
+	}
+
+	// the button that flips every frame-relative value between pixels and
+	// fractions, shown only on those
+	protected void WireFrameToggle(Button toggle)
+	{
+		if (toggle is null) return;
+
+		toggle.Visible = Spec.Frame != FrameMeasure.None;
+		toggle.Pressed += () => { if (Inspector is not null) Inspector.ShowPixels = !Inspector.ShowPixels; };
+	}
+
+	// a spin slider as pixels (whole ones, stepping by one) or as it was built
+	protected void ShowFrameUnits(SpinSlider spin, double scale, (double Multiplier, double Step, int Decimals, string Unit) fraction, Button toggle)
+	{
+		bool pixels = ShowingPixels;
+
+		spin.Multiplier = pixels ? scale : fraction.Multiplier;
+		spin.Step = pixels ? 1d / scale : fraction.Step;
+		spin.Decimals = pixels ? 0 : fraction.Decimals;
+		spin.Unit = pixels ? "px" : fraction.Unit;
+
+		if (toggle is not null) toggle.Text = pixels ? "px" : "fr";
+	}
+
 	public static string FormatNumber(double value, int decimals) => value.ToString("F" + decimals, CultureInfo.InvariantCulture);
 
 	public static bool TryParseNumber(string text, out double value)

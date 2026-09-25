@@ -1,3 +1,4 @@
+using EditSharp.Editing;
 using Godot;
 using System;
 using System.Linq;
@@ -21,8 +22,8 @@ public partial class DropdownEditor : ValueEditor
 		// the choices the object offers, or the enum's values
 		if (Spec.Choices is not null)
 		{
-			values = [.. Spec.Choices];
-			foreach (object value in values) options.AddItem(value.ToString());
+			values = [.. Spec.Choices.Select(c => c.Value)];
+			foreach (Choice choice in Spec.Choices) options.AddItem(choice.Label);
 		}
 		else
 		{

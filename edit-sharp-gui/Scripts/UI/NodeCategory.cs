@@ -13,7 +13,7 @@ public static class NodeCategory
 	{
 		CompositeNode => "composite",
 		ShapeMaskNode or MaskCombineNode or ImageToMaskNode => "mask",
-		GainNode or CompressorNode or EQNode or AudioMixNode or ToneGeneratorInputNode or AudioSourceNode or TimelineAudioInputNode => "audio",
+		GainNode or CompressorNode or EQNode or AudioMixNode or AudioSourceNode => "audio",
 		InputNode => "source",
 		_ when node.GetType().Namespace?.EndsWith(".Math") == true => "math",
 		_ => "effect"

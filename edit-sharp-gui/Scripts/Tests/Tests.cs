@@ -7,6 +7,8 @@ using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes;
 using EditSharp.Components.Nodes.Effects;
+using EditSharp.Components.Sources.Audio;
+using EditSharp.Components.Sources.Video;
 using EditSharp.Rendering;
 using EditSharp.Video;
 using SkiaSharp;
@@ -17,16 +19,14 @@ public static class Tests
     {
         get
         {
-            Source videoSource = new()
+            MediaVideoSource videoSource = new()
             {
-                Type = SourceType.Video,
                 Path = Path.Combine(AppContext.BaseDirectory, "Media", "Example", "Video", "video3.mp4"),
                 Duration = TimeSpan.FromSeconds(13)
             };
 
-            Source audioSource = new()
+            MediaAudioSource audioSource = new()
             {
-                Type = SourceType.Audio,
                 Path = Path.Combine(AppContext.BaseDirectory, "Media", "Example", "Video", "video3.mp4"),
                 Duration = TimeSpan.FromSeconds(13)
             };
@@ -158,7 +158,7 @@ public static class Tests
                     //HardwareAccelerator = HardwareAccelerator.None
                 },
                 Timeline = timeline,
-                OutputDirectory = Path.Combine(AppContext.BaseDirectory, "skibidi.mp4")
+                OutputPath = Path.Combine(AppContext.BaseDirectory, "skibidi.mp4")
             };
 
             

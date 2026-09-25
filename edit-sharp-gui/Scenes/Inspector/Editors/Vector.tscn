@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Inspector/SpinSlider.tscn" id="2_spin"]
 [ext_resource type="Script" path="res://Scripts/UI/Inspector/InspectorGlyph.cs" id="4_glyph"]
 
-[node name="VectorEditor" type="HBoxContainer" node_paths=PackedStringArray("x", "y", "link")]
+[node name="VectorEditor" type="HBoxContainer" node_paths=PackedStringArray("x", "y", "link", "frameToggle")]
 offset_right = 260.0
 offset_bottom = 24.0
 size_flags_horizontal = 3
@@ -13,6 +13,7 @@ script = ExtResource("1_editor")
 x = NodePath("X")
 y = NodePath("Y")
 link = NodePath("Link")
+frameToggle = NodePath("FrameToggle")
 
 [node name="XLabel" type="Label" parent="."]
 layout_mode = 2
@@ -41,3 +42,12 @@ text = "y"
 [node name="Y" parent="." instance=ExtResource("2_spin")]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="FrameToggle" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(22, 0)
+layout_mode = 2
+tooltip_text = "Show as pixels or as fractions of the frame"
+focus_mode = 0
+theme_type_variation = &"InspectorButton"
+text = "fr"

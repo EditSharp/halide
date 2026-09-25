@@ -4,13 +4,16 @@ using System.Linq;
 
 namespace EditSharpGUI.Scripts.UI.Inspecting;
 
-// ---- several lines, committed on leaving (Multiline.tscn) ----
+// ---- several lines, written as they're typed and committed on leaving (Multiline.tscn) ----
 
 [Tool]
 public partial class MultilineEditor : ValueEditor
 {
 	[Export] TextEdit entry;
 	string shown = "";
+
+	// between the first keystroke and leaving: one edit, one history entry
+	bool typing;
 
 	public override bool IsEditing => entry.HasFocus();
 
@@ -19,9 +22,17 @@ public partial class MultilineEditor : ValueEditor
 		entry.Editable = !ReadOnly;
 		entry.TooltipText = Spec.Tooltip ?? "";
 
+		entry.TextChanged += () =>
+		{
+			if (ReadOnly || !entry.HasFocus()) return;
+			if (!typing) { typing = true; RaiseBegan(); }
+			RaiseChanged(entry.Text);
+		};
+
 		entry.FocusExited += () =>
 		{
-			if (ReadOnly || entry.Text == shown) return;
+			if (!typing) return;
+			typing = false;
 			shown = entry.Text;
 			RaiseCommitted(entry.Text);
 		};

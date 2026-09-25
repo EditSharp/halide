@@ -46,8 +46,40 @@ public partial class InspectorRow : HBoxContainer
 	// same kind of value - and only the reading changes
 	public void Rebind(IReadOnlyList<Binding> bindings)
 	{
+		// an edit still open belongs to the objects it began on
+		if (Bindings is null || !bindings.SequenceEqual(Bindings, SameValue.Instance)) EndEdit();
+
 		Bindings = bindings;
 		Refresh();
+	}
+
+	// whether the choices this row offers are no longer what its object
+	// offers - a font's weights, once the font has changed
+	public bool ChoicesStale()
+	{
+		if (Spec?.Choices is null || Bindings is not [PropertyBinding first, ..]) return false;
+		if (first.Target is not EditSharp.Editing.IChoiceProvider provider) return false;
+
+		return provider.ChoicesFor(first.Descriptor.Name) is not { } now || !now.SequenceEqual(Spec.Choices);
+	}
+
+	// a row freed mid-edit (a picker left open while the selection changed)
+	// would otherwise hold its history scope open, and with it every undo
+	public override void _ExitTree() => EndEdit();
+
+	// bindings are made anew for every plan; two reach the same value when
+	// they read the same property of the same object
+	sealed class SameValue : IEqualityComparer<Binding>
+	{
+		public static readonly SameValue Instance = new();
+
+		public bool Equals(Binding a, Binding b) => (a, b) switch
+		{
+			(PropertyBinding x, PropertyBinding y) => x.Target == y.Target && x.Descriptor == y.Descriptor,
+			_ => ReferenceEquals(a, b)
+		};
+
+		public int GetHashCode(Binding b) => 0;
 	}
 
 	// the key column, for a row placed by hand in a scene to show a state

@@ -1,3 +1,4 @@
+using EditSharp.Components.Sources;
 using EditSharp.History;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI.Thumbnails;
@@ -35,7 +36,7 @@ public partial class Editor : Control
 		UIPlayback.SetPlayback(new()
 		{
 			Timeline = project.Timeline,
-			RenderSettings = project.RenderSettings with { Resolution = new(1280, 720), Framerate = 60 }
+			RenderSettings = project.RenderSettings with { Resolution = new(1280, 720), Framerate = 60, SourceMode = SourceMode.ProxiesAndSource }
 		});
 
 		// the timeline and playback never see each other - this is the only
@@ -55,6 +56,7 @@ public partial class Editor : Control
 		// moved to a keyframe
 		Inspector.History = project.History;
 		Inspector.Framerate = project.RenderSettings.Framerate;
+		Inspector.FrameSize = new((int)project.RenderSettings.Resolution.X, (int)project.RenderSettings.Resolution.Y);
 		Inspector.Playhead = UITimeline.PlayheadTime;
 		UITimeline.SelectionChanged += (_, _) => Inspector.ShowClips(UITimeline.SelectedClips);
 		Inspector.SeekRequested += (_, time) =>
@@ -78,6 +80,14 @@ public partial class Editor : Control
 		History.Active = history;
 		history.Changed += (_, e) => { if (e.Action != HistoryAction.Commit) UITimeline.Reconcile(); };
 		Inspector.Edited += (_, _) => UITimeline.Reconcile();
+
+		// the preview is a still picture while stopped, so anything that
+		// changes the timeline shows it again: every history entry (a drag,
+		// a trim, an undo), and live inspector edits as they happen. and
+		// once to begin with, so there's a picture before anything is played
+		history.Changed += (_, _) => UIPlayback.RefreshFrame();
+		Inspector.Edited += (_, _) => UIPlayback.RefreshFrame();
+		UIPlayback.RefreshFrame();
 
 		// page-wide shortcuts. every key that nothing closer wanted climbs up
 		// to here, since this page is above every view in it

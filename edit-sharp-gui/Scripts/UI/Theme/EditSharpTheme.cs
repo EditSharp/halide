@@ -214,8 +214,12 @@ public partial class EditSharpTheme : Theme
 	sealed class Settings
 	{
 		public string Palette { get; set; } = "";
+
+		// an accent the user picked over the palette's own; empty for the palette's
 		public string Accent { get; set; } = "";
 	}
+
+	string userAccent = "";
 
 	// swaps in the palette the user chose and sets their accent on it; seeds
 	// the file on first run so there is something to edit
@@ -233,7 +237,10 @@ public partial class EditSharpTheme : Theme
 				Palette = chosen;
 
 			if (_palette is not null && !string.IsNullOrWhiteSpace(settings.Accent) && Color.HtmlIsValid(settings.Accent))
+			{
+				userAccent = settings.Accent;
 				_palette.AccentColor = Color.FromHtml(settings.Accent);
+			}
 		}
 		catch (Exception e)
 		{
@@ -256,7 +263,7 @@ public partial class EditSharpTheme : Theme
 			Settings settings = new()
 			{
 				Palette = _palette?.ResourcePath ?? "",
-				Accent = _palette is null ? "" : "#" + _palette.AccentColor.ToHtml(false)
+				Accent = userAccent
 			};
 
 			File.WriteAllText(file, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));

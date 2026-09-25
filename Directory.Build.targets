@@ -1,0 +1,21 @@
+<Project>
+  <!--
+    Projects that set UsesEditSharp get EditSharp one of two ways: a project
+    reference to a local clone at ../EditSharp when there is one (edits show
+    up without packing), otherwise the newest EditSharp package from
+    nuget.org, prereleases included. Pass -p:UseLocalEditSharp=false to
+    build against the package even with a clone present.
+  -->
+  <PropertyGroup Condition="'$(UsesEditSharp)' == 'true'">
+    <EditSharpProject>$(MSBuildThisFileDirectory)..\EditSharp\EditSharp.csproj</EditSharpProject>
+    <UseLocalEditSharp Condition="'$(UseLocalEditSharp)' == '' and Exists('$(EditSharpProject)')">true</UseLocalEditSharp>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(UsesEditSharp)' == 'true' and '$(UseLocalEditSharp)' == 'true'">
+    <ProjectReference Include="$(EditSharpProject)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UsesEditSharp)' == 'true' and '$(UseLocalEditSharp)' != 'true'">
+    <PackageReference Include="EditSharp" Version="*-*" />
+  </ItemGroup>
+</Project>

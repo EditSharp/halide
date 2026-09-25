@@ -1,8 +1,10 @@
+using EditSharp.Components.Sources;
 using EditSharp.Editing;
 using EditSharp.History;
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EditSharpGUI.Scripts.UI.Inspecting;
 
@@ -10,7 +12,7 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // folded inline, a list. the header is a button the whole width; clicking
 // it anywhere folds the body. a section can carry a switch on the right of
 // its header - a node's Enabled - bound to a bool property of every object
-// it shows. Section.tscn and Subsection.tscn lay the two kinds out; the
+// it shows - and a source's kind picker. Section.tscn and Subsection.tscn lay the two kinds out; the
 // inspector instantiates whichever fits
 [Tool]
 public partial class InspectorSection : VBoxContainer
@@ -20,6 +22,7 @@ public partial class InspectorSection : VBoxContainer
 	[Export] Control indent;
 	[Export] VBoxContainer body;
 	[Export] CheckButton toggle;
+	[Export] OptionButton kindPicker;
 
 	public VBoxContainer Body => body;
 
@@ -27,6 +30,8 @@ public partial class InspectorSection : VBoxContainer
 	public bool Nested { get; internal set; }
 
 	public PropertyDescriptor ToggleDescriptor => toggleDescriptor;
+
+	public PropertyDescriptor KindDescriptor => kindDescriptor;
 
 	// these delegate to the header, an export. the C# hot-reload serialiser
 	// reads and writes public properties before it restores exported
@@ -64,6 +69,13 @@ public partial class InspectorSection : VBoxContainer
 			toggle.Visible = toggleDescriptor is not null;
 			toggle.Toggled += OnToggled;
 			RefreshToggle();
+		}
+
+		if (kindPicker is not null)
+		{
+			kindPicker.Visible = kindDescriptor is not null;
+			kindPicker.ItemSelected += OnKindSelected;
+			RefreshKindPicker();
 		}
 	}
 
@@ -125,6 +137,92 @@ public partial class InspectorSection : VBoxContainer
 		}
 
 		RefreshToggle();
+		inspector.NotifyEdited();
+	}
+
+	// ---- the kind picker ----
+
+	PropertyDescriptor kindDescriptor;
+	IReadOnlyList<InspectorTarget> kindTargets;
+	IReadOnlyList<SourceKindInfo> kinds = [];
+	object[] boundSources = [];
+
+	// the picker shows which kind the source in this property of every
+	// object is, blank when they differ, and switches all of them at once
+	public void BindKindPicker(Inspector inspector, PropertyDescriptor descriptor, IReadOnlyList<InspectorTarget> targets, IReadOnlyList<SourceKindInfo> kinds)
+	{
+		this.inspector = inspector;
+		kindDescriptor = descriptor;
+		kindTargets = targets;
+		boundSources = [.. targets.Select(t => descriptor.GetValue(t.Object))];
+
+		if (kindPicker is null) return;
+
+		if (!this.kinds.SequenceEqual(kinds))
+		{
+			this.kinds = kinds;
+			kindPicker.Clear();
+			foreach (SourceKindInfo kind in kinds) kindPicker.AddItem(kind.DisplayName);
+		}
+
+		kindPicker.Visible = true;
+		RefreshKindPicker();
+	}
+
+	// whether a source shown here was swapped for another object since the
+	// rows were planned (a switch, or its undo), so they're bound to the old one
+	public bool SourcesReplaced()
+	{
+		if (kindDescriptor is null) return false;
+
+		for (int i = 0; i < kindTargets.Count; i++)
+			if (!ReferenceEquals(kindDescriptor.GetValue(kindTargets[i].Object), boundSources[i])) return true;
+
+		return false;
+	}
+
+	public void RefreshKindPicker()
+	{
+		if (kindPicker is null || kindDescriptor is null) return;
+
+		Type shared = null;
+		bool mixed = false;
+
+		foreach (InspectorTarget t in kindTargets)
+		{
+			Type type = kindDescriptor.GetValue(t.Object)?.GetType();
+
+			if (shared is null) shared = type;
+			else if (shared != type) { mixed = true; break; }
+		}
+
+		int index = mixed ? -1 : kinds.ToList().FindIndex(k => k.Type == shared);
+		kindPicker.Select(index);
+
+		// an unlisted kind, or several, shows its name or a dash
+		if (index < 0)
+			kindPicker.Text = mixed ? "—" : (kindDescriptor.GetValue(kindTargets[0].Object) is Source s && SourceKinds.Of(s) is { } kind ? kind.DisplayName : "");
+	}
+
+	void OnKindSelected(long index)
+	{
+		if (kindDescriptor is null || inspector is null || index < 0 || index >= kinds.Count) return;
+
+		SourceKindInfo kind = kinds[(int)index];
+
+		using (Transaction.Scope change = inspector.BeginChange($"Change {Title} to {kind.DisplayName}"))
+		{
+			foreach (InspectorTarget t in kindTargets)
+			{
+				if (kindDescriptor.GetValue(t.Object) is Source from && from.GetType() != kind.Type)
+					kindDescriptor.SetValue(t.Object, SourceKinds.Switch(from, kind));
+			}
+
+			change?.Commit();
+		}
+
+		// the rows under it are the new kind's
+		inspector.Replan();
 		inspector.NotifyEdited();
 	}
 }

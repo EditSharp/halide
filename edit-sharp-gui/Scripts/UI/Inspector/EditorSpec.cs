@@ -16,13 +16,14 @@ public sealed record EditorSpec(
 	bool ReadOnly,
 	bool Nullable,
 	string Tooltip,
-	string[] Choices = null)
+	Choice[] Choices = null,
+	FrameMeasure Frame = FrameMeasure.None)
 {
 	public static EditorSpec Of(PropertyDescriptor d)
-		=> new(d.Editor, d.ValueType, d.Min, d.Max, d.Step, d.Unit, d.IsReadOnly, d.IsNullable, d.Tooltip);
+		=> new(d.Editor, d.ValueType, d.Min, d.Max, d.Step, d.Unit, d.IsReadOnly, d.IsNullable, d.Tooltip, Frame: d.Frame);
 
 	public static EditorSpec OfItem(PropertyDescriptor d)
-		=> new(d.ItemEditor, d.ItemValueType, d.Min, d.Max, d.Step, d.Unit, false, false, d.Tooltip);
+		=> new(d.ItemEditor, d.ItemValueType, d.Min, d.Max, d.Step, d.Unit, false, false, d.Tooltip, Frame: d.Frame);
 
 	public bool HasRange => Min.HasValue && Max.HasValue;
 

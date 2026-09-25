@@ -5,10 +5,9 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>EditSharpGUI</RootNamespace>
     <UserSecretsId>29b9d31f-ebf6-4493-9b3b-ea5f469a7e03</UserSecretsId>
+    <!-- EditSharp from ../EditSharp or nuget.org; see Directory.Build.targets -->
+    <UsesEditSharp>true</UsesEditSharp>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EditSharp\EditSharp.csproj" />
-  </ItemGroup>
   <ItemGroup>
     <Folder Include="Media\" />
     <Folder Include="Media\Example\" />

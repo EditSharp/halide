@@ -222,6 +222,41 @@ public partial class UIPlayback : Control
 		}
 	}
 
+	// the timeline changed under a still picture: show the frame at the
+	// current position again. many calls in one frame render once, at its end;
+	// playing or scrubbing already shows the latest
+	bool refreshQueued;
+
+	public void RefreshFrame()
+	{
+		if (playback is null || refreshQueued) return;
+
+		refreshQueued = true;
+		Callable.From(RefreshNow).CallDeferred();
+	}
+
+	void RefreshNow()
+	{
+		refreshQueued = false;
+		if (playback is null || scrubbing || playback.State == PlaybackState.Playing) return;
+
+		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+
+		TimeSpan position = playback.Position;
+		TimeSpan duration = playback.Timeline.Duration;
+		if (position > duration) position = duration;
+		if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+
+		try
+		{
+			_ = playback.ScrubToAsync(position);
+		}
+		catch (Exception e)
+		{
+			Debug.WriteLine(e);
+		}
+	}
+
 	void InitializeFramebuffer(int width, int height)
 	{
 		if (_frame is null || _frame.GetWidth() != width || _frame.GetHeight() != height)

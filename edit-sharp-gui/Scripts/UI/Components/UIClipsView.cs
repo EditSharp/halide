@@ -555,11 +555,11 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		c.QueueFree();
 	}
 
-	// ---- which selected clip wears the handles ----
+	// ---- which clip wears the handles ----
 
-	// with several clips selected, only the one nearest the cursor shows its
-	// drag handles - a selection five channels tall would otherwise be a
-	// thicket of them, and two touching clips would put handles in the crevice
+	// only the clip nearest the cursor shows its drag handles, selected or
+	// not - every clip showing them would be a thicket, and two touching
+	// clips would put handles in the crevice
 	UIClip handleClip;
 
 	void SetHandleClip(UIClip clip)
@@ -691,35 +691,29 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			// so the selection goes to the back of the tree to win that
 			if (c.Selected) clipsControl.MoveChild(c, -1);
 		}
-
-		// the handles stay with the clip that had them if it is still
-		// selected; otherwise the clip just clicked, or the only one there is.
-		// from then on the cursor decides - see FollowCursorWithHandles
-		if (handleClip is null || !Selection.Contains(handleClip))
-		{
-			SetHandleClip(lastClicked is not null && Selection.Contains(lastClicked) ? lastClicked
-				: Selection.Count == 1 ? Selection[0]
-				: null);
-		}
 	}
 
-	// with several clips selected, the one nearest the cursor wears the
-	// handles - nearest, not hovered, so they turn up as the cursor comes
-	// towards a clip rather than only once it is over it. left alone during
-	// a drag, since a handle in the middle of one must not vanish
+	// the clip nearest the cursor wears the handles - nearest, not hovered,
+	// so they turn up as the cursor comes towards a clip rather than only
+	// once it is over it. left alone during a drag, since a handle in the
+	// middle of one must not vanish
 	void FollowCursorWithHandles()
 	{
-		if (Selection.Count < 2 || dragClip is not null || edgeDrag is not null || box.Active) return;
+		if (dragClip is not null || edgeDrag is not null || box.Active) return;
 
 		Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
 		if (!UITimeline.ViewContains(cursor)) return;
+
+		// handles hang over the neighbouring clip; while the cursor is on
+		// them they stay put, or reaching for one would hand them away
+		if (handleClip is not null && handleClip.HandlesContain(cursor)) return;
 
 		Vector2 point = UITimeline.ToViewContent(cursor);
 
 		UIClip closest = null;
 		float best = float.MaxValue;
 
-		foreach (UIClip c in Selection)
+		foreach (UIClip c in UIClips)
 		{
 			float distance = DistanceSquared(point, c.GetRect());
 
@@ -1252,6 +1246,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		// cannot overlap one either
 		if (edgeDrag is not null || dragClip is not null) return;
 
+		// an unselected clip's handle takes the selection, like a click on it would
+		SelectClip(uiClip, SelectionMode.ExclusiveIfUnselected);
+
 		UITimeline.FlushScrollEase();
 		UITimeline.BeginViewScroll();
 
@@ -1329,8 +1326,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	}
 
 	// the tightest range every clip in the drag can accept: nothing shorter
-	// than the minimum duration, nothing before zero, and no extend past the
-	// head of the content - a timeshift has no content limit, it stretches
+	// than the minimum duration, nothing before zero, and no extend past
+	// either end of the content - a timeshift has no content limit, it stretches
 	TimeSpan ClampEdge(TimeSpan edge)
 	{
 		foreach (UIClip c in edgeDrag.Clips)
@@ -1355,6 +1352,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 			else
 			{
 				TimeSpan min = UITimeline.EarliestEndAfter(clip.Start);
+
+				if (edgeDrag.Kind == EdgeDragKind.Extend)
+				{
+					TimeSpan limit = clip.TailExtendLimit;
+					if (limit != TimeSpan.MaxValue && edge > clip.End + limit) edge = clip.End + limit;
+				}
 
 				if (edge < min) edge = min;
 			}

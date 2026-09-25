@@ -59,6 +59,38 @@ public partial class SmokeTest : Node
 		Check(inspector is not null, "inspector is in the page");
 		Check(timeline.Thumbnails is ThumbnailCache, "thumbnail cache is wired");
 
+		// ---- the preview shows a frame without being played, and again after each change
+		{
+			UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Playback");
+			var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
+			int shown = 0;
+			pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref shown);
+
+			async Task<bool> NewFrame(int since)
+			{
+				for (int i = 0; i < 300 && shown <= since; i++) await Frames(1);
+				return shown > since;
+			}
+
+			// startup already asked for one; it may have landed before we listened
+			await Frames(30);
+			int atStart = shown;
+			preview.RefreshFrame();
+			Check(await NewFrame(atStart), "the preview renders the frame at the playhead while stopped");
+
+			int before = shown;
+			EditSharp.Components.Clips.Clip first = clipsView.UIClips[0].Clip;
+			using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Nudge"))
+			{
+				first.Move(first.Start + TimeSpan.FromSeconds(0.1));
+				change.Commit();
+			}
+			Check(await NewFrame(before), "a committed edit re-renders it");
+			before = shown;
+			timeline.History.Undo();
+			Check(await NewFrame(before), "so does an undo");
+		}
+
 		// ---- the theme: styles resolved through the palette, bindings written from it
 		EditSharpTheme theme = ThemeDB.GetProjectTheme() as EditSharpTheme;
 		Check(theme is not null && theme.Palette is not null, "the project theme is an EditSharpTheme with a palette");
@@ -71,6 +103,7 @@ public partial class SmokeTest : Node
 			Check(theme.GetStylebox("panel", "ClipContent") is ThemedStyleBox content && content.MinCornerRadius == 5, "clip content keeps its rounded corners");
 			Check(theme.GetStylebox("hover", "CheckBox") is StyleBoxEmpty, "an empty base leaves empty states");
 			Check(theme.GetColor("video", "Clip") == palette.VideoClipColor, "the named clip colour follows its definition");
+			Check(palette.AccentColor != palette.PlaybackColor, $"the accent is the palette's own, not the playback colour: {palette.AccentColor.ToHtml(false)}");
 			Check(theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X >= 6f, $"the scroll bar has a width: {theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X}");
 			Check(theme.ColorBindings.Count > 30 && theme.FontBindings.Count > 3, $"bindings present: {theme.ColorBindings.Count} colours, {theme.FontBindings.Count} fonts");
 			FontBinding clipName = theme.FindFontBinding("ClipName");
@@ -253,9 +286,298 @@ public partial class SmokeTest : Node
 			Check(animatable.Keyframes.Count == 0, $"five undos clear the keyframes: {animatable.Keyframes.Count}");
 		}
 
+		// ---- frame-relative values in pixels
+		{
+			clipsView.SelectClip(clipsView.UIClips.First(u => u.Clip is EditSharp.Components.Clips.VideoClip), SelectionMode.Exclusive);
+			await Frames(3);
+
+			InspectorRow position = Find<InspectorRow>(inspector).Find(r => r.Label == "Position");
+			InspectorRow speedRow = Find<InspectorRow>(inspector).Find(r => r.Label == "Speed");
+			InspectorRow rotationRow = Find<InspectorRow>(inspector).Find(r => r.Label == "Rotation");
+			Button Toggle(InspectorRow r) => Find<Button>(r).Find(b => b.Name == "FrameToggle");
+			Check(position is not null && Toggle(position) is { Visible: true }, "Position has the pixel toggle");
+			Check(Toggle(speedRow) is null or { Visible: false } && Toggle(rotationRow) is null or { Visible: false }, "Speed and Rotation don't");
+
+			if (position is not null)
+			{
+				var transform = (EditSharp.Components.Clips.ClipTransform)((PropertyBinding)position.Bindings[0]).Target;
+				position.Apply(new System.Numerics.Vector2(0.5f, -0.25f));
+				await Frames(1);
+
+				Toggle(position).EmitSignal(BaseButton.SignalName.Pressed);
+				await Frames(2);
+				SpinSlider px = (SpinSlider)Find<VectorEditor>(position)[0].Get("x");
+				SpinSlider py = (SpinSlider)Find<VectorEditor>(position)[0].Get("y");
+				GD.Print($"frame {inspector.FrameSize}: position shows {px.Text}, {py.Text}; toggle {Toggle(position).Text}");
+				Check(inspector.ShowPixels && px.Text == $"{0.5 * inspector.FrameSize.X / 2:0} px" && py.Text == $"{-0.25 * inspector.FrameSize.Y / 2:0} px", "the toggle shows positions in pixels from the centre");
+				Check(Find<SpinSlider>(speedRow).All(sp => !sp.Text.EndsWith("px")), "and leaves Speed alone");
+
+				// typed in pixels, stored as a fraction
+				typeof(SpinSlider).GetMethod("StartTyping", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(px, null);
+				((LineEdit)px.Get("entry")).Text = (inspector.FrameSize.X / 4).ToString();
+				typeof(SpinSlider).GetMethod("OnEntrySubmitted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(px, [""]);
+				await Frames(2);
+				Check(Math.Abs(transform.Position.StaticValue.X - 0.5f) < 1e-4, $"a quarter frame width typed in pixels is 0.5 half-widths: {transform.Position.StaticValue.X}");
+
+				Toggle(position).EmitSignal(BaseButton.SignalName.Pressed);
+				await Frames(2);
+				Check(!inspector.ShowPixels && px.Text == "0.500", $"and back to fractions: {px.Text}");
+
+				timeline.History.Undo();
+				await Frames(1);
+			}
+		}
+
+		// ---- a source's kind, switched from its header picker
+		{
+			static EditSharp.Components.Nodes.Sources.VideoSourceNode SourceNode(EditSharp.Components.Clips.Clip c) =>
+				c.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Sources.VideoSourceNode>().FirstOrDefault();
+
+			List<UIClip> video = [.. clipsView.UIClips.Where(u => SourceNode(u.Clip) is not null)];
+			Check(video.Count >= 2, $"{video.Count} clips with a video source");
+
+			if (video.Count >= 2)
+			{
+				EditSharp.Components.Nodes.Sources.VideoSourceNode node = SourceNode(video[0].Clip);
+				EditSharp.Components.Sources.Video.VideoSource original = node.Source;
+				TimeSpan? inPoint = original.Start;
+
+				clipsView.SelectClip(video[0], SelectionMode.Exclusive);
+				await Frames(3);
+
+				InspectorSection sourceSection = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null);
+				List<string> SourceRows() => [.. Find<InspectorRow>(Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null)).Select(r => r.Label)];
+				OptionButton picker = sourceSection?.GetNode<OptionButton>("Header/HeaderControls/Kind");
+				Check(picker is not null && picker.Visible, "the Source section has a kind picker");
+
+				if (picker is not null)
+				{
+					List<string> items = [.. Enumerable.Range(0, picker.ItemCount).Select(picker.GetItemText)];
+					GD.Print("kinds: " + string.Join(", ", items));
+					Check(items.SequenceEqual(["Media", "Color", "Noise", "Text"]), "video kinds listed, Media first, Timeline hidden");
+					Check(picker.Text == EditSharp.Components.Sources.SourceKinds.Of(original).DisplayName, $"the picker shows the current kind: {picker.Text}");
+
+					List<string> rowsBefore = SourceRows();
+					entries = timeline.History.Position;
+					picker.Select(items.IndexOf("Color"));
+					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Color"));
+					await Frames(2);
+
+					Check(node.Source is EditSharp.Components.Sources.Video.ColorVideoSource && node.Source.Start == inPoint, "switching makes a Color source, keeping its in-point");
+					Check(timeline.History.Position == entries + 1, "the switch is one history entry");
+					Check(SourceRows().Contains("Color"), "the Color row appears");
+
+					timeline.History.Undo();
+					await Frames(2);
+					Check(node.Source == original, "undo brings the original source back");
+					Check(SourceRows().SequenceEqual(rowsBefore), $"and its rows: {string.Join(", ", SourceRows())}");
+					Check(picker.Text == EditSharp.Components.Sources.SourceKinds.Of(original).DisplayName, $"and its kind in the picker: {picker.Text}");
+
+					timeline.History.Redo();
+					await Frames(2);
+					Check(node.Source is EditSharp.Components.Sources.Video.ColorVideoSource && SourceRows().Contains("Color"), "redo switches again");
+
+					// two clips of different kinds: a dash, and only what every source has
+					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
+					clipsView.SelectClip(video[1], SelectionMode.Inclusive);
+					await Frames(3);
+					sourceSection = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null);
+					picker = sourceSection?.GetNode<OptionButton>("Header/HeaderControls/Kind");
+					List<string> labels = [.. Find<InspectorRow>(sourceSection).Select(r => r.Label)];
+					GD.Print("mixed source rows: " + string.Join(", ", labels));
+					Check(picker is not null && picker.Text == "—" && picker.Selected == -1, "mixed kinds show a dash");
+					Check(labels.Count > 0 && labels.All(l => l is "In point" or "Duration" or "Loop"), "and only the rows every source has");
+
+					entries = timeline.History.Position;
+					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Noise"));
+					await Frames(2);
+					Check(SourceNode(video[0].Clip).Source is EditSharp.Components.Sources.Video.NoiseVideoSource && SourceNode(video[1].Clip).Source is EditSharp.Components.Sources.Video.NoiseVideoSource, "picking a kind switches both");
+					Check(timeline.History.Position == entries + 1, "in one entry");
+
+					timeline.History.Undo();
+					timeline.History.Undo();
+					await Frames(2);
+					Check(node.Source == original, "undoing both puts the first clip back as it was");
+
+					// a colour popup left open when the selection changes must not leave its edit open
+					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
+					await Frames(2);
+					picker = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null).GetNode<OptionButton>("Header/HeaderControls/Kind");
+					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Color"));
+					await Frames(2);
+					InspectorRow colourRow = Find<InspectorRow>(Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null)).Find(r => r.Label == "Color");
+					ColorEditor colourEditor = colourRow is null ? null : Find<ColorEditor>(colourRow).FirstOrDefault();
+					Check(colourEditor is not null, "the Color source has a colour editor");
+					if (colourEditor is not null)
+					{
+						((Button)colourEditor.Get("swatch")).EmitSignal(BaseButton.SignalName.Pressed);
+						await Frames(2);
+						Check(EditSharp.History.Transaction.IsOpen, "opening the picker opens an edit");
+						clipsView.SelectClip(video[1], SelectionMode.Exclusive);
+						await Frames(3);
+						Check(!EditSharp.History.Transaction.IsOpen, "changing the selection with the picker open closes the edit");
+						int before = timeline.History.Position;
+						timeline.History.Undo();
+						await Frames(2);
+						Check(timeline.History.Position == before - 1, "and undo still works after it");
+					}
+
+					// a text source: its font from the installed ones, its size and wrap
+					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
+					await Frames(2);
+					picker = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null).GetNode<OptionButton>("Header/HeaderControls/Kind");
+					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Text"));
+					await Frames(2);
+					List<string> textRows = SourceRows();
+					GD.Print("text rows: " + string.Join(", ", textRows));
+					Check(new[] { "Text", "Font", "Size", "Box", "Wrap", "Horizontal alignment", "Vertical alignment" }.All(textRows.Contains), "a text source shows its font, size, box, wrap and alignment rows");
+					OptionButton wrapMode = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Wrap")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
+					OptionButton across = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Horizontal alignment")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
+					GD.Print($"wrap: {string.Join(", ", Enumerable.Range(0, wrapMode?.ItemCount ?? 0).Select(wrapMode.GetItemText))}; horizontal: {string.Join(", ", Enumerable.Range(0, across?.ItemCount ?? 0).Select(across.GetItemText))}");
+					Check(wrapMode?.ItemCount == 3 && across?.ItemCount == 4, "wrap offers three modes and horizontal alignment four");
+					OptionButton fonts = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Font")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
+					Check(fonts is not null && fonts.ItemCount > 20 && fonts.Text == "Arial", $"the font dropdown lists the installed fonts: {fonts?.ItemCount}, showing {fonts?.Text}");
+
+					List<string> WeightItems()
+					{
+						OptionButton w = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Weight")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
+						return w is null ? [] : [.. Enumerable.Range(0, w.ItemCount).Select(w.GetItemText)];
+					}
+					GD.Print("Arial weights: " + string.Join(", ", WeightItems()));
+					Check(WeightItems().SequenceEqual(["Regular", "Bold", "Black"]) && textRows.Contains("Italic"), "Weight lists the font's weights by name, and Italic is there");
+					Find<InspectorRow>(inspector).Find(r => r.Label == "Font").Apply("Segoe UI");
+					await Frames(2);
+					GD.Print("Segoe UI weights: " + string.Join(", ", WeightItems()));
+					Check(WeightItems().Contains("Semibold") && WeightItems().Contains("Light"), "changing the font refreshes the weights on offer");
+
+					// typing: the text changes live, the preview follows, and it's one entry when the field is left
+					{
+						var textSource = (EditSharp.Components.Sources.Video.TextVideoSource)((PropertyBinding)Find<InspectorRow>(inspector).Find(r => r.Label == "Text").Bindings[0]).Target;
+						TextEdit field = Find<TextEdit>(Find<InspectorRow>(inspector).Find(r => r.Label == "Text")).First();
+						UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Playback");
+						var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
+						int frames = 0;
+						pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref frames);
+
+						int entriesBefore = timeline.History.Position;
+						field.GrabFocus();
+						await Frames(1);
+						foreach (string typed in new[] { "H", "He", "Hel", "Hell", "Hello" })
+						{
+							field.Text = typed;
+							field.EmitSignal(TextEdit.SignalName.TextChanged);
+							await Frames(1);
+							Check(textSource.Content == typed, $"typing '{typed}' changes the text right away");
+						}
+						for (int i = 0; i < 120 && frames == 0; i++) await Frames(1);
+						Check(frames > 0, $"and the preview re-renders while typing ({frames} frames)");
+						Check(timeline.History.Position == entriesBefore, "nothing is recorded mid-typing");
+
+						// a click on empty inspector space leaves the field
+						Vector2I windowWas = GetWindow().Size;
+						GetWindow().Size = new Vector2I(1920, 1080);
+						await Frames(3);
+						Label emptyish = Find<Label>(Find<InspectorRow>(inspector).Find(r => r.Label == "Font"))[0];
+						Vector2 at = emptyish.GetGlobalRect().GetCenter();
+						GetViewport().PushInput(new InputEventMouseMotion { Position = at, GlobalPosition = at });
+						await Frames(1);
+						GetViewport().PushInput(new InputEventMouseButton { Position = at, GlobalPosition = at, ButtonIndex = MouseButton.Left, Pressed = true });
+						GetViewport().PushInput(new InputEventMouseButton { Position = at, GlobalPosition = at, ButtonIndex = MouseButton.Left, Pressed = false });
+						await Frames(2);
+						GetWindow().Size = windowWas;
+						Check(!field.HasFocus(), "clicking empty inspector space takes focus out of the field");
+						Check(timeline.History.Position == entriesBefore + 1, $"and the typing becomes one entry: {timeline.History.Position - entriesBefore}");
+						timeline.History.Undo();
+						await Frames(1);
+					}
+
+					timeline.History.Undo();
+					timeline.History.Undo();
+					await Frames(2);
+				}
+			}
+		}
+
+		// ---- two touching selected clips: the handles under the cursor stay where they are
+		{
+			var pair = clipsView.UIClips.GroupBy(u => u.Clip.Channel).Select(g => g.OrderBy(u => u.Clip.Start).Take(2).ToList()).FirstOrDefault(g => g.Count == 2);
+			Check(pair is not null, "a channel with two clips");
+
+			if (pair is not null)
+			{
+				UIClip a = pair[0], b = pair[1];
+				int mark = timeline.History.Position;
+
+				// b starts right where a ends
+				using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Butt"))
+				{
+					b.Clip.Move(a.Clip.End);
+					change.Commit();
+				}
+
+				// zoomed out so both are on screen, in a window big enough to hold a view
+				Vector2I windowWas = GetWindow().Size;
+				GetWindow().Size = new Vector2I(1920, 1080);
+				await Frames(3);
+				double zoomWas = timeline.PixelsPerSecond;
+				timeline.PixelsPerSecond = 40;
+				clipsView.Reconcile();
+				await Frames(3);
+
+				clipsView.SelectClip(a, SelectionMode.Exclusive);
+				clipsView.SelectClip(b, SelectionMode.Inclusive);
+				InputManager.Singleton.Mouse.CurrentPosition = a.GetGlobalRect().GetCenter();
+				await Frames(3);
+
+				Control aEnd = (Control)a.Get("endControls");
+				Check(aEnd.IsVisibleInTree(), "the clip under the cursor wears the handles");
+
+				Vector2 onHandle = aEnd.GetGlobalRect().GetCenter();
+
+				// the way a hand goes: from inside the clip across its edge, through the gap, onto the handle
+				bool keptAll = true;
+				for (float x = a.GetGlobalRect().End.X - 10f; x <= onHandle.X; x += 1f)
+				{
+					InputManager.Singleton.Mouse.CurrentPosition = new Vector2(x, onHandle.Y);
+					await Frames(1);
+					if (!aEnd.IsVisibleInTree()) { keptAll = false; GD.Print($"handles lost at x {x} (clip ends {a.GetGlobalRect().End.X}, handle box {aEnd.GetGlobalRect()})"); break; }
+				}
+				Check(keptAll, "moving the cursor from the clip onto its end handle keeps the handles the whole way");
+				Check(b.GetGlobalRect().HasPoint(onHandle) && timeline.ViewContains(onHandle), "the handle overhangs the next clip, in view");
+				InputManager.Singleton.Mouse.CurrentPosition = onHandle;
+				await Frames(3);
+				Check(aEnd.IsVisibleInTree(), "its end handle stays while the cursor is on it, over the next clip");
+
+				InputManager.Singleton.Mouse.CurrentPosition = b.GetGlobalRect().GetCenter();
+				await Frames(3);
+				Check(!aEnd.IsVisibleInTree() && ((Control)b.Get("endControls")).IsVisibleInTree(), "moving onto the other clip hands them over");
+
+				// nothing selected: still the nearest clip
+				clipsView.DeselectAll();
+				InputManager.Singleton.Mouse.CurrentPosition = a.GetGlobalRect().GetCenter();
+				await Frames(3);
+				Check(aEnd.IsVisibleInTree() && !((Control)b.Get("endControls")).IsVisibleInTree(), "with nothing selected the nearest clip wears the handles");
+
+				// grabbing an unselected clip's handle selects it alone
+				clipsView.SelectClip(b, SelectionMode.Exclusive);
+				InputManager.Singleton.Mouse.CurrentPosition = a.GetGlobalRect().GetCenter();
+				await Frames(3);
+				UIDragHandle grip = Find<UIDragHandle>(aEnd).First();
+				clipsView.BeginEdgeDrag(a, grip, UIClipsView.EdgeDragKind.Extend);
+				Check(clipsView.SelectedClips.Count == 1 && clipsView.SelectedClips[0] == a.Clip, "grabbing an unselected clip's handle selects just that clip");
+				clipsView.CancelEdgeDrag(grip);
+				await Frames(2);
+
+				while (timeline.History.Position > mark) timeline.History.Undo();
+				timeline.PixelsPerSecond = zoomWas;
+				GetWindow().Size = windowWas;
+				await Frames(2);
+			}
+		}
+
 		// ---- the mock scene builds every editor and control under the palette
 		{
-			ThemeMockPage mock = GD.Load<PackedScene>("res://Scenes/Tools/ThemeMock.tscn").Instantiate<ThemeMockPage>();
+			ThemeMockPage mock = GD.Load<PackedScene>("res://Tools/Scenes/Tools/ThemeMock.tscn").Instantiate<ThemeMockPage>();
 			AddChild(mock);
 			await Frames(2);
 			Check(Find<InspectorRow>(mock).Count > 40, $"the mock scene builds a live inspector: {Find<InspectorRow>(mock).Count} rows");

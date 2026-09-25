@@ -103,7 +103,7 @@ public partial class ListRow : VBoxContainer
 		builtCount = list?.Count ?? 0;
 		if (list is null) return;
 
-		bool objects = descriptor.ItemEditor is PropertyEditor.Object or PropertyEditor.Media && descriptor.ItemValueType is not null && Inspect.Of(descriptor.ItemValueType).Count > 0;
+		bool objects = descriptor.ItemEditor is PropertyEditor.Object or PropertyEditor.Source && descriptor.ItemValueType is not null && Inspect.Of(descriptor.ItemValueType).Count > 0;
 
 		for (int i = 0; i < list.Count; i++)
 		{

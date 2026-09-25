@@ -15,6 +15,9 @@ public partial class VectorEditor : ValueEditor
 	// with the link on, moving one axis moves the other by the same
 	// factor, so the pair keeps its ratio - uniform scaling
 	[Export] Button link;
+	[Export] Button frameToggle;
+
+	(double Multiplier, double Step, int Decimals, string Unit) fraction;
 
 	Vector2 current;
 
@@ -25,6 +28,9 @@ public partial class VectorEditor : ValueEditor
 
 		link.TooltipText = "Keep the ratio between x and y";
 		link.Disabled = ReadOnly;
+
+		fraction = (x.Multiplier, x.Step, x.Decimals, x.Unit);
+		WireFrameToggle(frameToggle);
 	}
 
 	void Axis(SpinSlider spin)
@@ -73,6 +79,12 @@ public partial class VectorEditor : ValueEditor
 
 	public override void Display(object value, bool mixed)
 	{
+		if (Spec.Frame != EditSharp.Editing.FrameMeasure.None)
+		{
+			ShowFrameUnits(x, PixelScale.X, fraction, frameToggle);
+			ShowFrameUnits(y, PixelScale.Y, fraction, frameToggle);
+		}
+
 		if (mixed || value is not Vector2 v)
 		{
 			x.Display(null);
