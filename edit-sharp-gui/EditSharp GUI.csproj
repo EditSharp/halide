@@ -13,7 +13,6 @@
     <Folder Include="Media\Example\" />
     <Folder Include="Media\Example\Video\" />
     <Folder Include="Scripts\Tests\" />
-    <Folder Include="Scripts\UI\ContextMenu\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Media\Example\Video\video3.mp4">

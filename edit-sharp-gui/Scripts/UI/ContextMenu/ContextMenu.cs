@@ -6,28 +6,62 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu;
 
 public class ContextMenu
 {
-    List<ContextElement> elements = [];
+    public List<ContextElement> Elements = [];
+
+    public bool HideOnItemSelect = true;
+    public bool HideOnCheckableItemSelect = false;
 }
 
-public class ContextElement
+public class ContextSubmenu : ContextBaseButton
+{
+    public List<ContextElement> Elements = [];
+}
+
+public abstract class ContextElement
+{
+    public bool Visible = true;
+}
+
+public class ContextDivider : ContextElement
+{
+    
+}
+
+public abstract class ContextBaseButton : ContextElement
+{
+    public ContextText Text;
+    public ContextText ShortcutHint = null;
+    public Texture2D Icon;
+}
+
+public class ContextText(string text) : ContextElement
+{
+    public string Text = text;
+
+    public Weight TextWeight = Weight.Normal;
+
+    public enum Weight { Normal, Bold }
+}
+
+public class ContextButton : ContextBaseButton
 {
     public bool Enabled = true;
+    public bool Checked = false;
+
+    public CheckType Type = CheckType.None;
+    public enum CheckType { None, Check, Radio}
 }
 
-public class ContextButton : ContextElement
+// list of buttons where any can be selected/deselected
+public class ContextCheckList : ContextElement
 {
-    public string Text;
-    public Texture2D Icon;
-
-    public bool Selected = false;
+    public List<ContextButton> Buttons = [];
+    public List<int> CheckedButtons = [];
 }
 
-public class ContextCheckList : ContextButton
+// list of buttons where only one can be selected
+public class ContextRadioList : ContextElement
 {
-    
-}
-
-public class ContextRadioList : ContextButton
-{
-    
+    public List<ContextButton> Buttons = [];
+    public int SelectedButton = 0;
 }

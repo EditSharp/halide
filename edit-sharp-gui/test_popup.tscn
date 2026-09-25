@@ -13,8 +13,9 @@ script = ExtResource("1_dpne6")
 popup = NodePath("PopupMenu")
 
 [node name="PopupMenu" type="PopupMenu" parent="." unique_id=239512985]
+hide_on_checkable_item_selection = false
 prefer_native_menu = true
-item_count = 4
+item_count = 5
 item_0/text = "Cut Clip"
 item_0/id = 0
 item_1/text = "Copy Clip"
@@ -25,3 +26,4 @@ item_3/text = "Linked"
 item_3/checkable = 1
 item_3/checked = true
 item_3/id = 3
+item_4/id = 4
