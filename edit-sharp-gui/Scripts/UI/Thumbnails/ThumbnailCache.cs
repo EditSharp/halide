@@ -1,7 +1,7 @@
+using EditSharp.Components.Media;
 using EditSharp.Components;
 using EditSharp.Caching.Proxy;
 using EditSharp.Components.Clips;
-using EditSharp.Components.Sources;
 using EditSharp.Editing;
 using EditSharp.History;
 using EditSharp.Playback;

@@ -1109,7 +1109,7 @@ Definition = 22
 [sub_resource type="Resource" id="Resource_h0kbh"]
 script = ExtResource("color")
 ThemeType = "Node"
-Item = "source"
+Item = "input"
 Definition = 23
 
 [sub_resource type="Resource" id="Resource_r4x6t"]
@@ -1493,6 +1493,11 @@ ThemeType = "OptionButton"
 Family = 1
 Size = 1
 
+[sub_resource type="Resource" id="Resource_0ye0x"]
+script = ExtResource("font")
+ThemeType = "InspectorLabel"
+Family = 1
+
 [sub_resource type="Resource" id="ThemeStyle_HScrollBar_grabber"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -1849,6 +1854,33 @@ content_margin_bottom = 3.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_InspectorField_normal")
 State = 3
+
+[sub_resource type="Resource" id="Resource_iiev5"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_hoc4k"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_iiev5")
+State = 4
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_mkcxj"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_iiev5")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
 
 [sub_resource type="Resource" id="ThemeStyle_InspectorSection_normal"]
 script = ExtResource("style")
@@ -3540,6 +3572,8 @@ InspectorKeyButtonActive/styles/pressed = SubResource("Empty")
 InspectorKeyButtonActive/styles/read_only = SubResource("Empty")
 InspectorLabel/base_type = &"Label"
 InspectorLabel/colors/font_color = Color(0.537, 0.537, 0.537, 1)
+InspectorLabel/styles/focus = SubResource("StyleBox_hoc4k")
+InspectorLabel/styles/normal = SubResource("StyleBox_mkcxj")
 InspectorMultiline/base_type = &"TextEdit"
 InspectorNoIndent/base_type = &"MarginContainer"
 InspectorNoIndent/constants/margin_bottom = 4
@@ -3639,10 +3673,10 @@ MenuButton/styles/read_only = SubResource("ThemedStyleBox_MenuButton_read_only")
 Node/colors/audio = Color(0.8117647, 0.3882353, 0.8117647, 1)
 Node/colors/composite = Color(1, 0.4, 0.5019608, 1)
 Node/colors/effect = Color(0.29803923, 0.5921569, 1, 1)
+Node/colors/input = Color(1, 0.7490196, 0, 1)
 Node/colors/keying = Color(0.36078432, 0.69411767, 0.8392157, 1)
 Node/colors/mask = Color(0.6, 0.4, 1, 1)
 Node/colors/math = Color(0.34901962, 0.7529412, 0.34901962, 1)
-Node/colors/source = Color(1, 0.7490196, 0, 1)
 OptionButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 OptionButton/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 OptionButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
@@ -3772,4 +3806,4 @@ ViewBackground/styles/panel = SubResource("ThemedStyleBox_ViewBackground_panel")
 script = ExtResource("theme")
 Palette = ExtResource("palette")
 ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color")])
-FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx")])
+FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx"), SubResource("Resource_0ye0x")])

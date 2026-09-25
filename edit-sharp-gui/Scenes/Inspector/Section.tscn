@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dm13tw25uql6d" path="res://Scripts/UI/Inspector/SectionHeader.cs" id="2_header"]
 [ext_resource type="Texture2D" uid="uid://sujct8dt324u" path="res://Images/Icons/ArrowDown.png" id="3_byunj"]
 
-[node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle")]
+[node name="Section" type="VBoxContainer" unique_id=2048596586 node_paths=PackedStringArray("header", "headerControls", "indent", "body", "toggle", "kindPicker")]
 offset_right = 420.0
 offset_bottom = 160.0
 theme_type_variation = &"InspectorVBox"
@@ -14,6 +14,7 @@ headerControls = NodePath("Header Section/Header/HeaderControls")
 indent = NodePath("Indent")
 body = NodePath("Indent/Body")
 toggle = NodePath("Header Section/Header/HeaderControls/Switch")
+kindPicker = NodePath("Header Section/Header/HeaderControls/Kind")
 
 [node name="Header Section" type="Control" parent="." unique_id=39646476]
 custom_minimum_size = Vector2(0, 30)
@@ -101,11 +102,20 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -200.0
-offset_right = -6.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_type_variation = &"InspectorEditor"
 alignment = 2
+
+[node name="Kind" type="OptionButton" parent="Header Section/Header/HeaderControls" unique_id=1837462901]
+visible = false
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+tooltip_text = "Node type"
+focus_mode = 0
 
 [node name="Switch" type="CheckButton" parent="Header Section/Header/HeaderControls" unique_id=1303976148]
 visible = false

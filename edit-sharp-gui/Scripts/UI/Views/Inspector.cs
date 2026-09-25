@@ -1,5 +1,6 @@
 using EditSharp.Components.Clips;
-using EditSharp.Components.Sources;
+using EditSharp.Components.Media;
+using EditSharp.Components.Nodes.Input;
 using EditSharp.Editing;
 using EditSharp.History;
 using EditSharpGUI.Scripts.UI;
@@ -14,8 +15,10 @@ using System.Linq;
 public sealed record InspectorTarget(object Object, Clip Clip = null);
 
 // a titled group of objects edited together: their shared properties are
-// shown once and an edit writes to all of them
-public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorTarget> Targets, Color? Accent = null);
+// shown once and an edit writes to all of them. Kinds, when given, puts a
+// picker of them on the header that switches every object (a node in its
+// graph) to the kind chosen
+public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorTarget> Targets, Color? Accent = null, IReadOnlyList<EditSharp.Components.Nodes.NodeKindInfo> Kinds = null);
 
 // a value committed on a row: what it wrote, to which bindings, and what
 // each held before - enough to undo it from outside
@@ -69,6 +72,10 @@ public partial class Inspector : Control
 			if (field is not null) field.Changed += OnHistoryChanged;
 		}
 	}
+
+	// the project's media, for a media property's picker; null offers only
+	// bringing a file in
+	public MediaLibrary Media { get; set; }
 
 	// for time fields shown as frames
 	public int Framerate { get; set; } = 30;
@@ -189,12 +196,15 @@ public partial class Inspector : Control
 
 	abstract record Plan;
 
-	// a section: what its header shows, the switch and kind picker on it,
+	// a section: what its header shows, the switch and the picker on it,
 	// and its body
-	sealed record SectionPlan(string Title, Color? Accent, bool Nested, PropertyDescriptor Toggle, IReadOnlyList<InspectorTarget> ToggleTargets, IReadOnlyList<Plan> Body, KindPlan Kind = null) : Plan;
+	sealed record SectionPlan(string Title, Color? Accent, bool Nested, PropertyDescriptor Toggle, IReadOnlyList<InspectorTarget> ToggleTargets, IReadOnlyList<Plan> Body, KindPlan Kind = null, MediaPlan Media = null) : Plan;
 
-	// a source property's kind picker: the property, the objects holding it, the kinds offered
-	sealed record KindPlan(PropertyDescriptor Descriptor, IReadOnlyList<InspectorTarget> Targets, IReadOnlyList<SourceKindInfo> Kinds);
+	// an input node section's kind picker: the nodes, the kinds offered
+	sealed record KindPlan(IReadOnlyList<InspectorTarget> Targets, IReadOnlyList<EditSharp.Components.Nodes.NodeKindInfo> Kinds);
+
+	// a media property's picker: the property, the objects holding it
+	sealed record MediaPlan(PropertyDescriptor Descriptor, IReadOnlyList<InspectorTarget> Targets);
 
 	// a row is the same row whenever it edits the same kind of value under
 	// the same name - the objects behind it are only ever bindings
@@ -209,7 +219,17 @@ public partial class Inspector : Control
 
 	IReadOnlyList<InspectorSectionSpec> shown = [];
 
+	// the clips the sections were made from, when they were; a re-plan
+	// reads their graphs again, since a switch puts new nodes in them
+	IReadOnlyList<Clip> shownClips;
+
 	public void Show(IReadOnlyList<InspectorSectionSpec> sections)
+	{
+		shownClips = null;
+		ShowSections(sections);
+	}
+
+	void ShowSections(IReadOnlyList<InspectorSectionSpec> sections)
 	{
 		shown = sections;
 		empty.Visible = sections.Count == 0;
@@ -223,7 +243,8 @@ public partial class Inspector : Control
 		// switch rather than in the body as a row
 		PropertyDescriptor enabled = HeaderToggle(spec.Targets);
 
-		return new(spec.Title, spec.Accent, Nested: false, enabled, spec.Targets, PlanRows(spec.Targets, skip: enabled?.Name));
+		return new(spec.Title, spec.Accent, Nested: false, enabled, spec.Targets, PlanRows(spec.Targets, skip: enabled?.Name),
+			spec.Kinds is null ? null : new KindPlan(spec.Targets, spec.Kinds));
 	}
 
 	// the bool property named Enabled, when every object has one
@@ -244,10 +265,15 @@ public partial class Inspector : Control
 
 	// clips: the clip itself, then each node of its graph in graph order,
 	// each a section. several clips: only what they all have - the same
-	// node type at the same place in the graph - edited together
+	// node type at the same place in the graph - edited together. input
+	// nodes are the exception: inputs of one kind of graph get a kind
+	// picker, and while their kinds differ the section shows only what
+	// every input has, so the picker can switch them all
 	public void ShowClips(IReadOnlyList<Clip> clips)
 	{
 		if (clips is null || clips.Count == 0) { Clear(); return; }
+
+		shownClips = clips;
 
 		List<InspectorSectionSpec> sections = [];
 
@@ -261,15 +287,20 @@ public partial class Inspector : Control
 			EditSharp.Components.Nodes.Node first = clips[0].Graph.Nodes[i];
 
 			if (first is EditSharp.Components.Nodes.OutputNode) continue;
-			if (clips.Any(c => c.Graph.Nodes[i].GetType() != first.GetType())) continue;
+
+			bool same = clips.All(c => c.Graph.Nodes[i].GetType() == first.GetType());
+
+			Type inputBase = first is VideoInputNode ? typeof(VideoInputNode) : first is AudioInputNode ? typeof(AudioInputNode) : null;
+			if (!same && (inputBase is null || clips.Any(c => !inputBase.IsInstanceOfType(c.Graph.Nodes[i])))) continue;
 
 			sections.Add(new(
-				NodeCategory.Title(first),
+				same ? NodeCategory.Title(first) : "Input",
 				[.. clips.Select(c => new InspectorTarget(c.Graph.Nodes[i], c))],
-				GetThemeColor(NodeCategory.Of(first), "Node")));
+				GetThemeColor(NodeCategory.Of(first), "Node"),
+				inputBase is null ? null : EditSharp.Components.Nodes.NodeKinds.For(inputBase)));
 		}
 
-		Show(sections);
+		ShowSections(sections);
 	}
 
 	Color ClipAccent(Clip clip) => GetThemeColor(clip is AudioClip ? "audio" : "video", "Clip");
@@ -280,8 +311,13 @@ public partial class Inspector : Control
 		=> Reconcile(into, PlanRows(targets, skip));
 
 	// the same objects again, for when what they have has changed shape -
-	// a source switched to another kind, or back by an undo
-	internal void Replan() => Show(shown);
+	// a node switched to another kind, a media changed, or either undone.
+	// clips are read again, since their graphs hold the new nodes
+	internal void Replan()
+	{
+		if (shownClips is not null) ShowClips(shownClips);
+		else ShowSections(shown);
+	}
 
 	// one row per property they all have, grouped as their attributes say,
 	// objects folded inline, lists as lists. `only`, when given, keeps just
@@ -338,7 +374,7 @@ public partial class Inspector : Control
 		}
 
 		// an object with properties of its own: folded inline
-		bool objectLike = descriptor.Editor is PropertyEditor.Object or PropertyEditor.Source or PropertyEditor.Timeline;
+		bool objectLike = descriptor.Editor is PropertyEditor.Object or PropertyEditor.Media or PropertyEditor.Timeline;
 
 		if (objectLike && Inspect.Of(descriptor.ValueType).Count > 0)
 		{
@@ -350,22 +386,13 @@ public partial class Inspector : Control
 				if (child is not null) children.Add(new InspectorTarget(child, t.Clip));
 			}
 
-			// a source: a kind picker on the header, and while the kinds
-			// differ only what every source has
-			KindPlan kind = null;
-			IReadOnlySet<string> only = null;
+			// a media: a picker of the project's media on the header. the
+			// rows are the media's own, shared by every clip reading it
+			MediaPlan media = typeof(IMedia).IsAssignableFrom(descriptor.ValueType) ? new MediaPlan(descriptor, targets) : null;
 
-			if (typeof(Source).IsAssignableFrom(descriptor.ValueType))
-			{
-				kind = new KindPlan(descriptor, targets, SourceKinds.For(descriptor.ValueType));
+			IReadOnlyList<Plan> body = children.Count == targets.Count ? PlanRows(children) : [new NotePlan("(none)")];
 
-				if (children.Select(c => c.Object.GetType()).Distinct().Count() > 1)
-					only = Inspect.Of(descriptor.ValueType).Select(d => d.Name).ToHashSet();
-			}
-
-			IReadOnlyList<Plan> body = children.Count == targets.Count ? PlanRows(children, only: only) : [new NotePlan("(none)")];
-
-			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body, kind);
+			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body, Media: media);
 		}
 
 		EditorSpec spec = EditorSpec.Of(descriptor);
@@ -432,7 +459,7 @@ public partial class Inspector : Control
 	// plan - the same scene with the same editor - so it can be kept
 	static bool Matches(Node node, Plan plan) => (node, plan) switch
 	{
-		(InspectorSection s, SectionPlan p) => s.Nested == p.Nested && (s.ToggleDescriptor is null) == (p.Toggle is null) && (s.KindDescriptor is null) == (p.Kind is null),
+		(InspectorSection s, SectionPlan p) => s.Nested == p.Nested && (s.ToggleDescriptor is null) == (p.Toggle is null) && s.HasKindPicker == (p.Kind is not null) && (s.MediaDescriptor is null) == (p.Media is null),
 		(InspectorRow r, RowPlan p) => r.Label == p.Label && SameSpec(r.Spec, p.Spec),
 		(ListRow l, ListPlan p) => l.Descriptor == p.Descriptor && l.Label == p.Label,
 		(Label t, NotePlan p) => t.Text == p.Text,
@@ -453,7 +480,8 @@ public partial class Inspector : Control
 				s.Title = p.Title;
 				s.Accent = p.Accent;
 				if (p.Toggle is not null) s.BindToggle(this, p.Toggle, p.ToggleTargets);
-				if (p.Kind is not null) s.BindKindPicker(this, p.Kind.Descriptor, p.Kind.Targets, p.Kind.Kinds);
+				if (p.Kind is not null) s.BindKindPicker(this, p.Kind.Targets, p.Kind.Kinds);
+				if (p.Media is not null) s.BindMediaPicker(this, p.Media.Descriptor, p.Media.Targets);
 				Reconcile(s.Body, p.Body);
 				break;
 
@@ -475,7 +503,8 @@ public partial class Inspector : Control
 			{
 				InspectorSection section = CreateSection(p.Title, p.Accent, p.Nested);
 				if (p.Toggle is not null) section.BindToggle(this, p.Toggle, p.ToggleTargets);
-				if (p.Kind is not null) section.BindKindPicker(this, p.Kind.Descriptor, p.Kind.Targets, p.Kind.Kinds);
+				if (p.Kind is not null) section.BindKindPicker(this, p.Kind.Targets, p.Kind.Kinds);
+				if (p.Media is not null) section.BindMediaPicker(this, p.Media.Descriptor, p.Media.Targets);
 				Reconcile(section.Body, p.Body);
 				return section;
 			}
@@ -514,7 +543,7 @@ public partial class Inspector : Control
 		{
 			case InspectorRow row: row.Refresh(); break;
 			case ListRow list: list.Refresh(); break;
-			case InspectorSection section: section.RefreshToggle(); section.RefreshKindPicker(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
+			case InspectorSection section: section.RefreshToggle(); section.RefreshPicker(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
 		}
 	}
 
@@ -529,13 +558,13 @@ public partial class Inspector : Control
 	}
 
 	// an undo, a redo, or a change made somewhere else: re-read everything,
-	// re-planning first only if a source shown was replaced (changes can
-	// come a primitive at a time, too often to re-plan on each). a commit
+	// re-planning first only if a node or media shown was replaced (changes
+	// can come a primitive at a time, too often to re-plan on each). a commit
 	// made here re-reads too - the row that made it is already showing the
 	// value, and the rest may depend on it
 	void OnHistoryChanged(object sender, HistoryEventArgs e)
 	{
-		if (content is not null && (SourcesReplaced(content) || ChoicesStale(content))) Replan();
+		if (content is not null && (Replaced(content) || ChoicesStale(content))) Replan();
 		RefreshValues();
 	}
 
@@ -546,10 +575,10 @@ public partial class Inspector : Control
 		_ => node.GetChildren().Any(ChoicesStale)
 	};
 
-	static bool SourcesReplaced(Node node) => node switch
+	static bool Replaced(Node node) => node switch
 	{
-		InspectorSection section => section.SourcesReplaced() || section.Body.GetChildren().Any(SourcesReplaced),
-		_ => node.GetChildren().Any(SourcesReplaced)
+		InspectorSection section => section.Replaced() || section.Body.GetChildren().Any(Replaced),
+		_ => node.GetChildren().Any(Replaced)
 	};
 
 	// a history scope for an edit made here; null when there is no history

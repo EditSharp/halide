@@ -83,17 +83,17 @@ grow_vertical = 2
 theme_type_variation = &"InspectorEditor"
 alignment = 2
 
-[node name="Switch" type="CheckButton" parent="Header/HeaderControls" unique_id=68943127]
-visible = false
-layout_mode = 2
-tooltip_text = "Enabled"
-focus_mode = 0
-
 [node name="Kind" type="OptionButton" parent="Header/HeaderControls" unique_id=1480262917]
 visible = false
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
-tooltip_text = "Source type"
+tooltip_text = "Type"
+focus_mode = 0
+
+[node name="Switch" type="CheckButton" parent="Header/HeaderControls" unique_id=68943127]
+visible = false
+layout_mode = 2
+tooltip_text = "Enabled"
 focus_mode = 0
 
 [node name="Indent" type="MarginContainer" parent="." unique_id=1386296912]

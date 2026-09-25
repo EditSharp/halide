@@ -53,11 +53,7 @@ public partial class ProjectManager : Node
 			GD.Print("Theme reloaded from disk.");
 	}
 
-	public Project CurrentProject = new()
-	{
-		Timeline = Tests.TestBlueprint.Timeline,
-		RenderSettings = Tests.TestBlueprint.RenderSettings
-	};
+	public Project CurrentProject = Project.FromBlueprint(Tests.TestBlueprint);
 }
 
 public class ConsoleLogger : IEditSharpLogger
@@ -95,4 +91,15 @@ public class Project
 
 	RenderSettings _renderSettings = new();
 	public RenderSettings RenderSettings { get => _renderSettings; set => Transaction.Set(this, ref _renderSettings, value, static (o, v) => o._renderSettings = v); }
+
+	// the media the project has brought in; nodes share them
+	public MediaLibrary Media { get; } = new();
+
+	// a project around a timeline built in code: its media are whatever the clips read
+	public static Project FromBlueprint(Blueprint blueprint)
+	{
+		Project project = new() { Timeline = blueprint.Timeline, RenderSettings = blueprint.RenderSettings };
+		project.Media.AdoptFrom(blueprint.Timeline);
+		return project;
+	}
 }

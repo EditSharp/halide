@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EditSharp;
 using EditSharp.Components.Clips;
-using EditSharp.Components.Nodes.Sources;
-using EditSharp.Components.Sources.Audio;
-using EditSharp.Components.Sources.Video;
+using EditSharp.Components.Nodes.Input;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI.Theming;
 using EditSharpGUI.Scripts.UI.Thumbnails;
@@ -84,12 +82,12 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		get
 		{
-			bool source = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode { Source: MediaVideoSource or TimelineVideoSource } or AudioSourceNode { Source: MediaAudioSource or TimelineAudioSource });
-			bool text = Clip.Graph.AllNodes.Any(n => n is VideoSourceNode { Source: TextVideoSource });
+			bool media = Clip.Graph.AllNodes.Any(n => n is VideoMediaNode or TimelineVideoNode or AudioMediaNode or TimelineAudioNode);
+			bool text = Clip.Graph.AllNodes.Any(n => n is TextNode);
 
-			if (Clip is AudioClip) return source ? "audio" : "generator_audio";
-			if (text && !source) return "text";
-			return source ? "video" : "generator_video";
+			if (Clip is AudioClip) return media ? "audio" : "generator_audio";
+			if (text && !media) return "text";
+			return media ? "video" : "generator_video";
 		}
 	}
 

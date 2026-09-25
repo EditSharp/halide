@@ -1,7 +1,7 @@
 using EditSharp.Components;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes.Effects;
-using EditSharp.Components.Sources.Video;
+using EditSharp.Components.Media;
 using EditSharp.Editing;
 using SkiaSharp;
 using System;
@@ -79,7 +79,7 @@ public sealed class GallerySample
 	public bool GroupedToggle { get; set; }
 
 	[Editable("Media", Order = 21)]
-	public VideoSource Media { get; set; } = new MediaVideoSource { Path = "C:/media/clip.mp4", Start = TimeSpan.FromSeconds(1), Duration = TimeSpan.FromSeconds(10) };
+	public VideoMedia Media { get; set; } = new VideoMedia { Path = "C:/media/clip.mp4" };
 
 	[Editable("Nested object", Order = 22)]
 	public ClipTransform Nested { get; set; } = new();

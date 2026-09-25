@@ -1,4 +1,4 @@
-using EditSharp.Components.Sources;
+using EditSharp.Components.Media;
 using EditSharp.History;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI.Thumbnails;
@@ -55,6 +55,7 @@ public partial class Editor : Control
 		// into the project's history, and can ask for the playhead to be
 		// moved to a keyframe
 		Inspector.History = project.History;
+	Inspector.Media = project.Media;
 		Inspector.Framerate = project.RenderSettings.Framerate;
 		Inspector.FrameSize = new((int)project.RenderSettings.Resolution.X, (int)project.RenderSettings.Resolution.Y);
 		Inspector.Playhead = UITimeline.PlayheadTime;

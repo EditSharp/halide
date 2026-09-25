@@ -593,7 +593,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	}
 
 	// FUTURE: add a clip and create its clip data from a dragged in source
-	// public void AddClip(Source s, int channelIndex)
+	// public void AddClip(IMedia media, int channelIndex)
 
 	// all selected clips
 	public class ClipsSelection : Selection<UIClip>

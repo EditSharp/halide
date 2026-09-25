@@ -328,86 +328,105 @@ public partial class SmokeTest : Node
 			}
 		}
 
-		// ---- a source's kind, switched from its header picker
+		// ---- an input node's kind, switched from its section's header picker
 		{
-			static EditSharp.Components.Nodes.Sources.VideoSourceNode SourceNode(EditSharp.Components.Clips.Clip c) =>
-				c.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Sources.VideoSourceNode>().FirstOrDefault();
+			static EditSharp.Components.Nodes.Input.VideoInputNode InputOf(EditSharp.Components.Clips.Clip c) =>
+				c.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Input.VideoInputNode>().FirstOrDefault();
 
-			List<UIClip> video = [.. clipsView.UIClips.Where(u => SourceNode(u.Clip) is not null)];
-			Check(video.Count >= 2, $"{video.Count} clips with a video source");
+			List<UIClip> video = [.. clipsView.UIClips.Where(u => InputOf(u.Clip) is EditSharp.Components.Nodes.Input.VideoMediaNode)];
+			Check(video.Count >= 2, $"{video.Count} clips with a video media input");
+
+			// the audio clip plays the same file: the video media's own audio, not a media of its own
+			{
+				var shared = ((EditSharp.Components.Nodes.Input.VideoMediaNode)InputOf(video[0].Clip)).Media;
+				var audioNodes = clipsView.UIClips.Select(u => u.Clip).OfType<EditSharp.Components.Clips.AudioClip>().SelectMany(a => a.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Input.AudioMediaNode>()).ToList();
+				Check(audioNodes.Count > 0 && audioNodes.All(n => ReferenceEquals(n.Media, shared.Audio)), "the audio clip plays the video media's own audio");
+				Check(inspector.Media.For(typeof(EditSharp.Components.Media.AudioMedia)).Contains(shared.Audio) && !inspector.Media.Contains(shared.Audio), "which the project offers for audio without listing it as an entry");
+			}
 
 			if (video.Count >= 2)
 			{
-				EditSharp.Components.Nodes.Sources.VideoSourceNode node = SourceNode(video[0].Clip);
-				EditSharp.Components.Sources.Video.VideoSource original = node.Source;
+				EditSharp.Components.Nodes.Input.VideoInputNode original = InputOf(video[0].Clip);
+				var originalMedia = ((EditSharp.Components.Nodes.Input.VideoMediaNode)original).Media;
 				TimeSpan? inPoint = original.Start;
 
 				clipsView.SelectClip(video[0], SelectionMode.Exclusive);
 				await Frames(3);
 
-				InspectorSection sourceSection = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null);
-				List<string> SourceRows() => [.. Find<InspectorRow>(Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null)).Select(r => r.Label)];
-				OptionButton picker = sourceSection?.GetNode<OptionButton>("Header/HeaderControls/Kind");
-				Check(picker is not null && picker.Visible, "the Source section has a kind picker");
+				InspectorSection InputSection() => Find<InspectorSection>(inspector).Find(s => s.HasKindPicker);
+				List<string> InputRows() => [.. Find<InspectorRow>(InputSection()).Select(r => r.Label)];
+				OptionButton picker = InputSection()?.Picker;
+				Check(picker is not null && picker.Visible, "the input node's section has a kind picker");
+
+				// the media section under it: the shared media's rows, with a picker of the project's media
+				InspectorSection mediaSection = Find<InspectorSection>(inspector).Find(s => s.MediaDescriptor is not null);
+				List<string> mediaRows = mediaSection is null ? [] : [.. Find<InspectorRow>(mediaSection).Select(r => r.Label)];
+				GD.Print("media rows: " + string.Join(", ", mediaRows));
+				Check(mediaSection is not null && mediaSection.Picker.Visible && mediaRows.Contains("File") && mediaRows.Contains("Name"), "the Media section shows the media's name and file with a media picker");
+				Check(mediaSection is not null && mediaSection.Picker.Text == originalMedia.Name, $"the media picker shows the media's name: {mediaSection?.Picker.Text}");
+				Check(mediaSection is not null && mediaSection.Picker.GetItemText(mediaSection.Picker.ItemCount - 1) == "Browse…", "and offers to browse for a file");
 
 				if (picker is not null)
 				{
 					List<string> items = [.. Enumerable.Range(0, picker.ItemCount).Select(picker.GetItemText)];
 					GD.Print("kinds: " + string.Join(", ", items));
-					Check(items.SequenceEqual(["Media", "Color", "Noise", "Text"]), "video kinds listed, Media first, Timeline hidden");
-					Check(picker.Text == EditSharp.Components.Sources.SourceKinds.Of(original).DisplayName, $"the picker shows the current kind: {picker.Text}");
+					Check(items.SequenceEqual(["Color", "Noise", "Text", "Video"]), "video input kinds listed by name, Timeline hidden");
+					Check(picker.Text == EditSharp.Components.Nodes.NodeKinds.Of(original).DisplayName, $"the picker shows the current kind: {picker.Text}");
 
-					List<string> rowsBefore = SourceRows();
+					List<string> rowsBefore = InputRows();
 					entries = timeline.History.Position;
 					picker.Select(items.IndexOf("Color"));
 					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Color"));
 					await Frames(2);
 
-					Check(node.Source is EditSharp.Components.Sources.Video.ColorVideoSource && node.Source.Start == inPoint, "switching makes a Color source, keeping its in-point");
+					EditSharp.Components.Nodes.Input.VideoInputNode switched = InputOf(video[0].Clip);
+					Check(switched is EditSharp.Components.Nodes.Input.ColorNode && switched.Start == inPoint, "switching makes a Color node, keeping its in-point");
+					Check(!video[0].Clip.Graph.AllNodes.Contains(original), "and takes the media node out of the graph");
 					Check(timeline.History.Position == entries + 1, "the switch is one history entry");
-					Check(SourceRows().Contains("Color"), "the Color row appears");
+					Check(InputRows().Contains("Color"), "the Color row appears");
+					Check(Find<InspectorSection>(inspector).Find(s => s.MediaDescriptor is not null) is null, "and the Media section is gone");
 
 					timeline.History.Undo();
 					await Frames(2);
-					Check(node.Source == original, "undo brings the original source back");
-					Check(SourceRows().SequenceEqual(rowsBefore), $"and its rows: {string.Join(", ", SourceRows())}");
-					Check(picker.Text == EditSharp.Components.Sources.SourceKinds.Of(original).DisplayName, $"and its kind in the picker: {picker.Text}");
+					Check(InputOf(video[0].Clip) == original, "undo brings the original node back");
+					Check(InputRows().SequenceEqual(rowsBefore), $"and its rows: {string.Join(", ", InputRows())}");
+					picker = InputSection()?.Picker;
+					Check(picker?.Text == EditSharp.Components.Nodes.NodeKinds.Of(original).DisplayName, $"and its kind in the picker: {picker?.Text}");
 
 					timeline.History.Redo();
 					await Frames(2);
-					Check(node.Source is EditSharp.Components.Sources.Video.ColorVideoSource && SourceRows().Contains("Color"), "redo switches again");
+					Check(InputOf(video[0].Clip) is EditSharp.Components.Nodes.Input.ColorNode && InputRows().Contains("Color"), "redo switches again");
 
-					// two clips of different kinds: a dash, and only what every source has
+					// two clips of different kinds: a dash, and only what every input has
 					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
 					clipsView.SelectClip(video[1], SelectionMode.Inclusive);
 					await Frames(3);
-					sourceSection = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null);
-					picker = sourceSection?.GetNode<OptionButton>("Header/HeaderControls/Kind");
-					List<string> labels = [.. Find<InspectorRow>(sourceSection).Select(r => r.Label)];
-					GD.Print("mixed source rows: " + string.Join(", ", labels));
+					picker = InputSection()?.Picker;
+					List<string> labels = InputSection() is null ? [] : InputRows();
+					GD.Print("mixed input rows: " + string.Join(", ", labels));
 					Check(picker is not null && picker.Text == "—" && picker.Selected == -1, "mixed kinds show a dash");
-					Check(labels.Count > 0 && labels.All(l => l is "In point" or "Duration" or "Loop"), "and only the rows every source has");
+					Check(labels.Count > 0 && labels.All(l => l is "In point" or "Duration" or "Loop"), "and only the rows every input has");
 
 					entries = timeline.History.Position;
 					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Noise"));
 					await Frames(2);
-					Check(SourceNode(video[0].Clip).Source is EditSharp.Components.Sources.Video.NoiseVideoSource && SourceNode(video[1].Clip).Source is EditSharp.Components.Sources.Video.NoiseVideoSource, "picking a kind switches both");
+					Check(InputOf(video[0].Clip) is EditSharp.Components.Nodes.Input.NoiseNode && InputOf(video[1].Clip) is EditSharp.Components.Nodes.Input.NoiseNode, "picking a kind switches both");
 					Check(timeline.History.Position == entries + 1, "in one entry");
 
 					timeline.History.Undo();
 					timeline.History.Undo();
 					await Frames(2);
-					Check(node.Source == original, "undoing both puts the first clip back as it was");
+					Check(InputOf(video[0].Clip) == original && ReferenceEquals(((EditSharp.Components.Nodes.Input.VideoMediaNode)original).Media, originalMedia), "undoing both puts the first clip back as it was, media included");
 
 					// a colour popup left open when the selection changes must not leave its edit open
 					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
 					await Frames(2);
-					picker = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null).GetNode<OptionButton>("Header/HeaderControls/Kind");
+					picker = InputSection().Picker;
 					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Color"));
 					await Frames(2);
-					InspectorRow colourRow = Find<InspectorRow>(Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null)).Find(r => r.Label == "Color");
+					InspectorRow colourRow = Find<InspectorRow>(InputSection()).Find(r => r.Label == "Color");
 					ColorEditor colourEditor = colourRow is null ? null : Find<ColorEditor>(colourRow).FirstOrDefault();
-					Check(colourEditor is not null, "the Color source has a colour editor");
+					Check(colourEditor is not null, "the Color node has a colour editor");
 					if (colourEditor is not null)
 					{
 						((Button)colourEditor.Get("swatch")).EmitSignal(BaseButton.SignalName.Pressed);
@@ -422,15 +441,15 @@ public partial class SmokeTest : Node
 						Check(timeline.History.Position == before - 1, "and undo still works after it");
 					}
 
-					// a text source: its font from the installed ones, its size and wrap
+					// a text node: its font from the installed ones, its size and wrap
 					clipsView.SelectClip(video[0], SelectionMode.Exclusive);
 					await Frames(2);
-					picker = Find<InspectorSection>(inspector).Find(s => s.KindDescriptor is not null).GetNode<OptionButton>("Header/HeaderControls/Kind");
+					picker = InputSection().Picker;
 					picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)items.IndexOf("Text"));
 					await Frames(2);
-					List<string> textRows = SourceRows();
+					List<string> textRows = InputRows();
 					GD.Print("text rows: " + string.Join(", ", textRows));
-					Check(new[] { "Text", "Font", "Size", "Box", "Wrap", "Horizontal alignment", "Vertical alignment" }.All(textRows.Contains), "a text source shows its font, size, box, wrap and alignment rows");
+					Check(new[] { "Text", "Font", "Size", "Box", "Wrap", "Horizontal alignment", "Vertical alignment" }.All(textRows.Contains), "a text node shows its font, size, box, wrap and alignment rows");
 					OptionButton wrapMode = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Wrap")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
 					OptionButton across = Find<DropdownEditor>(Find<InspectorRow>(inspector).Find(r => r.Label == "Horizontal alignment")).Select(d => (OptionButton)d.Get("options")).FirstOrDefault();
 					GD.Print($"wrap: {string.Join(", ", Enumerable.Range(0, wrapMode?.ItemCount ?? 0).Select(wrapMode.GetItemText))}; horizontal: {string.Join(", ", Enumerable.Range(0, across?.ItemCount ?? 0).Select(across.GetItemText))}");
@@ -452,7 +471,7 @@ public partial class SmokeTest : Node
 
 					// typing: the text changes live, the preview follows, and it's one entry when the field is left
 					{
-						var textSource = (EditSharp.Components.Sources.Video.TextVideoSource)((PropertyBinding)Find<InspectorRow>(inspector).Find(r => r.Label == "Text").Bindings[0]).Target;
+						var textNode = (EditSharp.Components.Nodes.Input.TextNode)((PropertyBinding)Find<InspectorRow>(inspector).Find(r => r.Label == "Text").Bindings[0]).Target;
 						TextEdit field = Find<TextEdit>(Find<InspectorRow>(inspector).Find(r => r.Label == "Text")).First();
 						UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Playback");
 						var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
@@ -467,7 +486,7 @@ public partial class SmokeTest : Node
 							field.Text = typed;
 							field.EmitSignal(TextEdit.SignalName.TextChanged);
 							await Frames(1);
-							Check(textSource.Content == typed, $"typing '{typed}' changes the text right away");
+							Check(textNode.Content == typed, $"typing '{typed}' changes the text right away");
 						}
 						for (int i = 0; i < 120 && frames == 0; i++) await Frames(1);
 						Check(frames > 0, $"and the preview re-renders while typing ({frames} frames)");
@@ -494,6 +513,48 @@ public partial class SmokeTest : Node
 					timeline.History.Undo();
 					timeline.History.Undo();
 					await Frames(2);
+
+					// the media picker: a second clip's node takes the first's media, and undo gives it back its own
+					{
+						var second = InputOf(video[1].Clip) as EditSharp.Components.Nodes.Input.VideoMediaNode;
+						Check(second is not null && ReferenceEquals(second.Media, originalMedia), "the test clips share one media");
+
+						if (second is not null)
+						{
+							var other = EditSharp.History.Transaction.Suppressed(() => new EditSharp.Components.Media.VideoMedia { Path = originalMedia.Path, Name = "Second copy" });
+							inspector.Media.Add(other);
+							using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Give the second clip its own media"))
+							{
+								second.Media = other;
+								change.Commit();
+							}
+
+							clipsView.SelectClip(video[1], SelectionMode.Exclusive);
+							await Frames(3);
+							InspectorSection section = Find<InspectorSection>(inspector).Find(s => s.MediaDescriptor is not null);
+							List<string> mediaItems = section is null ? [] : [.. Enumerable.Range(0, section.Picker.ItemCount).Select(section.Picker.GetItemText)];
+							GD.Print("media items: " + string.Join(", ", mediaItems));
+							Check(section is not null && section.Picker.Text == "Second copy" && mediaItems.Contains(originalMedia.Name), "the picker shows the clip's media and lists the project's");
+
+							entries = timeline.History.Position;
+							section.Picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)mediaItems.IndexOf(originalMedia.Name));
+							await Frames(2);
+							Check(ReferenceEquals(second.Media, originalMedia), "picking a media assigns it to the node");
+							Check(timeline.History.Position == entries + 1, "in one entry");
+							Check(originalMedia.UsedBy.Contains(second) && !other.UsedBy.Contains(second), "and the media know who reads them");
+
+							timeline.History.Undo();
+							await Frames(2);
+							Check(ReferenceEquals(second.Media, other), "undo gives the node its own media back");
+							section = Find<InspectorSection>(inspector).Find(s => s.MediaDescriptor is not null);
+							Check(section?.Picker.Text == "Second copy", $"and the picker follows: {section?.Picker.Text}");
+
+							timeline.History.Undo();
+							inspector.Media.Remove(other);
+							await Frames(2);
+							Check(ReferenceEquals(second.Media, originalMedia), "back to the shared media");
+						}
+					}
 				}
 			}
 		}

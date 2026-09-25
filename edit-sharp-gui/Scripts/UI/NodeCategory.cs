@@ -1,6 +1,6 @@
 using EditSharp.Components.Nodes;
 using EditSharp.Components.Nodes.Effects;
-using EditSharp.Components.Nodes.Sources;
+using EditSharp.Components.Nodes.Input;
 using System.Text;
 
 namespace EditSharpGUI.Scripts.UI;
@@ -13,28 +13,22 @@ public static class NodeCategory
 	{
 		CompositeNode => "composite",
 		ShapeMaskNode or MaskCombineNode or ImageToMaskNode => "mask",
-		GainNode or CompressorNode or EQNode or AudioMixNode or AudioSourceNode => "audio",
-		InputNode => "source",
+		GainNode or CompressorNode or EQNode or AudioMixNode or AudioInputNode => "audio",
+		InputNode => "input",
 		_ when node.GetType().Namespace?.EndsWith(".Math") == true => "math",
 		_ => "effect"
 	};
 
-	// "ColorGeneratorInputNode" -> "Color generator"; a custom node is its name
+	// the kind's own name - "Video", "Color", "Drop shadow" - as the kind
+	// picker says it; a custom node is its name, and a node without a kind
+	// is its class name spaced out: "SomeOddNode" -> "Some odd"
 	public static string Title(Node node)
 	{
 		if (node is CompositeNode composite) return composite.Name;
+		if (NodeKinds.Of(node) is { } kind) return kind.DisplayName;
 
 		string name = node.GetType().Name;
-
-		foreach (string suffix in new[] { "InputNode", "SourceNode", "Node" })
-		{
-			if (name.EndsWith(suffix) && name.Length > suffix.Length)
-			{
-				name = name[..^suffix.Length];
-				if (suffix == "SourceNode") name += " source";
-				break;
-			}
-		}
+		if (name.EndsWith("Node") && name.Length > 4) name = name[..^4];
 
 		StringBuilder text = new(name.Length + 4);
 

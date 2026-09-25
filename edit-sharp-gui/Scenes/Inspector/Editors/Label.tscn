@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dxlm6gdj8ginq"]
 
-[ext_resource type="Script" path="res://Scripts/UI/Inspector/Editors/LabelEditor.cs" id="1_editor"]
+[ext_resource type="Script" uid="uid://ciast2wugsqan" path="res://Scripts/UI/Inspector/Editors/LabelEditor.cs" id="1_editor"]
 
-[node name="LabelEditor" type="HBoxContainer" node_paths=PackedStringArray("label")]
+[node name="LabelEditor" type="HBoxContainer" unique_id=792131451 node_paths=PackedStringArray("label")]
 offset_right = 260.0
 offset_bottom = 24.0
 size_flags_horizontal = 3
@@ -10,9 +10,9 @@ theme_type_variation = &"InspectorEditor"
 script = ExtResource("1_editor")
 label = NodePath("Label")
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=1664567544]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"InspectorValue"
+theme_type_variation = &"InspectorLabel"
 clip_text = true
 text_overrun_behavior = 3

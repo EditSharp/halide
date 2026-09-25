@@ -31,7 +31,7 @@ public enum ThemeDefinition
 	MaskNodeColor,
 	MathNodeColor,
 	KeyingNodeColor,
-	SourceNodeColor,
+	InputNodeColor,
 	AudioNodeColor,
 	CompositeNodeColor,
 

@@ -7,28 +7,28 @@ using EditSharp.Components.Channels;
 using EditSharp.Components.Clips;
 using EditSharp.Components.Nodes;
 using EditSharp.Components.Nodes.Effects;
-using EditSharp.Components.Sources.Audio;
-using EditSharp.Components.Sources.Video;
+using EditSharp.Components.Media;
+using EditSharp.Components.Nodes.Input;
 using EditSharp.Rendering;
 using EditSharp.Video;
 using SkiaSharp;
 
 public static class Tests
 {
+    // the media clips play 13 seconds of their file, as the old per-clip sources did
+    static T Trim<T>(T clip, double seconds) where T : Clip
+    {
+        foreach (InputNode input in clip.Graph.InputNodes) input.Duration = TimeSpan.FromSeconds(seconds);
+        return clip;
+    }
+
     public static Blueprint TestBlueprint
     {
         get
         {
-            MediaVideoSource videoSource = new()
+            VideoMedia videoMedia = new()
             {
-                Path = Path.Combine(AppContext.BaseDirectory, "Media", "Example", "Video", "video3.mp4"),
-                Duration = TimeSpan.FromSeconds(13)
-            };
-
-            MediaAudioSource audioSource = new()
-            {
-                Path = Path.Combine(AppContext.BaseDirectory, "Media", "Example", "Video", "video3.mp4"),
-                Duration = TimeSpan.FromSeconds(13)
+                Path = Path.Combine(AppContext.BaseDirectory, "Media", "Example", "Video", "video3.mp4")
             };
 
             Timeline timeline = new();
@@ -85,7 +85,7 @@ public static class Tests
             List<VideoClip> videos = [];
             for (int i = 1; i < 7; i++)
             {
-                VideoClip video = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.Zero, TimeSpan.FromSeconds(13));
+                VideoClip video = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.Zero, TimeSpan.FromSeconds(13)), 13);
 
                 video.Name = $"Video {i}";
 
@@ -135,15 +135,15 @@ public static class Tests
             //timeline.Link(videos);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
+            VideoClip extraVideo = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7)), 13);
             timeline.Channels[6].AddClip(extraVideo);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo2 = VideoClip.CreateFromSource(videoSource.Duplicate(), TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7));
+            VideoClip extraVideo2 = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7)), 13);
             timeline.Channels[7].AddClip(extraVideo2);
             
             //sound
-            AudioClip audio = AudioClip.CreateFromSource(audioSource, TimeSpan.Zero, TimeSpan.FromSeconds(13));
+            AudioClip audio = Trim(AudioClip.CreateFromMedia(videoMedia.Audio, TimeSpan.Zero, TimeSpan.FromSeconds(13)), 13);
             audio.Name = $"Source Audio";
             timeline.AudioChannels[0].AddClip(audio);
 

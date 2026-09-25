@@ -95,7 +95,7 @@ public partial class ThemePalette : Resource
 	Color _maskNodeColor = new(0.6f, 0.6f, 0.3f);
 	Color _mathNodeColor = new(0.5f, 0.5f, 0.5f);
 	Color _keyingNodeColor = new(0.3f, 0.7f, 0.4f);
-	Color _sourceNodeColor = new(0.75f, 0.4f, 0.3f);
+	Color _inputNodeColor = new(0.75f, 0.4f, 0.3f);
 	Color _audioNodeColor = new(0.3f, 0.6f, 0.45f);
 	Color _compositeNodeColor = new(0.6f, 0.4f, 0.7f);
 
@@ -104,7 +104,7 @@ public partial class ThemePalette : Resource
 	[Export] public Color MaskNodeColor { get => _maskNodeColor; set => Define(ref _maskNodeColor, value); }
 	[Export] public Color MathNodeColor { get => _mathNodeColor; set => Define(ref _mathNodeColor, value); }
 	[Export] public Color KeyingNodeColor { get => _keyingNodeColor; set => Define(ref _keyingNodeColor, value); }
-	[Export] public Color SourceNodeColor { get => _sourceNodeColor; set => Define(ref _sourceNodeColor, value); }
+	[Export] public Color InputNodeColor { get => _inputNodeColor; set => Define(ref _inputNodeColor, value); }
 	[Export] public Color AudioNodeColor { get => _audioNodeColor; set => Define(ref _audioNodeColor, value); }
 	[Export] public Color CompositeNodeColor { get => _compositeNodeColor; set => Define(ref _compositeNodeColor, value); }
 
@@ -213,7 +213,7 @@ public partial class ThemePalette : Resource
 		ThemeDefinition.MaskNodeColor => _maskNodeColor,
 		ThemeDefinition.MathNodeColor => _mathNodeColor,
 		ThemeDefinition.KeyingNodeColor => _keyingNodeColor,
-		ThemeDefinition.SourceNodeColor => _sourceNodeColor,
+		ThemeDefinition.InputNodeColor => _inputNodeColor,
 		ThemeDefinition.AudioNodeColor => _audioNodeColor,
 		ThemeDefinition.CompositeNodeColor => _compositeNodeColor,
 		_ => Colors.Magenta
