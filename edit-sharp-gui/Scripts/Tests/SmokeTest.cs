@@ -384,6 +384,13 @@ public partial class SmokeTest : Node
 					Check(!video[0].Clip.Graph.AllNodes.Contains(original), "and takes the media node out of the graph");
 					Check(timeline.History.Position == entries + 1, "the switch is one history entry");
 					Check(InputRows().Contains("Color"), "the Color row appears");
+					Check(video[0].Color == inspector.GetThemeColor("generator_video", "Clip"), "and the clip on the timeline recolours as a generator");
+					Find<InspectorRow>(inspector).Find(r => r.Label == "Name").Apply("Renamed clip");
+					await Frames(2);
+					Check(((Label)video[0].Get("clipName")).Text == "Renamed clip", "renaming the clip in the inspector renames it on the timeline");
+					timeline.History.Undo();
+					await Frames(2);
+					Check(((Label)video[0].Get("clipName")).Text == video[0].Clip.Name && video[0].Clip.Name != "Renamed clip", "and undo puts the old name back on the timeline");
 					Check(Find<InspectorSection>(inspector).Find(s => s.MediaDescriptor is not null) is null, "and the Media section is gone");
 
 					timeline.History.Undo();

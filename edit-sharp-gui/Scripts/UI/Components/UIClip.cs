@@ -92,6 +92,14 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	}
 
 	void ApplyThemeColor() => Color = GetThemeColor(ColorKind, "Clip");
+
+	// the colour again only when the kind changed - a switch of the clip's
+	// input - since painting it rebuilds the panel's style
+	void RefreshThemeColor()
+	{
+		Color wanted = GetThemeColor(ColorKind, "Clip");
+		if (wanted != Color) Color = wanted;
+	}
 	public bool Selected
 	{
 		get
@@ -406,6 +414,15 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	// reset clip ui to what is actually stored in data
 	public void Refresh()
 	{
+		// the name and the kind of input can change in the inspector
+		if (clipName is not null && clipName.Text != Clip.Name)
+		{
+			clipName.Text = Clip.Name;
+			FitControls();
+		}
+
+		if (content is not null) RefreshThemeColor();
+
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start),
 			(float)(ClipsView.UITimeline.VerticalScale * (GetChannelsDown() + ClipsView.ChannelOffset))
