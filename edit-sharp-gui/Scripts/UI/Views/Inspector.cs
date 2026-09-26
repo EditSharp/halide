@@ -18,7 +18,11 @@ public sealed record InspectorTarget(object Object, Clip Clip = null);
 // shown once and an edit writes to all of them. Kinds, when given, puts a
 // picker of them on the header that switches every object (a node in its
 // graph) to the kind chosen
-public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorTarget> Targets, Color? Accent = null, IReadOnlyList<EditSharp.Components.Nodes.NodeKindInfo> Kinds = null);
+public sealed record InspectorSectionSpec(string Title, IReadOnlyList<InspectorTarget> Targets, Color? Accent = null, IReadOnlyList<EditSharp.Components.Nodes.NodeKindInfo> Kinds = null, IReadOnlyList<InspectorAction> Actions = null);
+
+// a button in a section: put at the end of the group named, or of the section
+// when it has no such group. Enabled, when given, greys it out while false
+public sealed record InspectorAction(string Group, string Label, Action Run, Func<bool> Enabled = null);
 
 // a value committed on a row: what it wrote, to which bindings, and what
 // each held before - enough to undo it from outside
@@ -214,6 +218,7 @@ public partial class Inspector : Control
 
 	// a line of text where rows would go: "(none)"
 	sealed record NotePlan(string Text) : Plan;
+	sealed record ActionPlan(InspectorAction Action) : Plan;
 
 	public void Clear() => Show([]);
 
@@ -243,7 +248,15 @@ public partial class Inspector : Control
 		// switch rather than in the body as a row
 		PropertyDescriptor enabled = HeaderToggle(spec.Targets);
 
-		return new(spec.Title, spec.Accent, Nested: false, enabled, spec.Targets, PlanRows(spec.Targets, skip: enabled?.Name),
+		List<Plan> body = PlanRows(spec.Targets, skip: enabled?.Name);
+
+		foreach (InspectorAction action in spec.Actions ?? [])
+		{
+			List<Plan> into = body.OfType<SectionPlan>().FirstOrDefault(s => s.Title == action.Group)?.Body as List<Plan> ?? body;
+			into.Add(new ActionPlan(action));
+		}
+
+		return new(spec.Title, spec.Accent, Nested: false, enabled, spec.Targets, body,
 			spec.Kinds is null ? null : new KindPlan(spec.Targets, spec.Kinds));
 	}
 
@@ -278,7 +291,8 @@ public partial class Inspector : Control
 		List<InspectorSectionSpec> sections = [];
 
 		string title = clips.Count == 1 ? clips[0].Name : $"{clips.Count} clips";
-		sections.Add(new(title, [.. clips.Select(c => new InspectorTarget(c, c))], ClipAccent(clips[0])));
+		InspectorAction reverse = new("Speed", "Reverse Clip", () => ReverseClips(clips), () => clips.Any(c => !c.Frozen));
+		sections.Add(new(title, [.. clips.Select(c => new InspectorTarget(c, c))], ClipAccent(clips[0]), Actions: [reverse]));
 
 		int count = clips.Min(c => c.Graph.Nodes.Count);
 
@@ -301,6 +315,30 @@ public partial class Inspector : Control
 		}
 
 		ShowSections(sections);
+	}
+
+	// plays each clip backwards, its effects' keyframes turned around with it.
+	// linked partners go along, so a pair selected together is turned once
+	void ReverseClips(IReadOnlyList<Clip> clips)
+	{
+		using (Transaction.Scope change = BeginChange("Reverse clip"))
+		{
+			HashSet<Clip> done = [];
+
+			foreach (Clip clip in clips)
+			{
+				if (clip.Frozen || done.Contains(clip)) continue;
+
+				clip.Reverse();
+				done.Add(clip);
+				if (clip.Channel?.Timeline?.GetLinkGroup(clip.LinkGroupId) is { } group) done.UnionWith(group.Members);
+			}
+
+			change?.Commit();
+		}
+
+		RefreshValues();
+		NotifyEdited();
 	}
 
 	Color ClipAccent(Clip clip) => GetThemeColor(clip is AudioClip ? "audio" : "video", "Clip");
@@ -407,7 +445,8 @@ public partial class Inspector : Control
 			return new SectionPlan(descriptor.DisplayName, null, Nested: true, null, null, body, Media: media);
 		}
 
-		EditorSpec spec = EditorSpec.Of(descriptor);
+		// read-only while a sibling says so - a frozen clip's speed
+		EditorSpec spec = EditorSpec.Of(descriptor) with { ReadOnly = targets.Any(t => descriptor.IsReadOnlyOn(t.Object)) };
 
 		// a string the object offers choices for is a dropdown of them
 		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<Choice> choices)
@@ -475,6 +514,7 @@ public partial class Inspector : Control
 		(InspectorRow r, RowPlan p) => r.Label == p.Label && SameSpec(r.Spec, p.Spec),
 		(ListRow l, ListPlan p) => l.Descriptor == p.Descriptor && l.Label == p.Label,
 		(Label t, NotePlan p) => t.Text == p.Text,
+		(ActionRow a, ActionPlan p) => a.Text == p.Action.Label,
 		_ => false
 	};
 
@@ -504,6 +544,10 @@ public partial class Inspector : Control
 			case (ListRow l, ListPlan p):
 				l.Rebind(p.Bindings);
 				break;
+
+			case (ActionRow a, ActionPlan p):
+				a.Configure(p.Action.Label, p.Action.Run, p.Action.Enabled);
+				break;
 		}
 	}
 
@@ -530,6 +574,13 @@ public partial class Inspector : Control
 			case NotePlan p:
 				return new Label { Text = p.Text, ThemeTypeVariation = "InspectorLabel" };
 
+			case ActionPlan p:
+			{
+				ActionRow row = new();
+				row.Configure(p.Action.Label, p.Action.Run, p.Action.Enabled);
+				return row;
+			}
+
 			default:
 				throw new ArgumentOutOfRangeException(nameof(plan));
 		}
@@ -555,6 +606,7 @@ public partial class Inspector : Control
 		{
 			case InspectorRow row: row.Refresh(); break;
 			case ListRow list: list.Refresh(); break;
+			case ActionRow action: action.Refresh(); break;
 			case InspectorSection section: section.RefreshToggle(); section.RefreshPicker(); foreach (Node child in section.Body.GetChildren()) RefreshNode(child); break;
 		}
 	}
@@ -576,7 +628,7 @@ public partial class Inspector : Control
 	// value, and the rest may depend on it
 	void OnHistoryChanged(object sender, HistoryEventArgs e)
 	{
-		if (content is not null && (Replaced(content) || ChoicesStale(content))) Replan();
+		if (content is not null && (Replaced(content) || ChoicesStale(content) || ReadOnlyStale(content))) Replan();
 		RefreshValues();
 	}
 
@@ -585,6 +637,13 @@ public partial class Inspector : Control
 		InspectorRow row => row.ChoicesStale(),
 		InspectorSection section => section.Body.GetChildren().Any(ChoicesStale),
 		_ => node.GetChildren().Any(ChoicesStale)
+	};
+
+	static bool ReadOnlyStale(Node node) => node switch
+	{
+		InspectorRow row => row.ReadOnlyStale(),
+		InspectorSection section => section.Body.GetChildren().Any(ReadOnlyStale),
+		_ => node.GetChildren().Any(ReadOnlyStale)
 	};
 
 	static bool Replaced(Node node) => node switch

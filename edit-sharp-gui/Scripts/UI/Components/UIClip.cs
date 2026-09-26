@@ -323,7 +323,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		if (speed is null || speedPercentage is null) return;
 
-		speedPercentage.Text = $"{Math.Round(value.Value * 100d)}%";
+		speedPercentage.Text = value.IsZero ? "Freeze" : $"{Math.Round(value.Value * 100d)}%";
 		SetWanted(speed, value != Rational.One);
 	}
 

@@ -118,8 +118,9 @@ void fragment() {
 	vec4 colour = vec4(0.0);
 
 	if (frame_count > 0) {
-		// bands faster than the pixel sampling can follow are noise, not a wave
-		float sample_seconds = pixel_seconds / float(SAMPLES);
+		// bands faster than the pixel sampling can follow are noise, not a wave;
+		// a reversed clip samples backwards at the same rate
+		float sample_seconds = abs(pixel_seconds) / float(SAMPLES);
 		float nyquist = 0.5 / sample_seconds;
 
 		float lo = 1e9;

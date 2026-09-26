@@ -304,6 +304,37 @@ script = ExtResource("button")
 Text = SubResource("text_65")
 Id = "clip.rename"
 
+[sub_resource type="Resource" id="text_69"]
+script = ExtResource("text")
+Text = "Freeze Frame"
+
+[sub_resource type="Resource" id="button_70"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_69")
+Id = "clip.freeze"
+
+[sub_resource type="Resource" id="text_71"]
+script = ExtResource("text")
+Text = "Create Freeze Frame"
+
+[sub_resource type="Resource" id="button_72"]
+script = ExtResource("button")
+Text = SubResource("text_71")
+Id = "clip.createFreezeFrame"
+
+[sub_resource type="Resource" id="text_73"]
+script = ExtResource("text")
+Text = "Reverse Clip"
+
+[sub_resource type="Resource" id="button_74"]
+script = ExtResource("button")
+Text = SubResource("text_73")
+Id = "clip.reverse"
+
+[sub_resource type="Resource" id="divider_75"]
+script = ExtResource("divider")
+
 [sub_resource type="Resource" id="text_67"]
 script = ExtResource("text")
 Text = "Reset Speed"
@@ -313,7 +344,17 @@ script = ExtResource("button")
 Text = SubResource("text_67")
 Id = "clip.resetSpeed"
 
+[sub_resource type="Resource" id="text_76"]
+script = ExtResource("text")
+Text = "Speed"
+
+[sub_resource type="Resource" id="submenu_77"]
+script = ExtResource("submenu")
+Elements = Array[ExtResource("element")]([SubResource("button_70"), SubResource("button_72"), SubResource("button_74"), SubResource("divider_75"), SubResource("button_68")])
+Text = SubResource("text_76")
+Id = "clip.speed"
+
 [resource]
 script = ExtResource("menu")
-Elements = Array[ExtResource("element")]([SubResource("button_46"), SubResource("button_48"), SubResource("button_50"), SubResource("divider_51"), SubResource("button_53"), SubResource("button_55"), SubResource("divider_56"), SubResource("button_58"), SubResource("button_60"), SubResource("divider_61"), SubResource("button_63"), SubResource("divider_64"), SubResource("submenu_44"), SubResource("button_66"), SubResource("button_68")])
+Elements = Array[ExtResource("element")]([SubResource("button_46"), SubResource("button_48"), SubResource("button_50"), SubResource("divider_51"), SubResource("button_53"), SubResource("button_55"), SubResource("divider_56"), SubResource("button_58"), SubResource("button_60"), SubResource("divider_61"), SubResource("button_63"), SubResource("divider_64"), SubResource("submenu_44"), SubResource("button_66"), SubResource("submenu_77")])
 HideOnCheckableItemSelect = true

@@ -31,9 +31,15 @@ public abstract class Binding
 		return false;
 	}
 
-	public Time ContentTime(Time playhead) => Clip is null ? playhead : Clip.ContentTimeAt(playhead);
+	// an input's own keyframes run with its content - backwards in a
+	// reversed clip, held in a frozen one - where an effect's run with the clip
+	protected virtual bool FollowsContent => false;
 
-	public Time TimelineTime(Time content) => Clip is null ? content : Clip.TimelineTimeOf(content);
+	public Time ContentTime(Time playhead) => Clip is null ? playhead
+		: FollowsContent ? Clip.MediaTimeAt(playhead) : Clip.ContentTimeAt(playhead);
+
+	public Time TimelineTime(Time content) => Clip is null ? content
+		: Clip.TimelineTimeOf(FollowsContent ? Clip.ContentTimeOfMedia(content) : content);
 }
 
 // a property on an object, through its descriptor
@@ -47,6 +53,7 @@ public sealed class PropertyBinding(PropertyDescriptor descriptor, object target
 	public override IAnimatable Animatable => descriptor.GetAnimatable(target);
 	public override bool IsVisible => descriptor.IsVisible(target);
 	public override bool TryGetDefault(out object value) => descriptor.TryGetDefault(target, out value);
+	protected override bool FollowsContent => target is EditSharp.Components.Nodes.InputNode;
 }
 
 // one item of a list, by index. an animatable item is the animatable

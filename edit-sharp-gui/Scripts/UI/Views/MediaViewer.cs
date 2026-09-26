@@ -826,10 +826,28 @@ public partial class MediaViewer : Control, IDropTarget
 			Wire(menu, "media.proxy.build", videos.Count > 0 && !building && !complete, () => { foreach (IMedia v in videos) StartProxy(v.Path); });
 			Wire(menu, "media.proxy.cancel", building, () => { foreach (IMedia v in videos) CancelProxy(v.Path); });
 			Wire(menu, "media.proxy.rebuild", complete, () => { foreach (IMedia v in videos) StartProxy(v.Path); });
+
+			// only once there is a proxy on disk to show
+			string proxyFile = tile.Media is IMedia clicked ? ProxyFileOf(clicked) : null;
+			if (menu.Find<ContextButton>("media.proxy.reveal") is ContextButton reveal) reveal.Visible = proxyFile is not null;
+			if (menu.Find<ContextDivider>("media.proxy.revealDivider") is ContextDivider line) line.Visible = proxyFile is not null;
+			Wire(menu, "media.proxy.reveal", proxyFile is not null, () => OS.ShellShowInFileManager(proxyFile));
 		}
 
 		if (button is not null) ContextMenus.ShowContextMenu(menu, button);
 		else ContextMenus.ShowContextMenu(menu, at);
+	}
+
+	// the proxy file a media has on disk: the .esrp, or a MOV proxy's finished
+	// .mov (its sidecar while it is still building); null when there is none
+	static string ProxyFileOf(IMedia media)
+	{
+		if (string.IsNullOrEmpty(media.Path) || !ProxyCache.TryGetEntry(media.Path, out ProxyEntry entry)) return null;
+
+		string path = entry.Path;
+		if (!entry.IsEsrp && path.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && File.Exists(path[..^".json".Length])) path = path[..^".json".Length];
+
+		return File.Exists(path) ? path : null;
 	}
 
 	// a small popup with a field for the tag's name

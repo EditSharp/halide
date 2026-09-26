@@ -458,6 +458,16 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		Wire(menu, "clip.splitAll", Shortcuts.SplitAll, anySpanning, () => SplitAtPlayhead(everything: true));
 		Wire(menu, "clip.rename", null, targets.Count == 1, targets[0].BeginRename);
 		Wire(menu, "clip.resetSpeed", null, targets.Any(c => c.Clip.Speed != Rational.One), () => ResetSpeed(targets));
+		Wire(menu, "clip.reverse", null, targets.Any(c => !c.Clip.Frozen), () => ReverseClips(targets));
+
+		VideoClip holdable = targets.Select(c => c.Clip).OfType<VideoClip>().FirstOrDefault(c => !c.Frozen && c.Start <= playhead && c.End > playhead);
+		Wire(menu, "clip.createFreezeFrame", null, holdable is not null, () => CreateFreezeFrame(holdable, playhead));
+
+		if (menu.Find<ContextButton>("clip.freeze") is ContextButton freeze)
+		{
+			freeze.Checked = targets.All(c => c.Clip.Frozen);
+			freeze.Pressed += () => SetFrozen(targets, freeze.Checked, playhead);
+		}
 
 		// linked: checked when every target is in one group. one clip alone
 		// cannot be linked to anything, so it can only be unlinked
@@ -611,6 +621,65 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		};
 
 		popup.Popup(new Rect2I((Vector2I)InputManager.Singleton.Mouse.CurrentPosition.Round(), Vector2I.Zero));
+	}
+
+	// how long Create Freeze Frame holds the frame
+	static readonly Time FreezeFrameLength = Time.FromSeconds(2);
+
+	// hold the frame under the playhead: the clip is split there and a frozen
+	// piece of that frame pushes the rest of it, and its channel, along
+	void CreateFreezeFrame(VideoClip clip, Time at)
+	{
+		using (Transaction.Scope change = UITimeline.History.Begin("Create freeze frame"))
+		{
+			clip.InsertFreezeFrame(at, FreezeFrameLength);
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	// freeze each clip on the frame under the playhead, or let it move again
+	// at the speed it had. linked partners follow, so each group is done once
+	void SetFrozen(List<UIClip> targets, bool frozen, Time playhead)
+	{
+		using (Transaction.Scope change = UITimeline.History.Begin(frozen ? "Freeze frame" : "Unfreeze"))
+		{
+			foreach (Clip clip in OncePerGroup(targets))
+			{
+				if (frozen) clip.Freeze(playhead);
+				else clip.Frozen = false;
+			}
+
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	// play each clip backwards, its effects' keyframes turned around with it
+	void ReverseClips(List<UIClip> targets)
+	{
+		using (Transaction.Scope change = UITimeline.History.Begin("Reverse clip"))
+		{
+			foreach (Clip clip in OncePerGroup(targets).Where(c => !c.Frozen)) clip.Reverse();
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	// the clips, skipping any whose link group was already reached through
+	// another: speed changes carry to the whole group
+	IEnumerable<Clip> OncePerGroup(List<UIClip> targets)
+	{
+		HashSet<Guid> groups = [];
+
+		foreach (UIClip c in targets)
+		{
+			if (c.Clip.LinkGroupId is Guid id && !groups.Add(id)) continue;
+			yield return c.Clip;
+		}
 	}
 
 	void ResetSpeed(List<UIClip> targets)
@@ -1857,7 +1926,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 			if (edgeDrag.Kind == EdgeDragKind.Timeshift)
 			{
 				Time duration = edgeDrag.Left ? c.Clip.End - edge : edge - c.Clip.Start;
-				c.PreviewSpeed(new Rational(c.Clip.ContentDuration.Ticks, duration.Ticks));
+				c.PreviewSpeed(new Rational(c.Clip.ContentDuration.Ticks, duration.Ticks) * c.Clip.Speed.Sign);
 			}
 		}
 	}

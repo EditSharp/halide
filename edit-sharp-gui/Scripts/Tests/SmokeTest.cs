@@ -353,9 +353,100 @@ public partial class SmokeTest : Node
 			Check(animatable.Keyframes.Count == 0 && clip.Speed == Rational.One, "undo puts it all back");
 		}
 
+		// ---- reversed and frozen clips
+		{
+			var clips = clipsView.UIClips.Select(u => u.Clip).OfType<EditSharp.Components.Clips.VideoClip>().ToList();
+			var v = clips.FirstOrDefault(c => c.LinkGroupId is not null && c.Duration > Time.FromSeconds(2)) ?? clips.First();
+			var partners = v.Channel.Timeline.GetLinkGroup(v.LinkGroupId)?.Members.Where(m => m != v).ToList() ?? [];
+			int mark = timeline.History.Position;
+
+			// the file time a clip shows at a moment: its in-point plus its media time
+			Time FileAt(EditSharp.Components.Clips.Clip c, Time t) => EditSharp.Editing.ClipFingerprint.Anchor(c) + c.MediaTimeAt(t);
+			void Edit(string what, Action action)
+			{
+				using EditSharp.History.Transaction.Scope change = timeline.History.Begin(what);
+				action();
+				change.Commit();
+			}
+
+			// an effect keyframe, to see where it goes
+			var spin = v.EffectAnimatables.OfType<EditSharp.Components.Animatable<float>>().First();
+			Time p = v.Start + v.Duration / 3;
+			Time keyAt = v.ContentTimeAt(p);
+			Edit("key", () => { spin.SetKeyframe(keyAt, 10f); spin.SetKeyframe(keyAt + Time.FromSeconds(1), 50f); });
+			Time fileAtKey = FileAt(v, p);
+
+			Edit("reverse by speed", () => v.Speed = new Rational(-1));
+			Check(v.Speed == new Rational(-1) && partners.All(m => m.Speed == new Rational(-1)), "a negative speed is taken, by the linked partners too");
+			Check(v.MediaTimeAt(v.Start) == v.ContentDuration - Time.Tick && v.MediaTimeAt(v.End - Time.Tick) <= Time.Tick, $"backwards it starts at the end of its content and ends at its start: {v.MediaTimeAt(v.Start)} .. {v.MediaTimeAt(v.End - Time.Tick)} of {v.ContentDuration}");
+			Check(spin.Keyframes[0].Start == keyAt, "typing a negative speed leaves the keyframes in timeline order");
+			Edit("forward again", () => v.Speed = Rational.One);
+
+			Edit("reverse clip", v.Reverse);
+			Time keyNow = v.TimelineTimeOf(spin.Keyframes.First(k => Equals(k.Value, 10f)).Start);
+			Check(v.IsReversed && FileAt(v, keyNow) == fileAtKey, $"Reverse Clip turns the keyframes with the picture: the key sits on {FileAt(v, keyNow)}, was {fileAtKey}");
+			Check(spin.Keyframes.Count == 2 && spin.Keyframes[0].Start < spin.Keyframes[1].Start && Equals(spin.Keyframes[0].Value, 50f), "and in order, the later one first");
+
+			// trims and a split on a reversed clip leave every frame where it was
+			Time q = v.Start + v.Duration / 2;
+			Time fileAtQ = FileAt(v, q);
+			Time inPoint = EditSharp.Editing.ClipFingerprint.Anchor(v);
+			Edit("trim head", () => v.TrimStart(Time.FromSeconds(0.25)));
+			Check(FileAt(v, q) == fileAtQ && EditSharp.Editing.ClipFingerprint.Anchor(v) == inPoint, "a head trim backwards keeps the frames and the in-point");
+			Edit("trim tail", () => v.TrimEnd(Time.FromSeconds(0.25)));
+			Check(FileAt(v, q) == fileAtQ && EditSharp.Editing.ClipFingerprint.Anchor(v) == inPoint + Time.FromSeconds(0.25), "a tail trim backwards keeps the frames and moves the in-point");
+			Edit("extend tail", () => v.ExtendEnd(Time.FromSeconds(0.25)));
+			Check(FileAt(v, q) == fileAtQ && EditSharp.Editing.ClipFingerprint.Anchor(v) == inPoint, "extending the tail back brings the in-point back");
+
+			var channel = v.Channel;
+			Edit("split", () => v.Split(q));
+			var right = channel.Clips.First(c => c.Start == q);
+			var left = channel.Clips.First(c => c.End == q);
+			Check(FileAt(right, q) == fileAtQ && FileAt(left, q - Time.Tick) >= fileAtQ, "a split backwards carries on across the cut");
+
+			// freezing
+			Time r = right.Start + right.Duration / 2;
+			Time fileAtR = FileAt(right, r);
+			Edit("freeze", () => right.Freeze(r));
+			var rightPartners = channel.Timeline.GetLinkGroup(right.LinkGroupId)?.Members.Where(m => m != right).ToList() ?? [];
+			Check(right.Frozen && right.Speed.IsZero && FileAt(right, right.Start) == fileAtR && FileAt(right, right.End - Time.Tick) == fileAtR, "a freeze holds the frame under the playhead the whole way");
+			Check(rightPartners.All(m => m.Frozen), "and freezes the linked partners");
+
+			// the inspector: speed read-only while frozen, the held frame shown, and the Reverse Clip button
+			timeline.Reconcile();
+			await Frames(3);
+			clipsView.SelectClip(clipsView.UIClips.First(u => u.Clip == right), SelectionMode.Exclusive);
+			await Frames(3);
+			List<InspectorRow> rowsNow = Find<InspectorRow>(inspector);
+			Check(rowsNow.Find(x => x.Label == "Speed") is { Spec.ReadOnly: true }, "a frozen clip's speed is read-only");
+			Check(rowsNow.Find(x => x.Label == "Freeze at") is { Visible: true } && rowsNow.Find(x => x.Label == "Freeze frame") is not null, "the freeze toggle and held frame show");
+			Check(Find<ActionRow>(inspector).Any(a => a.Text == "Reverse Clip" && a.Disabled), "Reverse Clip is there, and off while frozen");
+
+			rowsNow.Find(x => x.Label == "Freeze frame")?.Apply(false);
+			await Frames(2);
+			Check(!right.Frozen && right.Speed == new Rational(-1), $"unfreezing puts the speed back: {right.Speed}");
+			await Frames(1);
+			Check(Find<InspectorRow>(inspector).Find(x => x.Label == "Speed") is { Spec.ReadOnly: false }, "and the speed can be edited again");
+
+			// Create Freeze Frame: a two second hold of the frame at r, the rest pushed along
+			int onChannel = channel.Clips.Count();
+			var audioChannels = rightPartners.Select(m => m.Channel).Distinct().ToList();
+			Edit("create freeze frame", () => ((EditSharp.Components.Clips.VideoClip)right).InsertFreezeFrame(r, Time.FromSeconds(2)));
+			var hold = channel.Clips.First(c => c.Start == r);
+			var after = channel.Clips.First(c => c.Start == r + Time.FromSeconds(2));
+			Check(hold.Frozen && hold.Duration == Time.FromSeconds(2) && FileAt(hold, r) == fileAtR, "the hold is the frame at the playhead, two seconds long");
+			Check(FileAt(after, r + Time.FromSeconds(2)) == fileAtR && channel.Clips.Count() == onChannel + 2, "and the clip carries on after it");
+			Check(audioChannels.All(a => !a.Clips.Any(c => c.Start < r + Time.FromSeconds(2) && c.End > r)), "the linked audio has a gap under the hold");
+
+			while (timeline.History.Position > mark) timeline.History.Undo();
+			await Frames(2);
+			Check(v.Speed == Rational.One && spin.Keyframes.Count == 0 && channel.Clips.Contains(v), "undo puts it all back");
+		}
+
 		// ---- frame-relative values in pixels
 		{
-			clipsView.SelectClip(clipsView.UIClips.First(u => u.Clip is EditSharp.Components.Clips.VideoClip), SelectionMode.Exclusive);
+			// a clip with nothing keyed, so a typed value is its static value
+			clipsView.SelectClip(clipsView.UIClips.First(u => u.Clip is EditSharp.Components.Clips.VideoClip && u.Clip.EffectAnimatables.All(a => a.Keyframes.Count == 0)), SelectionMode.Exclusive);
 			await Frames(3);
 
 			InspectorRow position = Find<InspectorRow>(inspector).Find(r => r.Label == "Position");

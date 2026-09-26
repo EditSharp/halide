@@ -73,13 +73,18 @@ public partial class WaveformStrip : WaveformView
 	{
 		if (cache is null || clip is null || pixelsPerSecond <= 0d) return;
 
-		EnvelopeTexture envelope = cache.Get(clip);
+		double speed = previewSpeed ?? clip.Speed.Value;
+
+		// a frozen clip is silent
+		EnvelopeTexture envelope = speed == 0d ? null : cache.Get(clip);
 		SetEnvelope(envelope);
 		if (envelope is null) return;
 
-		double speed = previewSpeed ?? clip.Speed.Value;
+		// backwards the left edge is the end of the covered content, and the content runs down from there
+		double left = speed < 0d ? clip.ContentDuration.Seconds - previewShift.Seconds : previewShift.Seconds;
+
 		SetAnchor(ClipFingerprint.Anchor(clip));
-		SetWindow(previewShift.Seconds, speed / pixelsPerSecond);
+		SetWindow(left, speed / pixelsPerSecond);
 	}
 
 	public override void _ExitTree()

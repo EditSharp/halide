@@ -123,11 +123,19 @@ public partial class ThumbnailStrip : Control
 
 		// content seconds one slot spans, and the coarsest power-of-two grid
 		// that still puts a frame of its own in every slot
-		double slotSeconds = slotWidth / pixelsPerSecond * clip.Speed.Value;
-		int grid = Math.Clamp((int)Math.Floor(Math.Log2(slotSeconds)), ThumbnailCache.MinGrid, ThumbnailCache.MaxGrid);
+		double magnitude = Math.Abs(clip.Speed.Value);
+		double slotSeconds = slotWidth / pixelsPerSecond * magnitude;
+		int grid = magnitude > 0d ? Math.Clamp((int)Math.Floor(Math.Log2(slotSeconds)), ThumbnailCache.MinGrid, ThumbnailCache.MaxGrid) : ThumbnailCache.MinGrid;
 		double gridSeconds = ThumbnailCache.GridSeconds(grid);
 
-		double anchor = (ClipFingerprint.Anchor(clip) + previewShift).Seconds;
+		double inPoint = ClipFingerprint.Anchor(clip).Seconds;
+		double shift = previewShift.Seconds;
+
+		// the file time shown at x: forwards from the in-point, backwards from the
+		// end of the covered content (just inside it), or the one held frame
+		double FileTimeAt(float x) => clip.Frozen ? inPoint + clip.FreezeAt.Seconds
+			: clip.IsReversed ? inPoint + clip.ContentDuration.Seconds - shift - x / pixelsPerSecond * magnitude - 1e-6
+			: inPoint + shift + x / pixelsPerSecond * magnitude;
 
 		float left = Mathf.Max(0f, viewLeft);
 		float right = Mathf.Min(Size.X, viewRight);
@@ -142,8 +150,8 @@ public partial class ThumbnailStrip : Control
 			float width = Mathf.Min(slotWidth, Size.X - x);
 			if (width <= 0f) continue;
 
-			// the content time at the slot's left edge, against the in-point
-			double anchored = x / pixelsPerSecond * clip.Speed.Value + anchor;
+			// the file time at the slot's left edge
+			double anchored = FileTimeAt(x);
 
 			// before the media starts: a head extend in preview past what
 			// the content has. nothing to show there yet

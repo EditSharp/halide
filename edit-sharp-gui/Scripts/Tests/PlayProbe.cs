@@ -74,6 +74,31 @@ public partial class PlayProbe : Node
 			return;
 		}
 
+		// --reverse-clips / --freeze-clips: every clip (and so its linked audio) played backwards, or held
+		bool reverseClips = OS.GetCmdlineUserArgs().Contains("--reverse-clips");
+		bool freezeClips = OS.GetCmdlineUserArgs().Contains("--freeze-clips");
+		if (reverseClips || freezeClips)
+		{
+			HashSet<Guid> done = [];
+			foreach (var c in playback.Timeline.Channels.SelectMany(ch => ch.Clips).ToList())
+			{
+				if (c.LinkGroupId is Guid id && !done.Add(id)) continue;
+				if (reverseClips) c.Reverse();
+				else c.Freeze(c.Start + c.Duration / 2);
+			}
+			GD.Print($"PROBE clips {(reverseClips ? "reversed" : "frozen")}: {string.Join(", ", playback.Timeline.Channels.SelectMany(ch => ch.Clips).Select(c => c.Speed.ToString()).Distinct())}");
+		}
+
+		int loudBlocks = 0, audioBlocks = 0;
+		playback.AudioSample += (_, e) =>
+		{
+			double sum = 0;
+			for (int i = 0; i + 1 < e.Length; i += 2) { short v = (short)(e.Buffer[i] | (e.Buffer[i + 1] << 8)); sum += v * (double)v; }
+			double rms = Math.Sqrt(sum / Math.Max(1, e.Length / 2)) / 32768d;
+			System.Threading.Interlocked.Increment(ref audioBlocks);
+			if (rms > 0.001) System.Threading.Interlocked.Increment(ref loudBlocks);
+		};
+
 		// what the picture on screen does: a new hash every time it changes
 		TextureRect screen = preview.GetNode<TextureRect>("VBoxContainer/TextureRect");
 		List<(double At, ulong Hash)> shown = [];
@@ -115,6 +140,7 @@ public partial class PlayProbe : Node
 		GD.Print($"PROBE caches={(noCaches ? "off" : "on")} build={(build ? "on" : "off")} frames={times.Length} lastFramePos={lastFramePosition} first={firstAt:0}ms last={lastAt:0}ms longestGap={longestGap:0}ms position={playback.Position}");
 		double lastShown = shown.Count > 0 ? shown[^1].At : double.NaN;
 		double longestShownGap = shown.Count > 1 ? shown.Zip(shown.Skip(1), (a, b) => b.At - a.At).Max() : double.NaN;
+		GD.Print($"PROBE audio blocks={audioBlocks} loud={loudBlocks}");
 		GD.Print($"PROBE screen changes={shown.Count} lastChange={lastShown:0}ms longestScreenGap={longestShownGap:0}ms");
 		GD.Print(times.Length > 30 && longestGap < 1000 && (double.IsNaN(longestShownGap) || longestShownGap < 1000) ? "PROBE OK" : "PROBE STALL");
 		GetTree().Quit();

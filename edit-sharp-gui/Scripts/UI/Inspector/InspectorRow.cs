@@ -59,6 +59,16 @@ public partial class InspectorRow : HBoxContainer
 		return provider.ChoicesFor(first.Descriptor.Name) is not { } now || !now.SequenceEqual(Spec.Choices);
 	}
 
+	// whether a property that is read-only only some of the time has gone
+	// one way or the other since the row was built
+	public bool ReadOnlyStale()
+	{
+		if (Bindings is not [PropertyBinding first, ..] || first.Descriptor.ReadOnlyConditions.Count == 0) return false;
+
+		bool now = Bindings.OfType<PropertyBinding>().Any(b => b.Descriptor.IsReadOnlyOn(b.Target));
+		return now != Spec.ReadOnly;
+	}
+
 	// a row freed mid-edit (a picker left open while the selection changed)
 	// would otherwise hold its history scope open, and with it every undo
 	public override void _ExitTree() => EndEdit();
@@ -261,6 +271,13 @@ public partial class InspectorRow : HBoxContainer
 			foreach (Binding b in Bindings)
 			{
 				IAnimatable a = b.Animatable;
+
+				// freezing holds the frame under the playhead
+				if (value is true && b is PropertyBinding { Target: EditSharp.Components.Clips.Clip clip, Descriptor.Name: nameof(EditSharp.Components.Clips.Clip.Frozen) })
+				{
+					clip.Freeze(inspector.Playhead);
+					continue;
+				}
 
 				if (a is not null && a.Keyframes.Count > 0)
 				{

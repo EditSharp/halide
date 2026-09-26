@@ -1,0 +1,176 @@
+[gd_scene format=3 uid="uid://8cx70bngp62k"]
+
+[ext_resource type="Script" uid="uid://dlixl6m6v5mwx" path="res://Scripts/UI/Components/UIMediaItem.cs" id="1_l3bx2"]
+[ext_resource type="Texture2D" uid="uid://cq446xk6os5i2" path="res://Images/Icons/Add.png" id="2_v7pf3"]
+[ext_resource type="PackedScene" uid="uid://c73t3qeow7o8d" path="res://Scenes/Components/ProjectItem.tscn" id="3_3cmrv"]
+
+[node name="Home" type="Control" unique_id=282266559]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=521723924]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Temporary Fake Top Bar" type="HBoxContainer" parent="VBoxContainer" unique_id=420016979]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="VBoxContainer/Temporary Fake Top Bar" unique_id=1828368705]
+layout_mode = 2
+size_flags_horizontal = 0
+current_tab = 0
+clip_tabs = false
+tab_count = 2
+tab_0/title = "Local"
+tab_1/title = "Cloud"
+
+[node name="Label" type="Label" parent="VBoxContainer/Temporary Fake Top Bar" unique_id=25298596]
+layout_mode = 2
+size_flags_horizontal = 6
+theme_override_font_sizes/font_size = 32
+text = "EditSharp"
+vertical_alignment = 1
+
+[node name="Button" type="Button" parent="VBoxContainer/Temporary Fake Top Bar" unique_id=1579518388]
+layout_mode = 2
+text = "Minimize - Maximize - Close lol"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=201521654]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FlowContainer" type="FlowContainer" parent="VBoxContainer/ScrollContainer" unique_id=1743381823]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+last_wrap_alignment = 1
+
+[node name="Add Project" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=362681392 node_paths=PackedStringArray("content", "picture", "waveform", "kindIcon", "options", "outline", "proxy", "nameLabel", "nameEdit")]
+custom_minimum_size = Vector2(384, 0)
+layout_mode = 2
+tooltip_text = "Add Project via import or creating a new one"
+theme_type_variation = &"InspectorVBox"
+script = ExtResource("1_l3bx2")
+content = NodePath("Content")
+picture = NodePath("")
+waveform = NodePath("")
+kindIcon = NodePath("")
+options = NodePath("")
+outline = NodePath("")
+proxy = NodePath("")
+nameLabel = NodePath("")
+nameEdit = NodePath("")
+
+[node name="Content" type="Panel" parent="VBoxContainer/ScrollContainer/FlowContainer/Add Project" unique_id=619545238]
+custom_minimum_size = Vector2(0, 216)
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"MediaContent"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/ScrollContainer/FlowContainer/Add Project/Content" unique_id=1902623972]
+texture_filter = 4
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_v7pf3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Project Item2" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=823660106 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item3" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1336377040 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item4" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=474697983 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item5" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1806294560 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item6" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=2111774421 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item7" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=71230161 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item8" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=953539864 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item9" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=907660320 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item10" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1699346267 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item11" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1425159704 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item12" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=328618393 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item13" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1555986687 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item14" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1530513759 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item15" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1602279681 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item16" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=116587624 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item17" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=229020121 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item18" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=59514361 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Project Item19" parent="VBoxContainer/ScrollContainer/FlowContainer" unique_id=1839402009 instance=ExtResource("3_3cmrv")]
+layout_mode = 2
+
+[node name="Add Project Native Window" type="Control" parent="." unique_id=1873026948]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="Panel" parent="Add Project Native Window" unique_id=478835305]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Part 1 Import or Create New" type="Control" parent="Add Project Native Window/Background" unique_id=2051319674]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Part 2a Import Existing Project" type="FileDialog" parent="Add Project Native Window/Background" unique_id=1115189286]
+
+[node name="Part 2b Create New Options" type="Control" parent="Add Project Native Window/Background" unique_id=429042440]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0

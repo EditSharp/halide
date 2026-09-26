@@ -85,13 +85,26 @@ script = ExtResource("button")
 Text = SubResource("text_17")
 Id = "media.proxy.rebuild"
 
+[sub_resource type="Resource" id="divider_proxy_reveal"]
+script = ExtResource("divider")
+Id = "media.proxy.revealDivider"
+
+[sub_resource type="Resource" id="text_proxy_reveal"]
+script = ExtResource("text")
+Text = "Reveal in File Explorer"
+
+[sub_resource type="Resource" id="button_proxy_reveal"]
+script = ExtResource("button")
+Text = SubResource("text_proxy_reveal")
+Id = "media.proxy.reveal"
+
 [sub_resource type="Resource" id="text_19"]
 script = ExtResource("text")
 Text = "Proxy"
 
 [sub_resource type="Resource" id="submenu_20"]
 script = ExtResource("submenu")
-Elements = Array[ExtResource("element")]([SubResource("button_14"), SubResource("button_16"), SubResource("button_18")])
+Elements = Array[ExtResource("element")]([SubResource("button_14"), SubResource("button_16"), SubResource("button_18"), SubResource("divider_proxy_reveal"), SubResource("button_proxy_reveal")])
 Text = SubResource("text_19")
 Id = "media.proxy"
 
