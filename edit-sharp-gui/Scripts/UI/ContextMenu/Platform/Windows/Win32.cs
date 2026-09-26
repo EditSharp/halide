@@ -137,6 +137,7 @@ static class Win32
     [DllImport("user32.dll")] public static extern nint CreatePopupMenu();
     [DllImport("user32.dll")] public static extern bool DestroyMenu(nint menu);
     [DllImport("user32.dll")] public static extern bool InsertMenuItemW(nint menu, uint item, bool byPosition, ref MENUITEMINFO info);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern bool SetMenuItemInfoW(nint menu, uint item, bool byPosition, ref MENUITEMINFO info);
     [DllImport("user32.dll")] public static extern bool SetMenuInfo(nint menu, ref MENUINFO info);
     [DllImport("user32.dll")] public static extern uint TrackPopupMenuEx(nint menu, uint flags, int x, int y, nint owner, nint parameters);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(nint window);

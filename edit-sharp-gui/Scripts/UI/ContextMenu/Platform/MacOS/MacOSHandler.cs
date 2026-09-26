@@ -83,6 +83,10 @@ public class MacOSHandler : PlatformHandler
     }
 
     // godot screen pixels (top-left origin) to appkit screen points (bottom-left origin), via where the mouse is in both
+    internal static NSPoint ScreenPointOf(Vector2 viewportPosition) => ScreenPoint(viewportPosition);
+
+    internal static (string Key, long Mask) KeyEquivalentOf(string hint) => Built.KeyEquivalent(hint);
+
     static NSPoint ScreenPoint(Vector2 viewportPosition)
     {
         Viewport root = ((SceneTree)Engine.GetMainLoop()).Root;
@@ -210,7 +214,7 @@ public class MacOSHandler : PlatformHandler
         }
 
         // "Ctrl+Shift+X" as a key equivalent: ctrl becomes command, the mac's primary modifier
-        static (string key, long mask) KeyEquivalent(string hint)
+        internal static (string key, long mask) KeyEquivalent(string hint)
         {
             if (!MenuModel.TryParseHint(hint, out Key key, out KeyModifierMask modifiers)) return ("", 0);
 

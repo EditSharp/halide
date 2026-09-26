@@ -1,5 +1,6 @@
 using EditSharpGUI.Scripts.UI.ContextMenu;
 using Godot;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,6 +22,12 @@ public partial class MenuProbe : Node
 		Node editor = GD.Load<PackedScene>("res://Scenes/Views/Editor.tscn").Instantiate();
 		AddChild(editor);
 		await Frames(60);
+
+		// the frame rate this machine manages with nothing open, to judge the one with a menu open by
+		int baselineFrom = frames;
+		double baselineStart = Time.GetTicksMsec();
+		while (Time.GetTicksMsec() - baselineStart < 1000) await Frames(1);
+		int baseline = frames - baselineFrom;
 
 		MediaViewer viewer = Find<MediaViewer>(editor).First();
 		Button filter = Find<Button>(viewer).First(b => b.Name == "Filter");
@@ -94,6 +101,92 @@ public partial class MenuProbe : Node
 			return;
 		}
 
+		// --submenu: right-click empty viewer space, hover into the Filter submenu, click its first
+		// item five times; a sampling thread records every change in the visible menu windows and
+		// in the pixel under the clicked item, to catch flashes and submenus closing
+		if (args.Contains("--submenu") || args.Contains("--repeat"))
+		{
+			bool top = args.Contains("--repeat");
+			// --repeat opens the Filter button's menu, whose first row is a check; --submenu right-clicks empty space
+			Control opener = top ? filter : Find<ScrollContainer>(viewer).First();
+			Vector2 spot = top ? opener.GetGlobalRect().GetCenter() : opener.GetGlobalRect().Position + new Vector2(opener.Size.X - 40f, opener.Size.Y - 40f);
+			Vector2I screenSpot = DisplayServer.WindowGetPosition(GetWindow().GetWindowId()) + (Vector2I)(GetViewport().GetScreenTransform() * spot).Round();
+			SetCursorPos(screenSpot.X, screenSpot.Y);
+			await Frames(3);
+			mouse_event(top ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
+			await Frames(2);
+			mouse_event(top ? MOUSEEVENTF_LEFTUP : MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
+
+			double t0 = Time.GetTicksMsec();
+			while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - t0 < 5000) await Frames(1);
+			Rect2I? main = ContextMenus.Handler.OpenMenuRect();
+			GD.Print($"MENU viewer menu {main}");
+			if (main is not Rect2I m) { GD.Print("MENU FAIL"); GetTree().Quit(1); return; }
+
+			// --repeat: the first row; --submenu: Filter, the last row, and its first item
+			Vector2I item;
+			if (top) item = new(m.Position.X + 60, m.Position.Y + 16);
+			else
+			{
+				SetCursorPos(m.Position.X + 40, m.End.Y - 16);
+				double t1 = Time.GetTicksMsec();
+				List<Rect2I> popups = [];
+				while (Time.GetTicksMsec() - t1 < 3000)
+				{
+					await Frames(1);
+					popups = VisiblePopups();
+					if (popups.Count >= 2) break;
+				}
+				GD.Print($"MENU popups after hover: {string.Join(" ", popups)}");
+				if (popups.Count < 2) { GD.Print("MENU FAIL"); GetTree().Quit(1); return; }
+
+				Rect2I sub = popups.First(p => p != m);
+				item = new(sub.Position.X + 60, sub.Position.Y + 16);
+			}
+			SetCursorPos(item.X, item.Y);
+			await Frames(10);
+
+			List<string> events = [];
+			bool sampling = true;
+			System.Threading.Thread sampler = new(() =>
+			{
+				string lastPopups = "";
+				uint lastPixel = 0xFFFFFFFF;
+				nint dc = GetDC(0);
+				double start = Time.GetTicksMsec();
+				while (sampling)
+				{
+					string now = string.Join(" ", VisiblePopups());
+					if (now != lastPopups) { lock (events) events.Add($"{Time.GetTicksMsec() - start:0}ms popups {now}"); lastPopups = now; }
+					uint pixel = GetPixel(dc, item.X - 40, item.Y);
+					if (pixel != lastPixel) { lock (events) events.Add($"{Time.GetTicksMsec() - start:0}ms pixel {pixel:X6}"); lastPixel = pixel; }
+					System.Threading.Thread.Sleep(1);
+				}
+				ReleaseDC(0, dc);
+			}) { IsBackground = true };
+			sampler.Start();
+
+			for (int i = 0; i < 5; i++)
+			{
+				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+				await Frames(2);
+				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+				double tc = Time.GetTicksMsec();
+				while (Time.GetTicksMsec() - tc < 400) await Frames(1);
+			}
+
+			sampling = false;
+			sampler.Join();
+			foreach (string e in events) GD.Print($"MENU  {e}");
+			int popupChanges = events.Count(e => e.Contains(" popups "));
+			GD.Print(popupChanges <= 1 ? "MENU OK: the menu windows never changed" : $"MENU FAIL: the menu windows changed {popupChanges - 1} times");
+
+			ContextMenus.Handler.Dismiss();
+			await Frames(10);
+			GetTree().Quit();
+			return;
+		}
+
 		// --click: a real mouse click on the button through the OS, as a hand would do it
 		if (OS.GetCmdlineUserArgs().Contains("--click"))
 		{
@@ -109,20 +202,46 @@ public partial class MenuProbe : Node
 		}
 		else filter.EmitSignal(BaseButton.SignalName.Pressed);
 
-		// the menu opens on a deferred call; then a second of frames while it is up
-		await Frames(3);
+		// the menu opens on a deferred call, and within a few seconds on the slowest machine;
+		// then a second of frames while it is up, against a second of frames before it
+		double waitFrom = Time.GetTicksMsec();
+		while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - waitFrom < 10000) await Frames(1);
 		int at = frames;
 		double started = Time.GetTicksMsec();
 		while (Time.GetTicksMsec() - started < 1000) await Frames(1);
 		int during = frames - at;
 		Rect2I? rect = ContextMenus.Handler.OpenMenuRect();
-		GD.Print($"MENU open={rect is not null} framesWhileOpen={during}");
+		GD.Print($"MENU framesBefore={baseline} framesWhileOpen={during}");
+		GD.Print($"MENU handler={ContextMenus.Handler.GetType().Name} open={rect is not null} framesWhileOpen={during}");
 
-		// "Used in a Timeline" is the first item; unchecking it hides the used media
-		ContextMenus.Handler.HighlightNext();
+		// "Used in a Timeline" is the first item; unchecking it hides the used media.
+		// --mousepick clicks the row through the OS instead of picking it from the keyboard
+		if (args.Contains("--mousepick") && rect is Rect2I menuRect)
+		{
+			SetCursorPos(menuRect.Position.X + 40, menuRect.Position.Y + 14);
+			await Frames(3);
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			await Frames(2);
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+		}
+		else
+		{
+			ContextMenus.Handler.HighlightNext();
+			await Frames(5);
+			ContextMenus.Handler.ActivateHighlighted();
+		}
+		// the pick goes through the menu's own thread or process first; a slow machine gets a while
+		double pickFrom = Time.GetTicksMsec();
 		await Frames(5);
-		ContextMenus.Handler.ActivateHighlighted();
-		await Frames(30);
+		while (Find<UIMediaItem>(viewer).Count(t => t.GetParent() is not null) >= tilesBefore && Time.GetTicksMsec() - pickFrom < 10000) await Frames(1);
+		await Frames(5);
+		GD.Print($"MENU pick took {Time.GetTicksMsec() - pickFrom:0}ms");
+
+		// a menu that stays open by showing again (macOS) takes a moment to be back
+		double reopenFrom = Time.GetTicksMsec();
+		while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - reopenFrom < 5000) await Frames(1);
+		Rect2I? afterPick = ContextMenus.Handler.OpenMenuRect();
+		GD.Print($"MENU after pick: open={afterPick is not null} sameRect={afterPick == rect}");
 
 		int tilesAfter = Find<UIMediaItem>(viewer).Count(t => t.GetParent() is not null);
 		bool stillOpen = ContextMenus.Handler.OpenMenuRect() is not null;
@@ -132,12 +251,33 @@ public partial class MenuProbe : Node
 		await Frames(10);
 
 		bool filterMenu = !args.Contains("--clip") && !args.Contains("--tile");
-		bool ok = rect is not null && during >= 20 && (!filterMenu || (tilesAfter < tilesBefore && stillOpen));
+		bool ok = rect is not null && during * 2 >= baseline && (!filterMenu || (tilesAfter < tilesBefore && stillOpen));
 		GD.Print(ok ? "MENU OK" : "MENU FAIL");
 		GetTree().Quit(ok ? 0 : 1);
 	}
 
-	const uint MOUSEEVENTF_LEFTDOWN = 0x2, MOUSEEVENTF_LEFTUP = 0x4;
+	const uint MOUSEEVENTF_LEFTDOWN = 0x2, MOUSEEVENTF_LEFTUP = 0x4, MOUSEEVENTF_RIGHTDOWN = 0x8, MOUSEEVENTF_RIGHTUP = 0x10;
+
+	static List<Rect2I> VisiblePopups()
+	{
+		List<Rect2I> found = [];
+		for (nint popup = FindWindowExW(0, 0, "#32768", null); popup != 0; popup = FindWindowExW(0, popup, "#32768", null))
+		{
+			if (!IsWindowVisible(popup) || !GetWindowRect(popup, out RECT r)) continue;
+			found.Add(new Rect2I(r.left, r.top, r.right - r.left, r.bottom - r.top));
+		}
+		return found;
+	}
+
+	[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+	struct RECT { public int left, top, right, bottom; }
+
+	[System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)] static extern nint FindWindowExW(nint parent, nint after, string cls, string name);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsWindowVisible(nint hwnd);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetWindowRect(nint hwnd, out RECT rect);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern nint GetDC(nint hwnd);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern int ReleaseDC(nint hwnd, nint dc);
+	[System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern uint GetPixel(nint dc, int x, int y);
 	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
 	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, nuint extra);
 

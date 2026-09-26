@@ -11,6 +11,11 @@
 script = ExtResource("1_palette")
 AccentColor = Color(0.827451, 0.95686275, 0.38431373, 1)
 PlaybackColor = Color(0.6901961, 0.21960784, 0.12941177, 1)
+ClipTan = Color(0.7254902, 0.6901961, 0.5921569, 1)
+ClipGray = Color(0.27450982, 0.27450982, 0.27450982, 1)
+NodeTan = Color(0.7254902, 0.6901961, 0.5921569, 1)
+NodeGray = Color(0.27265528, 0.2726553, 0.2726553, 1)
+TextClip = 14
 UIFont = ExtResource("2_33hwj")
 MonoFont = ExtResource("1_22qdm")
 UIFontLight = ExtResource("4_b3oqw")

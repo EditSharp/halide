@@ -11,15 +11,21 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu;
 
 public static class ContextMenus
 {
-    // the handler for this OS. EDITSHARP_MENU_HANDLER=godot forces the godot-drawn menu anywhere, to try it
+    // the handler for this OS. windows tracks native menus on a thread of their
+    // own; macOS shows them from a helper process (Tools/MacOS), falling back
+    // to tracking in this process when the helper isn't built.
+    // EDITSHARP_MENU_HANDLER=godot forces the godot-drawn menu anywhere, and
+    // =inprocess the in-process NSMenu on macOS
     public static PlatformHandler Handler { get; } = Create();
 
     static PlatformHandler Create()
     {
-        if (OS.GetEnvironment("EDITSHARP_MENU_HANDLER") == "godot") return new GodotHandler();
+        string forced = OS.GetEnvironment("EDITSHARP_MENU_HANDLER");
+        if (forced == "godot") return new GodotHandler();
         return OS.GetName() switch
         {
             "Windows" => new WindowsHandler(),
+            "macOS" when forced != "inprocess" && MacOSProcessHandler.Available => new MacOSProcessHandler(),
             "macOS" => new MacOSHandler(),
             _ => new GodotHandler(),
         };

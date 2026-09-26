@@ -16,8 +16,11 @@ using Godot;
 // without --menu a showcase of every item kind is shown
 public partial class ContextMenuPreview : Control
 {
-	public override void _Ready()
+	// the window settles before the menu opens, as it has by the time anyone clicks
+	public override async void _Ready()
 	{
+		for (int i = 0; i < 30; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
 		string menuPath = null, outPath = null, palettePath = null;
 		int hold = 2000, hover = 0;
 		foreach (string arg in OS.GetCmdlineUserArgs())

@@ -79,6 +79,12 @@ static class MenuThread
         helper = CreateWindowExW(WS_EX_TOOLWINDOW, cls.lpszClassName, "", WS_POPUP, 0, 0, 0, 0, 0, 0, cls.hInstance, 0);
     }
 
+    // what the message filter needs while a menu is up
+    static Showing current;
+    static Built currentBuilt;
+    static Snapshot currentSnapshot;
+    static (nint Menu, int Index) highlighted = (0, -1);
+
     static void Track(Showing showing)
     {
         uint mainThread = GetWindowThreadProcessId(showing.MainWindow, 0);
@@ -86,6 +92,7 @@ static class MenuThread
 
         using MenuPainter menuPainter = new(helper, showing.Dpi, showing.Dark);
         painter = menuPainter;
+        current = showing;
 
         try
         {
@@ -95,6 +102,12 @@ static class MenuThread
 
                 using (Built built = new(snapshot, menuPainter))
                 {
+                    currentBuilt = built;
+                    currentSnapshot = snapshot;
+                    highlighted = (0, -1);
+                    filterHook ??= Filter;
+                    nint filter = SetWindowsHookExW(WH_MSGFILTER, filterHook, 0, threadId);
+
                     // the tracking thread's window has to be in front for the menu to
                     // close on a click elsewhere; sharing input with godot's thread is
                     // what lets a background thread take the foreground
@@ -115,6 +128,17 @@ static class MenuThread
                     SetForegroundWindow(showing.MainWindow);
                     AttachThreadInput(threadId, mainThread, false);
                     if (hook != 0) UnhookWindowsHookEx(hook);
+                    if (filter != 0) UnhookWindowsHookEx(filter);
+                    currentBuilt = null;
+
+                    // a pick handled inside the loop that could not update the menu in
+                    // place closed it; the snapshot it left is built again
+                    if (id == 0 && rebuildWith is not null)
+                    {
+                        snapshot = rebuildWith;
+                        rebuildWith = null;
+                        continue;
+                    }
 
                     if (id == 0 || !built.Entries.TryGetValue(id, out entry))
                     {
@@ -157,7 +181,129 @@ static class MenuThread
         finally
         {
             painter = null;
+            current = null;
+            currentSnapshot = null;
             snapshot?.Dispose();
+        }
+    }
+
+    // ---- picks that keep the menu open, handled inside the menu loop ----
+
+    static HookProc filterHook;
+    static Snapshot rebuildWith;
+
+    // the row a message names: the one under the cursor for a mouse message
+    // (by position), the highlighted one for a key (by identifier, which is
+    // how WM_MENUSELECT names a plain item)
+    static bool RowOf(in MSG msg, out nint menu, out uint item, out bool byPosition)
+    {
+        menu = 0;
+        item = 0;
+        byPosition = true;
+
+        if (msg.message is WM_LBUTTONUP or WM_RBUTTONUP or WM_LBUTTONDOWN or WM_RBUTTONDOWN or WM_LBUTTONDBLCLK or WM_RBUTTONDBLCLK)
+        {
+            nint popup = WindowFromPoint(msg.pt);
+            if (popup == 0 || GetWindowThreadProcessId(popup, 0) != threadId) return false;
+
+            menu = SendMessageW(popup, MN_GETHMENU, 0, 0);
+            if (menu == 0) return false;
+
+            int index = MenuItemFromPoint(0, menu, msg.pt);
+            item = (uint)index;
+            return index >= 0;
+        }
+
+        if (msg.message == WM_KEYDOWN && ((int)msg.wParam is VK_RETURN or VK_SPACE) && highlighted.Menu != 0)
+        {
+            (menu, int id) = highlighted;
+            item = (uint)id;
+            byPosition = false;
+            return id > 0;
+        }
+
+        return false;
+    }
+
+    // the message filter runs for every message the menu loop takes. a pick
+    // on a row that keeps the menu open is applied here and swallowed, so
+    // the popup and any submenu stay up; everything else passes
+    static nint Filter(int code, nint wParam, nint lParam)
+    {
+        if (code == MSGF_MENU && currentBuilt is Built built && current is Showing showing)
+        {
+            MSG msg = Marshal.PtrToStructure<MSG>(lParam);
+
+            if (RowOf(msg, out nint menu, out uint item, out bool byPosition))
+            {
+                MENUITEMINFO info = new() { cbSize = (uint)Marshal.SizeOf<MENUITEMINFO>(), fMask = MIIM_ID | MIIM_STATE | MIIM_SUBMENU };
+
+                if (GetMenuItemInfoW(menu, item, byPosition, ref info) && info.hSubMenu == 0 && (info.fState & MFS_DISABLED) == 0
+                    && built.Entries.TryGetValue(info.wID, out MenuEntry entry) && StaysOpen(entry, showing))
+                {
+                    // the press never reaches the menu: once it has seen a button go down it picks the
+                    // row itself when the button comes up, whatever happens to the release message
+                    if (msg.message is WM_LBUTTONDOWN or WM_RBUTTONDOWN or WM_LBUTTONDBLCLK or WM_RBUTTONDBLCLK) return 1;
+
+                    Apply(entry, showing, built);
+                    return 1;
+                }
+            }
+        }
+
+        return CallNextHookEx(0, code, wParam, lParam);
+    }
+
+    static bool StaysOpen(MenuEntry entry, Showing showing)
+    {
+        bool checkable = entry.Owner is not null || entry.Button.Type != ContextButton.CheckType.None;
+        return !(checkable ? showing.HideOnCheckable : showing.HideOnItem);
+    }
+
+    // the pick lands on godot's thread; the fresh snapshot it returns
+    // restyles the rows in place and the popups repaint
+    static void Apply(MenuEntry entry, Showing showing, Built built)
+    {
+        TaskCompletionSource<Snapshot> next = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        ContextMenu menu = showing.Menu;
+
+        Callable.From(() =>
+        {
+            try
+            {
+                MenuModel.Activate(entry);
+                next.SetResult(Snapshot.Of(menu));
+            }
+            catch (Exception e)
+            {
+                next.SetException(e);
+            }
+        }).CallDeferred();
+
+        Snapshot snapshot;
+        try { snapshot = next.Task.GetAwaiter().GetResult(); }
+        catch (Exception e) { GD.PushError($"Context menu pick failed: {e}"); return; }
+
+        if (built.Update(snapshot))
+        {
+            currentSnapshot?.Dispose();
+            currentSnapshot = snapshot;
+            RepaintPopups();
+            return;
+        }
+
+        // the rows changed shape: the menu closes and comes back built from the new snapshot
+        rebuildWith = snapshot;
+        PostMessageW(helper, WM_CANCELMODE, 0, 0);
+    }
+
+    static void RepaintPopups()
+    {
+        for (nint popup = FindWindowExW(0, 0, "#32768", null); popup != 0; popup = FindWindowExW(0, popup, "#32768", null))
+        {
+            if (GetWindowThreadProcessId(popup, 0) != threadId || !IsWindowVisible(popup)) continue;
+            // no erase: the items paint every pixel of themselves, and blanking first is a visible flash
+            RedrawWindow(popup, 0, 0, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
         }
     }
 
@@ -266,7 +412,13 @@ static class MenuThread
     {
         try
         {
-            if (msg == WM_INITMENUPOPUP)
+            if (msg == WM_MENUSELECT)
+            {
+                uint flags = (uint)((long)wParam >> 16) & 0xFFFF;
+                int item = (int)((long)wParam & 0xFFFF);
+                highlighted = (flags & MF_POPUP) != 0 || lParam == 0 ? (0, -1) : (lParam, item);
+            }
+            else if (msg == WM_INITMENUPOPUP)
             {
                 StylePopups();
             }
@@ -325,7 +477,7 @@ static class MenuThread
     }
 
     const int VK_LBUTTON = 0x01, VK_RBUTTON = 0x02;
-    const uint WM_LBUTTONDOWN = 0x201, WM_LBUTTONUP = 0x202, WM_RBUTTONDOWN = 0x204, WM_RBUTTONUP = 0x205;
+    const uint WM_LBUTTONDOWN = 0x201, WM_LBUTTONUP = 0x202, WM_LBUTTONDBLCLK = 0x203, WM_RBUTTONDOWN = 0x204, WM_RBUTTONUP = 0x205, WM_RBUTTONDBLCLK = 0x206;
     const uint WM_MOUSEFIRST = 0x200, WM_MOUSELAST = 0x20D, WM_KEYFIRST = 0x100, WM_KEYLAST = 0x109;
     const uint PM_REMOVE = 0x1;
     const nint MK_LBUTTON = 0x1, MK_RBUTTON = 0x2;
@@ -341,7 +493,18 @@ static class MenuThread
         public POINT pt;
     }
 
-    const int WH_MOUSE_LL = 14;
+    const int WH_MOUSE_LL = 14, WH_MSGFILTER = -1, MSGF_MENU = 2;
+    const uint WM_MENUSELECT = 0x11F, MN_GETHMENU = 0x1E1, MF_POPUP = 0x10;
+    const int VK_RETURN = 0x0D, VK_SPACE = 0x20;
+    const uint RDW_INVALIDATE = 0x1, RDW_ERASE = 0x4, RDW_ALLCHILDREN = 0x80, RDW_UPDATENOW = 0x100;
+
+    delegate nint HookProc(int code, nint wParam, nint lParam);
+
+    [DllImport("user32.dll")] static extern nint SetWindowsHookExW(int id, HookProc proc, nint module, uint thread);
+    [DllImport("user32.dll")] static extern nint SendMessageW(nint hwnd, uint msg, nint wParam, nint lParam);
+    [DllImport("user32.dll")] static extern int MenuItemFromPoint(nint hwnd, nint menu, POINT point);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool GetMenuItemInfoW(nint menu, uint item, bool byPosition, ref MENUITEMINFO info);
+    [DllImport("user32.dll")] static extern bool RedrawWindow(nint hwnd, nint rect, nint region, uint flags);
 
     delegate nint LowLevelMouseProc(int code, nint wParam, nint lParam);
 

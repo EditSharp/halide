@@ -83,6 +83,9 @@ sealed class Built : IDisposable
     public readonly nint Menu;
     public readonly Dictionary<uint, MenuEntry> Entries = [];
 
+    // every row in tree order: which popup holds it, where, its id and its painted look
+    public readonly List<(nint Menu, uint Position, uint Id, MenuPainter.Item Row)> Rows = [];
+
     readonly MenuPainter painter;
     readonly Snapshot snapshot;
     uint nextId = 1;
@@ -131,11 +134,59 @@ sealed class Built : IDisposable
                 Entries[id] = item.Entry;
             }
 
+            // the row goes in before its submenu's rows, in the order Update walks them
+            Rows.Add((menu, at, id, row));
             nint submenu = item.Kind == MenuItemKind.Submenu ? Fill(item.Submenu) : 0;
             Insert(menu, at++, row, id, submenu);
         }
 
         return menu;
+    }
+
+    // the same menu after a pick that kept it open: every row takes the
+    // state the fresh snapshot gives it, in place. false when the snapshot
+    // no longer has the same rows, so the menu has to be built again
+    public bool Update(Snapshot next)
+    {
+        List<MenuItem> flat = [];
+        Walk(next.Items, flat);
+        if (flat.Count != Rows.Count) return false;
+
+        for (int i = 0; i < flat.Count; i++)
+        {
+            MenuItem item = flat[i];
+            (nint menu, uint position, uint id, MenuPainter.Item row) = Rows[i];
+            if (item.Kind != row.Kind || (item.Entry is null) != (id == 0)) return false;
+
+            row.Text = item.Text;
+            row.Hint = item.Hint;
+            row.Bold = item.Bold;
+            row.Enabled = item.Enabled;
+            row.Checked = item.Checked;
+            row.Radio = item.Radio;
+            row.Icon = next.IconOf(item.Icon);
+
+            if (item.Entry is not null) Entries[id] = item.Entry;
+
+            MENUITEMINFO info = new()
+            {
+                cbSize = (uint)Marshal.SizeOf<MENUITEMINFO>(),
+                fMask = MIIM_STATE,
+                fState = (item.Enabled ? 0 : MFS_DISABLED) | (item.Checked ? MFS_CHECKED : 0),
+            };
+            SetMenuItemInfoW(menu, position, true, ref info);
+        }
+
+        return true;
+    }
+
+    static void Walk(List<MenuItem> items, List<MenuItem> into)
+    {
+        foreach (MenuItem item in items)
+        {
+            into.Add(item);
+            if (item.Kind == MenuItemKind.Submenu) Walk(item.Submenu, into);
+        }
     }
 
     void Insert(nint menu, uint at, MenuPainter.Item item, uint id, nint submenu)
