@@ -11,12 +11,15 @@ public partial class Editor : Control
 
 	[Export] UITimeline UITimeline;
 	[Export] UIPlayback UIPlayback;
-	[Export] Inspector Inspector;
-	[Export] TabsView TabsView;
+	[Export] TabsView LeftTabs;
+	[Export] TabsView RightTabs;
 
 	[ExportGroup("Packed Scenes")]
 
-	[Export] PackedScene SourceViewer;
+	[Export] PackedScene MediaViewerScene;
+	//SourceViewer sourceViewer;
+	[Export] PackedScene InspectorScene;
+	Inspector inspector;
 
 	// the clips' frames. it owns a playback of its own, apart from the one
 	// the user watches, so the two never wait on each other
@@ -27,7 +30,10 @@ public partial class Editor : Control
 	{
 		Project project = ProjectManager.Singleton.CurrentProject;
 
-		TabsView.AddTab(SourceViewer.Instantiate() as Control);
+		LeftTabs.AddTab(MediaViewerScene.Instantiate() as Control);
+
+		inspector = InspectorScene.Instantiate() as Inspector;
+		RightTabs.AddTab(inspector);
 
 		thumbnails = new ThumbnailCache(project.Timeline, project.RenderSettings, project.History);
 		UITimeline.Thumbnails = thumbnails;
@@ -46,27 +52,27 @@ public partial class Editor : Control
 		// view stays wherever the user put it. the inspector follows the
 		// playhead too, for what an animated value is right now
 		UITimeline.PlayheadDragStarted += (_, _) => UIPlayback.BeginScrub();
-		UITimeline.PlayheadDrag += (_, time) => { UIPlayback.ScrubTo(time); Inspector.Playhead = time; };
+		UITimeline.PlayheadDrag += (_, time) => { UIPlayback.ScrubTo(time); inspector.Playhead = time; };
 		UITimeline.PlayheadDragEnded += (_, _) => UIPlayback.EndScrub();
 
-		UIPlayback.PositionChanged += (_, time) => { UITimeline.PlayheadTime = time; Inspector.Playhead = time; };
+		UIPlayback.PositionChanged += (_, time) => { UITimeline.PlayheadTime = time; inspector.Playhead = time; };
 
 		// the inspector shows whatever the timeline has selected, records
 		// into the project's history, and can ask for the playhead to be
 		// moved to a keyframe
-		Inspector.History = project.History;
-	Inspector.Media = project.Media;
-		Inspector.Framerate = project.RenderSettings.Framerate;
-		Inspector.FrameSize = new((int)project.RenderSettings.Resolution.X, (int)project.RenderSettings.Resolution.Y);
-		Inspector.Playhead = UITimeline.PlayheadTime;
-		UITimeline.SelectionChanged += (_, _) => Inspector.ShowClips(UITimeline.SelectedClips);
-		Inspector.SeekRequested += (_, time) =>
+		inspector.History = project.History;
+	inspector.Media = project.Media;
+		inspector.Framerate = project.RenderSettings.Framerate;
+		inspector.FrameSize = new((int)project.RenderSettings.Resolution.X, (int)project.RenderSettings.Resolution.Y);
+		inspector.Playhead = UITimeline.PlayheadTime;
+		UITimeline.SelectionChanged += (_, _) => inspector.ShowClips(UITimeline.SelectedClips);
+		inspector.SeekRequested += (_, time) =>
 		{
 			UIPlayback.BeginScrub();
 			UIPlayback.ScrubTo(time);
 			UIPlayback.EndScrub();
 			UITimeline.PlayheadTime = time;
-			Inspector.Playhead = time;
+			inspector.Playhead = time;
 		};
 
 		// the project's history is the one stray writes fall into, and an undo
@@ -80,14 +86,14 @@ public partial class Editor : Control
 		History history = project.History;
 		History.Active = history;
 		history.Changed += (_, e) => { if (e.Action != HistoryAction.Commit) UITimeline.Reconcile(); };
-		Inspector.Edited += (_, _) => UITimeline.Reconcile();
+		inspector.Edited += (_, _) => UITimeline.Reconcile();
 
 		// the preview is a still picture while stopped, so anything that
 		// changes the timeline shows it again: every history entry (a drag,
 		// a trim, an undo), and live inspector edits as they happen. and
 		// once to begin with, so there's a picture before anything is played
 		history.Changed += (_, _) => UIPlayback.RefreshFrame();
-		Inspector.Edited += (_, _) => UIPlayback.RefreshFrame();
+		inspector.Edited += (_, _) => UIPlayback.RefreshFrame();
 		UIPlayback.RefreshFrame();
 
 		// page-wide shortcuts. every key that nothing closer wanted climbs up

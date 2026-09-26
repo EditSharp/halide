@@ -1,13 +1,9 @@
 [gd_scene format=3 uid="uid://ddl0543e6u2fc"]
 
 [ext_resource type="Script" uid="uid://d4nm5exc55nij" path="res://Scripts/UI/Views/TabsView.cs" id="1_q1ia2"]
-[ext_resource type="PackedScene" uid="uid://byuamsawv1kcd" path="res://Scenes/Views/SourceViewer.tscn" id="2_sv57s"]
 [ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="3_sv57s"]
-[ext_resource type="PackedScene" uid="uid://cswj3vpn8yv71" path="res://Scenes/Views/GraphEditor.tscn" id="4_4db0l"]
-[ext_resource type="PackedScene" uid="uid://c3uao3qqjglxj" path="res://Scenes/Views/Playback.tscn" id="4_sv57s"]
 
 [node name="VBoxContainer" type="VBoxContainer" unique_id=141499235 node_paths=PackedStringArray("tabBar", "tabView")]
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -16,7 +12,6 @@ size_flags_horizontal = 3
 script = ExtResource("1_q1ia2")
 tabBar = NodePath("HBoxContainer/TabBar")
 tabView = NodePath("Tab View")
-testScenes = Array[PackedScene]([ExtResource("2_sv57s"), ExtResource("4_4db0l"), ExtResource("4_sv57s")])
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1411960806]
 custom_minimum_size = Vector2(0, 28)

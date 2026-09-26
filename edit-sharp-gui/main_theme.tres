@@ -2340,6 +2340,26 @@ script = ExtResource("themed")
 Style = SubResource("ThemeStyle_LinkButton_normal")
 State = 3
 
+[sub_resource type="Resource" id="Resource_gkk83"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 9
+CornerRadiusTopLeft = 5
+CornerRadiusTopRight = 5
+CornerRadiusBottomRight = 5
+CornerRadiusBottomLeft = 5
+
+[sub_resource type="StyleBox" id="StyleBox_s4yqv"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_gkk83")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
 [sub_resource type="Resource" id="ThemeStyle_MenuButton_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -3653,6 +3673,8 @@ LinkButton/styles/hover_pressed = SubResource("ThemedStyleBox_LinkButton_hover_p
 LinkButton/styles/normal = SubResource("ThemedStyleBox_LinkButton_normal")
 LinkButton/styles/pressed = SubResource("ThemedStyleBox_LinkButton_pressed")
 LinkButton/styles/read_only = SubResource("ThemedStyleBox_LinkButton_read_only")
+MediaContent/base_type = &"Panel"
+MediaContent/styles/panel = SubResource("StyleBox_s4yqv")
 MenuButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 MenuButton/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 MenuButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)

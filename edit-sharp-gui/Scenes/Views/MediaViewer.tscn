@@ -1,0 +1,146 @@
+[gd_scene format=3 uid="uid://byuamsawv1kcd"]
+
+[ext_resource type="PackedScene" uid="uid://dejc4onqqkvog" path="res://Scenes/Components/MediaItem.tscn" id="1_vc5xv"]
+
+[node name="Media" type="Control" unique_id=861251413]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=859593589]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"TightVBox"
+
+[node name="Media Options" type="Control" parent="VBoxContainer" unique_id=541275116]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Background" type="Panel" parent="VBoxContainer/Media Options" unique_id=390143872]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ToolbarBackground"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/Media Options" unique_id=72477359]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1340147264]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add Source"
+
+[node name="Button2" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1389012709]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add Source"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=866422693]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Media Flow" type="HFlowContainer" parent="VBoxContainer/ScrollContainer" unique_id=1880662620]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 1
+last_wrap_alignment = 1
+
+[node name="Media" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1189208708 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media2" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1001363172 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media3" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=297873994 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media4" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1920712769 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media5" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=330971803 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media6" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=291857006 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media7" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=85961048 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media8" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=990099019 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media9" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=319203037 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media10" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=141368733 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media11" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=974838260 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media12" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2127508100 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media13" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2101591980 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media14" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1760424391 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media15" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=360601518 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media16" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1160134423 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media17" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1488818197 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media18" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1577428804 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media19" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=291933444 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media20" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1535616419 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media21" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=571305331 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media22" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1590510857 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media23" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2048995694 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media24" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=744578399 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media25" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2075838506 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media26" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2085563833 instance=ExtResource("1_vc5xv")]
+layout_mode = 2
+
+[node name="Media27" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=588324231 instance=ExtResource("1_vc5xv")]
+layout_mode = 2

@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://dejc4onqqkvog"]
+
+[node name="Media Item" type="Control" unique_id=1189208708]
+custom_minimum_size = Vector2(120, 70)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 120.0
+offset_bottom = 80.0
+
+[node name="Content" type="Panel" parent="." unique_id=618798168]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"MediaContent"
+
+[node name="Outline" type="Panel" parent="." unique_id=933648710]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ClipOutline"
+
+[node name="Inner" type="Panel" parent="Outline" unique_id=1820067490]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ClipOutlineInner"
+
+[node name="Outer" type="Panel" parent="Outline" unique_id=1049982670]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ClipOutlineOuter"
