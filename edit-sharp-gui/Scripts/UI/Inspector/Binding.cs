@@ -74,3 +74,29 @@ public sealed class ListItemBinding(IList list, int index, bool animatable) : Bi
 
 	public override IAnimatable Animatable => animatable ? list[index] as IAnimatable : null;
 }
+
+// one value held by every one of several lists, matched by value. writing
+// replaces it in each list, recorded
+public sealed class MultiListItemBinding(IReadOnlyList<IList> lists, object value) : Binding
+{
+	object value = value;
+
+	public override object Get() => value;
+
+	public override void Set(object newValue)
+	{
+		object old = value;
+
+		foreach (IList list in lists)
+		{
+			int at = list.IndexOf(old);
+			if (at < 0 || list.Contains(newValue)) continue;
+
+			IList target = list;
+			int index = at;
+			Transaction.Apply(() => target[index] = newValue, () => target[index] = old, "set item");
+		}
+
+		value = newValue;
+	}
+}

@@ -214,7 +214,7 @@ State = 3
 [sub_resource type="Resource" id="ThemeStyle_ClipContent_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
-Background = 14
+Background = 9
 CornerRadiusTopLeft = 6
 CornerRadiusTopRight = 6
 CornerRadiusBottomRight = 6
@@ -261,7 +261,7 @@ Style = SubResource("ThemeStyle_ClipInnerShadow_panel")
 script = ExtResource("style")
 Palette = ExtResource("palette")
 Background = 0
-Border = 26
+Border = 14
 BorderWidthLeft = 5
 BorderWidthTop = 5
 BorderWidthRight = 5
@@ -1033,7 +1033,7 @@ Definition = 5
 script = ExtResource("color")
 ThemeType = "Inspector"
 Item = "key"
-Definition = 27
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_5phew"]
 script = ExtResource("color")
@@ -1056,73 +1056,73 @@ Definition = 7
 script = ExtResource("color")
 ThemeType = "Clip"
 Item = "video"
-Definition = 14
+Source = 3
 
 [sub_resource type="Resource" id="Resource_anqa4"]
 script = ExtResource("color")
 ThemeType = "Clip"
 Item = "audio"
-Definition = 15
+Source = 3
 
 [sub_resource type="Resource" id="Resource_3r3vc"]
 script = ExtResource("color")
 ThemeType = "Clip"
 Item = "text"
-Definition = 16
+Source = 3
 
 [sub_resource type="Resource" id="Resource_bj7e2"]
 script = ExtResource("color")
 ThemeType = "Clip"
 Item = "generator_video"
-Definition = 17
+Source = 3
 
 [sub_resource type="Resource" id="Resource_slnpp"]
 script = ExtResource("color")
 ThemeType = "Clip"
 Item = "generator_audio"
-Definition = 18
+Source = 3
 
 [sub_resource type="Resource" id="Resource_n3yaf"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "effect"
-Definition = 19
+Source = 4
 
 [sub_resource type="Resource" id="Resource_iht4d"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "mask"
-Definition = 20
+Source = 4
 
 [sub_resource type="Resource" id="Resource_ottyf"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "math"
-Definition = 21
+Source = 4
 
 [sub_resource type="Resource" id="Resource_nsbpn"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "keying"
-Definition = 22
+Source = 4
 
 [sub_resource type="Resource" id="Resource_h0kbh"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "input"
-Definition = 23
+Source = 4
 
 [sub_resource type="Resource" id="Resource_r4x6t"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "audio"
-Definition = 24
+Source = 4
 
 [sub_resource type="Resource" id="Resource_mu0fg"]
 script = ExtResource("color")
 ThemeType = "Node"
 Item = "composite"
-Definition = 25
+Source = 4
 
 [sub_resource type="Resource" id="Resource_akhw3"]
 script = ExtResource("color")
@@ -1147,7 +1147,7 @@ Alpha = 0.6
 script = ExtResource("color")
 ThemeType = "Timeline"
 Item = "playhead"
-Definition = 27
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_1i34x"]
 script = ExtResource("color")
@@ -1190,37 +1190,37 @@ Shade = 3
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_normal_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_tpkcg"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_hover_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_xxa0j"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_pressed_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_70bsv"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_hover_pressed_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_hr40q"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_focus_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="Resource_a24hu"]
 script = ExtResource("color")
 ThemeType = "InspectorKeyButtonActive"
 Item = "icon_disabled_color"
-Definition = 26
+Definition = 14
 Shade = 3
 
 [sub_resource type="Resource" id="Resource_dfltk"]
@@ -1279,38 +1279,288 @@ Shade = 3
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="ColorBinding_PlayButton_font_hover_color"]
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_hover_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="ColorBinding_PlayButton_font_pressed_color"]
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_pressed_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="ColorBinding_PlayButton_font_hover_pressed_color"]
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_hover_pressed_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="ColorBinding_PlayButton_font_focus_color"]
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_focus_color"
-Definition = 26
+Definition = 14
 
 [sub_resource type="Resource" id="ColorBinding_PlayButton_font_disabled_color"]
 script = ExtResource("color")
 ThemeType = "PlayButton"
 Item = "font_disabled_color"
-Definition = 27
+Definition = 14
 Shade = 3
+
+[sub_resource type="Resource" id="ColorBinding_Clip_poppy"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "poppy"
+Source = 1
+
+[sub_resource type="Resource" id="ColorBinding_Clip_red"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "red"
+Source = 1
+ClipSwatch = 1
+
+[sub_resource type="Resource" id="ColorBinding_Clip_orange"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "orange"
+Source = 1
+ClipSwatch = 2
+
+[sub_resource type="Resource" id="ColorBinding_Clip_mango"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "mango"
+Source = 1
+ClipSwatch = 3
+
+[sub_resource type="Resource" id="ColorBinding_Clip_yellow"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "yellow"
+Source = 1
+ClipSwatch = 4
+
+[sub_resource type="Resource" id="ColorBinding_Clip_green"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "green"
+Source = 1
+ClipSwatch = 5
+
+[sub_resource type="Resource" id="ColorBinding_Clip_turquoise"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "turquoise"
+Source = 1
+ClipSwatch = 6
+
+[sub_resource type="Resource" id="ColorBinding_Clip_lime"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "lime"
+Source = 1
+ClipSwatch = 7
+
+[sub_resource type="Resource" id="ColorBinding_Clip_cyan"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "cyan"
+Source = 1
+ClipSwatch = 8
+
+[sub_resource type="Resource" id="ColorBinding_Clip_purple"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "purple"
+Source = 1
+ClipSwatch = 9
+
+[sub_resource type="Resource" id="ColorBinding_Clip_pink"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "pink"
+Source = 1
+ClipSwatch = 10
+
+[sub_resource type="Resource" id="ColorBinding_Clip_lavender"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "lavender"
+Source = 1
+ClipSwatch = 11
+
+[sub_resource type="Resource" id="ColorBinding_Clip_magenta"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "magenta"
+Source = 1
+ClipSwatch = 12
+
+[sub_resource type="Resource" id="ColorBinding_Clip_brown"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "brown"
+Source = 1
+ClipSwatch = 13
+
+[sub_resource type="Resource" id="ColorBinding_Clip_tan"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "tan"
+Source = 1
+ClipSwatch = 14
+
+[sub_resource type="Resource" id="ColorBinding_Clip_gray"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "gray"
+Source = 1
+ClipSwatch = 15
+
+[sub_resource type="Resource" id="ColorBinding_Clip_blue"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "blue"
+Source = 1
+ClipSwatch = 16
+
+[sub_resource type="Resource" id="ColorBinding_Clip_navy"]
+script = ExtResource("color")
+ThemeType = "Clip"
+Item = "navy"
+Source = 1
+ClipSwatch = 17
+
+[sub_resource type="Resource" id="ColorBinding_Node_poppy"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "poppy"
+Source = 2
+
+[sub_resource type="Resource" id="ColorBinding_Node_red"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "red"
+Source = 2
+NodeSwatch = 1
+
+[sub_resource type="Resource" id="ColorBinding_Node_orange"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "orange"
+Source = 2
+NodeSwatch = 2
+
+[sub_resource type="Resource" id="ColorBinding_Node_mango"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "mango"
+Source = 2
+NodeSwatch = 3
+
+[sub_resource type="Resource" id="ColorBinding_Node_yellow"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "yellow"
+Source = 2
+NodeSwatch = 4
+
+[sub_resource type="Resource" id="ColorBinding_Node_green"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "green"
+Source = 2
+NodeSwatch = 5
+
+[sub_resource type="Resource" id="ColorBinding_Node_turquoise"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "turquoise"
+Source = 2
+NodeSwatch = 6
+
+[sub_resource type="Resource" id="ColorBinding_Node_lime"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "lime"
+Source = 2
+NodeSwatch = 7
+
+[sub_resource type="Resource" id="ColorBinding_Node_cyan"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "cyan"
+Source = 2
+NodeSwatch = 8
+
+[sub_resource type="Resource" id="ColorBinding_Node_purple"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "purple"
+Source = 2
+NodeSwatch = 9
+
+[sub_resource type="Resource" id="ColorBinding_Node_pink"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "pink"
+Source = 2
+NodeSwatch = 10
+
+[sub_resource type="Resource" id="ColorBinding_Node_lavender"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "lavender"
+Source = 2
+NodeSwatch = 11
+
+[sub_resource type="Resource" id="ColorBinding_Node_magenta"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "magenta"
+Source = 2
+NodeSwatch = 12
+
+[sub_resource type="Resource" id="ColorBinding_Node_brown"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "brown"
+Source = 2
+NodeSwatch = 13
+
+[sub_resource type="Resource" id="ColorBinding_Node_tan"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "tan"
+Source = 2
+NodeSwatch = 14
+
+[sub_resource type="Resource" id="ColorBinding_Node_gray"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "gray"
+Source = 2
+NodeSwatch = 15
+
+[sub_resource type="Resource" id="ColorBinding_Node_blue"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "blue"
+Source = 2
+NodeSwatch = 16
+
+[sub_resource type="Resource" id="ColorBinding_Node_navy"]
+script = ExtResource("color")
+ThemeType = "Node"
+Item = "navy"
+Source = 2
+NodeSwatch = 17
 
 [sub_resource type="Resource" id="ThemeStyle_ColorPickerButton_normal"]
 script = ExtResource("style")
@@ -2365,6 +2615,162 @@ script = ExtResource("themed")
 Style = SubResource("Resource_gkk83")
 metadata/_custom_type_script = "uid://dv1xorpp4he7j"
 
+[sub_resource type="Resource" id="Resource_s4yqv"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 4
+BackgroundAlpha = 0.5
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+
+[sub_resource type="StyleBox" id="StyleBox_38asi"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+State = 3
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_kwmeo"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_o6ovo"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_kwmeo")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_p0yto"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+State = 4
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_h8mvt"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+State = 1
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_mmag0"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_f6b55"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_mmag0")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_3wvkw"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+State = 2
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_m0c75"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_6tc3g"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_m0c75")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_wutdb"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_rpjxr"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_faoxm"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_rpjxr")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="StyleBox" id="StyleBox_ha7xl"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_s4yqv")
+State = 2
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
+[sub_resource type="Resource" id="Resource_ym3u2"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+
+[sub_resource type="StyleBox" id="StyleBox_tkv0b"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_ym3u2")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
 [sub_resource type="Resource" id="ThemeStyle_MenuButton_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -2575,7 +2981,7 @@ Style = SubResource("ThemeStyle_PanelContainer_panel")
 [sub_resource type="Resource" id="ThemeStyle_PlayheadBody_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
-Background = 26
+Background = 14
 Border = 13
 BorderAlpha = 0.35
 BorderBlend = true
@@ -2596,7 +3002,7 @@ Style = SubResource("ThemeStyle_PlayheadBody_panel")
 [sub_resource type="Resource" id="ThemeStyle_PlayheadHead_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
-Background = 26
+Background = 14
 Border = 13
 BorderAlpha = 0.35
 BorderBlend = true
@@ -3413,6 +3819,7 @@ ChannelHeader/base_type = &"PanelContainer"
 ChannelHeader/styles/panel = SubResource("ThemedStyleBox_ChannelHeader_panel")
 ChannelName/base_type = &"LineEdit"
 ChannelName/font_sizes/font_size = 16
+ChannelToggle/base_type = &"Button"
 CheckBox/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 CheckBox/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 CheckBox/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
@@ -3447,11 +3854,30 @@ CheckButton/styles/hover_pressed = SubResource("Empty")
 CheckButton/styles/normal = SubResource("Empty")
 CheckButton/styles/pressed = SubResource("Empty")
 CheckButton/styles/read_only = SubResource("Empty")
-Clip/colors/audio = Color(0.267, 0.561, 0.392, 1)
-Clip/colors/generator_audio = Color(0.2, 0.55, 0.55, 1)
-Clip/colors/generator_video = Color(0.7, 0.45, 0.15, 1)
-Clip/colors/text = Color(0.55, 0.35, 0.7, 1)
+Clip/colors/audio = Color(0.3, 0.6, 0.37, 1)
+Clip/colors/blue = Color(0.102, 0.373, 0.706, 1)
+Clip/colors/brown = Color(0.55, 0.38, 0.26, 1)
+Clip/colors/cyan = Color(0.23, 0.7, 0.9, 1)
+Clip/colors/generator_audio = Color(0.2, 0.65, 0.63, 1)
+Clip/colors/generator_video = Color(0.88, 0.48, 0.18, 1)
+Clip/colors/gray = Color(0.54, 0.56, 0.59, 1)
+Clip/colors/green = Color(0.3, 0.6, 0.37, 1)
+Clip/colors/lavender = Color(0.66, 0.61, 0.78, 1)
+Clip/colors/lime = Color(0.56, 0.82, 0.31, 1)
+Clip/colors/magenta = Color(0.78, 0.31, 0.75, 1)
+Clip/colors/mango = Color(0.94, 0.63, 0.19, 1)
+Clip/colors/navy = Color(0.18, 0.29, 0.5, 1)
+Clip/colors/orange = Color(0.88, 0.48, 0.18, 1)
+Clip/colors/pink = Color(0.88, 0.44, 0.6, 1)
+Clip/colors/poppy = Color(0.76, 0.36, 0.36, 1)
+Clip/colors/purple = Color(0.55, 0.36, 0.71, 1)
+Clip/colors/red = Color(0.85, 0.22, 0.23, 1)
+Clip/colors/tan = Color(0.79, 0.66, 0.51, 1)
+Clip/colors/text = Color(0.55, 0.36, 0.71, 1)
+Clip/colors/turquoise = Color(0.2, 0.65, 0.63, 1)
 Clip/colors/video = Color(0.102, 0.373, 0.706, 1)
+Clip/colors/yellow = Color(0.9, 0.78, 0.29, 1)
+Clip/constants/waveform_brightness = 30
 ClipButton/base_type = &"Button"
 ClipButton/font_sizes/font_size = 12
 ClipButton/styles/disabled = SubResource("ThemedStyleBox_ClipButton_disabled")
@@ -3470,6 +3896,7 @@ ClipInnerShadow/styles/panel = SubResource("ThemedStyleBox_ClipInnerShadow_panel
 ClipName/base_type = &"Label"
 ClipName/colors/font_color = Color(1, 1, 1, 1)
 ClipName/font_sizes/font_size = 16
+ClipNameEdit/base_type = &"LineEdit"
 ClipOutline/base_type = &"Panel"
 ClipOutline/styles/panel = SubResource("ThemedStyleBox_ClipOutline_panel")
 ClipOutlineInner/base_type = &"Panel"
@@ -3532,7 +3959,7 @@ HeaderLabel/base_type = &"Label"
 HeaderLabel/font_sizes/font_size = 16
 HeaderLabel/fonts/font = ExtResource("7_7hjjl")
 Inspector/colors/arrow = Color(0.92, 0.92, 0.92, 1)
-Inspector/colors/key = Color(1, 0, 1, 1)
+Inspector/colors/key = Color(0.6901961, 0.21960784, 0.12941177, 1)
 Inspector/colors/key_dim = Color(0.537, 0.537, 0.537, 1)
 Inspector/colors/reset = Color(0.537, 0.537, 0.537, 1)
 InspectorAxis/base_type = &"Label"
@@ -3680,6 +4107,19 @@ LinkButton/styles/pressed = SubResource("ThemedStyleBox_LinkButton_pressed")
 LinkButton/styles/read_only = SubResource("ThemedStyleBox_LinkButton_read_only")
 MediaContent/base_type = &"Panel"
 MediaContent/styles/panel = SubResource("StyleBox_s4yqv")
+MediaName/base_type = &"Label"
+MediaOptions/base_type = &"Button"
+MediaOptions/styles/disabled = SubResource("StyleBox_38asi")
+MediaOptions/styles/disabled_mirrored = SubResource("StyleBox_o6ovo")
+MediaOptions/styles/focus = SubResource("StyleBox_p0yto")
+MediaOptions/styles/hover = SubResource("StyleBox_h8mvt")
+MediaOptions/styles/hover_mirrored = SubResource("StyleBox_f6b55")
+MediaOptions/styles/hover_pressed = SubResource("StyleBox_3wvkw")
+MediaOptions/styles/hover_pressed_mirrored = SubResource("StyleBox_6tc3g")
+MediaOptions/styles/normal = SubResource("StyleBox_wutdb")
+MediaOptions/styles/normal_mirrored = SubResource("StyleBox_faoxm")
+MediaOptions/styles/pressed = SubResource("StyleBox_ha7xl")
+MediaOptions/styles/pressed_mirrored = SubResource("StyleBox_tkv0b")
 MenuButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 MenuButton/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 MenuButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
@@ -3697,13 +4137,31 @@ MenuButton/styles/hover_pressed = SubResource("ThemedStyleBox_MenuButton_hover_p
 MenuButton/styles/normal = SubResource("ThemedStyleBox_MenuButton_normal")
 MenuButton/styles/pressed = SubResource("ThemedStyleBox_MenuButton_pressed")
 MenuButton/styles/read_only = SubResource("ThemedStyleBox_MenuButton_read_only")
-Node/colors/audio = Color(0.8117647, 0.3882353, 0.8117647, 1)
-Node/colors/composite = Color(1, 0.4, 0.5019608, 1)
-Node/colors/effect = Color(0.29803923, 0.5921569, 1, 1)
-Node/colors/input = Color(1, 0.7490196, 0, 1)
-Node/colors/keying = Color(0.36078432, 0.69411767, 0.8392157, 1)
-Node/colors/mask = Color(0.6, 0.4, 1, 1)
-Node/colors/math = Color(0.34901962, 0.7529412, 0.34901962, 1)
+Node/colors/audio = Color(0.78, 0.31, 0.75, 1)
+Node/colors/blue = Color(0.102, 0.373, 0.706, 1)
+Node/colors/brown = Color(0.55, 0.38, 0.26, 1)
+Node/colors/composite = Color(0.88, 0.44, 0.6, 1)
+Node/colors/cyan = Color(0.23, 0.7, 0.9, 1)
+Node/colors/effect = Color(0.102, 0.373, 0.706, 1)
+Node/colors/gray = Color(0.54, 0.56, 0.59, 1)
+Node/colors/green = Color(0.3, 0.6, 0.37, 1)
+Node/colors/input = Color(0.94, 0.63, 0.19, 1)
+Node/colors/keying = Color(0.23, 0.7, 0.9, 1)
+Node/colors/lavender = Color(0.66, 0.61, 0.78, 1)
+Node/colors/lime = Color(0.56, 0.82, 0.31, 1)
+Node/colors/magenta = Color(0.78, 0.31, 0.75, 1)
+Node/colors/mango = Color(0.94, 0.63, 0.19, 1)
+Node/colors/mask = Color(0.55, 0.36, 0.71, 1)
+Node/colors/math = Color(0.3, 0.6, 0.37, 1)
+Node/colors/navy = Color(0.18, 0.29, 0.5, 1)
+Node/colors/orange = Color(0.88, 0.48, 0.18, 1)
+Node/colors/pink = Color(0.88, 0.44, 0.6, 1)
+Node/colors/poppy = Color(0.76, 0.36, 0.36, 1)
+Node/colors/purple = Color(0.55, 0.36, 0.71, 1)
+Node/colors/red = Color(0.85, 0.22, 0.23, 1)
+Node/colors/tan = Color(0.79, 0.66, 0.51, 1)
+Node/colors/turquoise = Color(0.2, 0.65, 0.63, 1)
+Node/colors/yellow = Color(0.9, 0.78, 0.29, 1)
 OptionButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 OptionButton/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 OptionButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
@@ -3726,7 +4184,7 @@ Panel/styles/panel = SubResource("ThemedStyleBox_Panel_panel")
 PanelContainer/styles/panel = SubResource("ThemedStyleBox_PanelContainer_panel")
 PlayButton/base_type = &"Button"
 PlayButton/colors/font_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
-PlayButton/colors/font_disabled_color = Color(1, 0, 1, 0.5)
+PlayButton/colors/font_disabled_color = Color(0.6901961, 0.21960784, 0.12941177, 0.5)
 PlayButton/colors/font_focus_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
 PlayButton/colors/font_hover_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
 PlayButton/colors/font_hover_pressed_color = Color(0.6901961, 0.21960784, 0.12941177, 1)
@@ -3808,7 +4266,7 @@ TightHBox/base_type = &"HBoxContainer"
 TightHBox/constants/separation = 0
 TightVBox/base_type = &"VBoxContainer"
 TightVBox/constants/separation = 0
-Timeline/colors/playhead = Color(1, 0, 1, 1)
+Timeline/colors/playhead = Color(0.6901961, 0.21960784, 0.12941177, 1)
 Timeline/colors/snap_line = Color(1, 1, 1, 0.6)
 TimelineSpacer/base_type = &"Panel"
 TimelineSpacer/styles/panel = SubResource("ThemedStyleBox_TimelineSpacer_panel")
@@ -3832,5 +4290,5 @@ ViewBackground/base_type = &"Panel"
 ViewBackground/styles/panel = SubResource("ThemedStyleBox_ViewBackground_panel")
 script = ExtResource("theme")
 Palette = ExtResource("palette")
-ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color")])
+ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color"), SubResource("ColorBinding_Clip_poppy"), SubResource("ColorBinding_Clip_red"), SubResource("ColorBinding_Clip_orange"), SubResource("ColorBinding_Clip_mango"), SubResource("ColorBinding_Clip_yellow"), SubResource("ColorBinding_Clip_green"), SubResource("ColorBinding_Clip_turquoise"), SubResource("ColorBinding_Clip_lime"), SubResource("ColorBinding_Clip_cyan"), SubResource("ColorBinding_Clip_purple"), SubResource("ColorBinding_Clip_pink"), SubResource("ColorBinding_Clip_lavender"), SubResource("ColorBinding_Clip_magenta"), SubResource("ColorBinding_Clip_brown"), SubResource("ColorBinding_Clip_tan"), SubResource("ColorBinding_Clip_gray"), SubResource("ColorBinding_Clip_blue"), SubResource("ColorBinding_Clip_navy"), SubResource("ColorBinding_Node_poppy"), SubResource("ColorBinding_Node_red"), SubResource("ColorBinding_Node_orange"), SubResource("ColorBinding_Node_mango"), SubResource("ColorBinding_Node_yellow"), SubResource("ColorBinding_Node_green"), SubResource("ColorBinding_Node_turquoise"), SubResource("ColorBinding_Node_lime"), SubResource("ColorBinding_Node_cyan"), SubResource("ColorBinding_Node_purple"), SubResource("ColorBinding_Node_pink"), SubResource("ColorBinding_Node_lavender"), SubResource("ColorBinding_Node_magenta"), SubResource("ColorBinding_Node_brown"), SubResource("ColorBinding_Node_tan"), SubResource("ColorBinding_Node_gray"), SubResource("ColorBinding_Node_blue"), SubResource("ColorBinding_Node_navy")])
 FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx"), SubResource("Resource_0ye0x")])

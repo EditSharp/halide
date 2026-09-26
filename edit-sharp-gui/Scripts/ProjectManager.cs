@@ -5,6 +5,7 @@ using EditSharp.Rendering;
 using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public partial class ProjectManager : Node
 {
@@ -95,11 +96,42 @@ public class Project
 	// the media the project has brought in; nodes share them
 	public MediaLibrary Media { get; } = new();
 
+	// every timeline in the project, the edited one first. the list has
+	// history like the media
+	readonly List<Timeline> timelines = [];
+	public IReadOnlyList<Timeline> Timelines => timelines;
+
+	public event Action TimelinesChanged;
+
+	public void AddTimeline(Timeline timeline)
+	{
+		if (timeline is null || timelines.Contains(timeline)) return;
+
+		Transaction.Apply(
+			() => { timelines.Add(timeline); TimelinesChanged?.Invoke(); },
+			() => { timelines.Remove(timeline); TimelinesChanged?.Invoke(); },
+			"add timeline");
+	}
+
+	public void RemoveTimeline(Timeline timeline)
+	{
+		int index = timelines.IndexOf(timeline);
+		if (index < 0 || ReferenceEquals(timeline, Timeline)) return;
+
+		Transaction.Apply(
+			() => { timelines.Remove(timeline); TimelinesChanged?.Invoke(); },
+			() => { timelines.Insert(Math.Min(index, timelines.Count), timeline); TimelinesChanged?.Invoke(); },
+			"remove timeline");
+	}
+
 	// a project around a timeline built in code: its media are whatever the clips read
 	public static Project FromBlueprint(Blueprint blueprint)
 	{
 		Project project = new() { Timeline = blueprint.Timeline, RenderSettings = blueprint.RenderSettings };
 		project.Media.AdoptFrom(blueprint.Timeline);
+
+		using (Transaction.Suppress()) project.AddTimeline(blueprint.Timeline);
+
 		return project;
 	}
 }

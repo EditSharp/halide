@@ -1,0 +1,151 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://bdflxoloq14k8"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://d3nkymp1v2xqp" path="res://Scripts/UI/ContextMenu/Elements/ContextCheckList.cs" id="check"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Used in a Timeline"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Checked = true
+Type = 1
+Text = SubResource("text_1")
+Id = "filter.used"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "Not Used"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Checked = true
+Type = 1
+Text = SubResource("text_3")
+Id = "filter.unused"
+
+[sub_resource type="Resource" id="text_5"]
+script = ExtResource("text")
+Text = "Offline"
+
+[sub_resource type="Resource" id="button_6"]
+script = ExtResource("button")
+Checked = true
+Type = 1
+Text = SubResource("text_5")
+Id = "filter.offline"
+
+[sub_resource type="Resource" id="divider_7"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_8"]
+script = ExtResource("text")
+Text = "Proxy"
+TextWeight = 1
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Not Created"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "filter.proxy.none"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Failed"
+
+[sub_resource type="Resource" id="button_12"]
+script = ExtResource("button")
+Text = SubResource("text_11")
+Id = "filter.proxy.failed"
+
+[sub_resource type="Resource" id="text_13"]
+script = ExtResource("text")
+Text = "In Progress"
+
+[sub_resource type="Resource" id="button_14"]
+script = ExtResource("button")
+Text = SubResource("text_13")
+Id = "filter.proxy.building"
+
+[sub_resource type="Resource" id="text_15"]
+script = ExtResource("text")
+Text = "Created"
+
+[sub_resource type="Resource" id="button_16"]
+script = ExtResource("button")
+Text = SubResource("text_15")
+Id = "filter.proxy.created"
+
+[sub_resource type="Resource" id="check_17"]
+script = ExtResource("check")
+Buttons = Array[ExtResource("button")]([SubResource("button_10"), SubResource("button_12"), SubResource("button_14"), SubResource("button_16")])
+CheckedButtons = Array[int]([0, 1, 2, 3])
+Id = "filter.proxy"
+
+[sub_resource type="Resource" id="divider_18"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_19"]
+script = ExtResource("text")
+Text = "Contains Audio"
+
+[sub_resource type="Resource" id="button_20"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_19")
+Id = "filter.audio"
+
+[sub_resource type="Resource" id="text_21"]
+script = ExtResource("text")
+Text = "Has Alpha"
+
+[sub_resource type="Resource" id="button_22"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_21")
+Id = "filter.alpha"
+
+[sub_resource type="Resource" id="text_23"]
+script = ExtResource("text")
+Text = "Matches Project Frame Rate"
+
+[sub_resource type="Resource" id="button_24"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_23")
+Id = "filter.fps"
+
+[sub_resource type="Resource" id="text_25"]
+script = ExtResource("text")
+Text = "Matches Project Resolution"
+
+[sub_resource type="Resource" id="button_26"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_25")
+Id = "filter.resolution"
+
+[sub_resource type="Resource" id="divider_27"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_28"]
+script = ExtResource("text")
+Text = "Tags"
+
+[sub_resource type="Resource" id="submenu_29"]
+script = ExtResource("submenu")
+Text = SubResource("text_28")
+Id = "filter.tags"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("button_4"), SubResource("button_6"), SubResource("divider_7"), SubResource("text_8"), SubResource("check_17"), SubResource("divider_18"), SubResource("button_20"), SubResource("button_22"), SubResource("button_24"), SubResource("button_26"), SubResource("divider_27"), SubResource("submenu_29")])

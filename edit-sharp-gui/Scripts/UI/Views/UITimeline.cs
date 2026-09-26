@@ -48,11 +48,32 @@ public partial class UITimeline : Control
 	// of its own
 	public ThumbnailCache Thumbnails { get; set; }
 
+	// where audio clips get their waveforms from, handed over the same way
+	public WaveformCache Waveforms { get; set; }
+
+	// a clip's graph button was pressed
+	public event Action<UIClip> GraphRequested;
+
+	// files were dropped on the clips: the page imports them and places what came in
+	public event Action<IReadOnlyList<string>, Vector2> FilesDropped;
+
+	// media placed as linked clips, end to end from a time on a channel and its mirror
+	public void PlaceMedia(IReadOnlyList<EditSharp.Components.Media.IMedia> media, TimeSpan at, bool video, int channelIndex)
+		=> clipsView.PlaceMedia(media, at, video, channelIndex);
+
+	// the same, at a point on screen
+	public void PlaceMediaAt(IReadOnlyList<EditSharp.Components.Media.IMedia> media, Vector2 globalPosition)
+		=> clipsView.PlaceMediaAt(media, globalPosition);
+
 	// the clips selected in the view, as data, and a word when that changes
 	public event EventHandler SelectionChanged;
 	public IReadOnlyList<Clip> SelectedClips => clipsView.SelectedClips;
 
 	void OnClipsSelectionChanged(object sender, EventArgs e) => SelectionChanged?.Invoke(this, EventArgs.Empty);
+
+	void OnGraphRequested(UIClip clip) => GraphRequested?.Invoke(clip);
+
+	void OnFilesDropped(IReadOnlyList<string> files, Vector2 at) => FilesDropped?.Invoke(files, at);
 
 	List<UIChannelEdit> ChannelEdits = [];
 
@@ -506,6 +527,10 @@ public partial class UITimeline : Control
 		clipsView.UITimeline = this;
 		clipsView.SelectionChanged -= OnClipsSelectionChanged;
 		clipsView.SelectionChanged += OnClipsSelectionChanged;
+		clipsView.GraphRequested -= OnGraphRequested;
+		clipsView.GraphRequested += OnGraphRequested;
+		clipsView.FilesDropped -= OnFilesDropped;
+		clipsView.FilesDropped += OnFilesDropped;
 		clipsView.Refresh();
 
 		// update ruler

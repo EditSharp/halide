@@ -2,7 +2,7 @@ namespace EditSharpGUI.Scripts.UI.Theming;
 
 // the colour definitions a theme item can take its colour from - the
 // names in the palette. None leaves a colour alone; Transparent is a
-// colour of its own
+// colour of its own. clip and node colours are swatches, not definitions
 public enum ThemeDefinition
 {
 	None,
@@ -21,24 +21,67 @@ public enum ThemeDefinition
 	WhiteColor,
 	BlackColor,
 
-	VideoClipColor,
-	AudioClipColor,
-	TextClipColor,
-	GeneratorVideoClipColor,
-	GeneratorAudioClipColor,
-
-	EffectNodeColor,
-	MaskNodeColor,
-	MathNodeColor,
-	KeyingNodeColor,
-	InputNodeColor,
-	AudioNodeColor,
-	CompositeNodeColor,
-
 	// the colour of everything to do with time and motion: the playhead,
-	// keyframes, the play button. appended so the numbers the theme file
-	// stores stay valid
+	// keyframes, the play button
 	PlaybackColor
+}
+
+// the colours a clip can wear. each is a palette colour; a clip kind's
+// default and the user's own pick are both one of these
+public enum ClipSwatch
+{
+	Poppy,
+	Red,
+	Orange,
+	Mango,
+	Yellow,
+	Green,
+	Turquoise,
+	Lime,
+	Cyan,
+	Purple,
+	Pink,
+	Lavender,
+	Magenta,
+	Brown,
+	Tan,
+	Gray,
+	Blue,
+	Navy
+}
+
+// the colours a node can wear, one per swatch name like the clips'
+public enum NodeSwatch
+{
+	Poppy,
+	Red,
+	Orange,
+	Mango,
+	Yellow,
+	Green,
+	Turquoise,
+	Lime,
+	Cyan,
+	Purple,
+	Pink,
+	Lavender,
+	Magenta,
+	Brown,
+	Tan,
+	Gray,
+	Blue,
+	Navy
+}
+
+// where a bound colour item takes its value from: a definition, a swatch,
+// or the swatch the palette picks for the item's clip or node kind
+public enum ColorSource
+{
+	Definition,
+	ClipSwatch,
+	NodeSwatch,
+	ClipKind,
+	NodeKind
 }
 
 // how a definition is shifted before use: the same colour, or the shade

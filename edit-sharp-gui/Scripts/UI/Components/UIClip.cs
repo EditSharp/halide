@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using EditSharp;
 using EditSharp.Components.Clips;
-using EditSharp.Components.Nodes.Input;
+using EditSharp.History;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.ContextMenu;
 using EditSharpGUI.Scripts.UI.Theming;
 using EditSharpGUI.Scripts.UI.Thumbnails;
 using static UIClipsView;
@@ -25,8 +26,11 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	[Export] Control controlsBox;
 
 	[Export] Label clipName;
+	[Export] LineEdit nameEdit;
 	[Export] Control speed;
 	[Export] Label speedPercentage;
+	[Export] Button graph;
+	[Export] Button options;
 
 	// the inner controls, least important first. when the clip is too narrow
 	// to hold them all, they are hidden from the front of this list until
@@ -55,9 +59,17 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	public Clip Clip;
 	public UIClipsView ClipsView;
 
-	// the clip's colour is the theme's colour for its kind, painted over the
-	// theme's ClipContent style - so the theme decides both the palette and
-	// the shape, and this only picks which colour
+	// a ghost previews a drop: a clip not on the timeline, laid out on a
+	// row the view names, translucent, taking no mouse
+	public int? GhostRow;
+	public bool IsGhost => GhostRow is not null;
+
+	// the graph button was pressed; opening an editor for it is the page's job
+	public event Action<UIClip> GraphRequested;
+
+	// the clip's colour: its own pick, or the theme's colour for its kind,
+	// painted over the theme's ClipContent style - so the theme decides the
+	// palette and the shape, and this only picks which colour
 	public Color Color
 	{
         get;
@@ -73,31 +85,17 @@ public partial class UIClip : PanelContainer, IDragCancellable
 			}
 
 			field = value;
+			waveform?.SetColor(ClipColors.Waveform(this, value));
 		}
 	}
 
-	// which of the theme's clip colours this clip takes: by what feeds its
-	// graph, since a clip is its graph
-	string ColorKind
-	{
-		get
-		{
-			bool media = Clip.Graph.AllNodes.Any(n => n is VideoMediaNode or TimelineVideoNode or AudioMediaNode or TimelineAudioNode);
-			bool text = Clip.Graph.AllNodes.Any(n => n is TextNode);
+	void ApplyThemeColor() => Color = ClipColors.Resolve(this, Clip);
 
-			if (Clip is AudioClip) return media ? "audio" : "generator_audio";
-			if (text && !media) return "text";
-			return media ? "video" : "generator_video";
-		}
-	}
-
-	void ApplyThemeColor() => Color = GetThemeColor(ColorKind, "Clip");
-
-	// the colour again only when the kind changed - a switch of the clip's
-	// input - since painting it rebuilds the panel's style
+	// the colour again only when it changed - a switch of the clip's input,
+	// a pick from the menu - since painting it rebuilds the panel's style
 	void RefreshThemeColor()
 	{
-		Color wanted = GetThemeColor(ColorKind, "Clip");
+		Color wanted = ClipColors.Resolve(this, Clip);
 		if (wanted != Color) Color = wanted;
 	}
 	public bool Selected
@@ -145,6 +143,22 @@ public partial class UIClip : PanelContainer, IDragCancellable
 			}
 		}
 
+		if (options is not null) options.Pressed += () => ClipsView.ShowClipMenu(this, options);
+		if (graph is not null) graph.Pressed += () => GraphRequested?.Invoke(this);
+
+		if (IsGhost)
+		{
+			SetTransparency(0.5f);
+			IgnoreMouse(this);
+		}
+
+		if (nameEdit is not null)
+		{
+			nameEdit.Visible = false;
+			nameEdit.TextSubmitted += _ => EndRename(commit: true);
+			nameEdit.FocusExited += () => EndRename(commit: true);
+		}
+
 		Refresh();
 		UpdateThumbnail();
 
@@ -154,6 +168,49 @@ public partial class UIClip : PanelContainer, IDragCancellable
 			handle.DragEnded += (_, _) => ClipsView.FinishEdgeDrag(handle);
 			handle.DragCancelled += (_, _) => ClipsView.CancelEdgeDrag(handle);
 		}
+	}
+
+	static void IgnoreMouse(Control control)
+	{
+		control.MouseFilter = MouseFilterEnum.Ignore;
+		foreach (Node child in control.GetChildren()) if (child is Control c) IgnoreMouse(c);
+	}
+
+	// ---- renaming in place ----
+
+	bool renaming;
+
+	// the name label becomes a field until enter or a click elsewhere
+	public void BeginRename()
+	{
+		if (nameEdit is null || renaming) return;
+
+		renaming = true;
+		nameEdit.Text = Clip.Name;
+		nameEdit.Visible = true;
+		clipName.Visible = false;
+		nameEdit.GrabFocus();
+		nameEdit.SelectAll();
+	}
+
+	void EndRename(bool commit)
+	{
+		if (!renaming) return;
+		renaming = false;
+
+		nameEdit.Visible = false;
+		clipName.Visible = true;
+
+		string name = nameEdit.Text.Trim();
+		if (!commit || name.Length == 0 || name == Clip.Name) { FitControls(); return; }
+
+		using (Transaction.Scope change = ClipsView.UITimeline.History.Begin("Rename clip"))
+		{
+			Clip.Name = name;
+			change.Commit();
+		}
+
+		Refresh();
 	}
 
 	// whether this clip is the one wearing the handles - the view picks
@@ -188,6 +245,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	void UpdateHandles()
 	{
+		if (IsGhost) return;
 		if (endControls is not null) endControls.Visible = handlesEnabled;
 		if (startControls is not null) startControls.Visible = handlesEnabled && Clip.Start > TimeSpan.Zero;
 	}
@@ -255,7 +313,11 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	// what a timeshift in progress would set the speed to. Refresh puts the
 	// real value back
-	public void PreviewSpeed(double value) => ShowSpeed(value);
+	public void PreviewSpeed(double value)
+	{
+		ShowSpeed(value);
+		waveform?.SetPreviewSpeed(value);
+	}
 
 	void ShowSpeed(double value)
 	{
@@ -323,7 +385,9 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		{
 			bool show = wanted.Contains(c);
 
-			// leave controls hidden on their own account alone
+			// leave controls hidden on their own account alone. the name
+			// label stays hidden while its field stands in for it
+			if (renaming && c == clipName) continue;
 			if (c.Visible != show && (show || hiddenForWidth.Contains(c))) c.Visible = show;
 		}
 	}
@@ -390,6 +454,9 @@ public partial class UIClip : PanelContainer, IDragCancellable
                 break;
         }
 
+		// a right click opens the clip's menu at the cursor
+		ContextTrigger.Handle(this, at => ClipsView.ShowClipMenu(this, at));
+
 		void Press(MouseButtonState left)
 		{
 			// clicking a clip is clicking the view, as far as the keyboard goes,
@@ -423,15 +490,23 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 		if (content is not null) RefreshThemeColor();
 
+		int row = GhostRow ?? GetChannelsDown();
+
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start),
-			(float)(ClipsView.UITimeline.VerticalScale * (GetChannelsDown() + ClipsView.ChannelOffset))
+			(float)(ClipsView.UITimeline.VerticalScale * (row + ClipsView.ChannelOffset))
 		);
 
 		Size = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Duration),
 			(float)ClipsView.UITimeline.VerticalScale
 		);
+
+		if (IsGhost)
+		{
+			UpdateThumbnail();
+			return;
+		}
 
 		// the start may have moved onto or off zero
 		UpdateHandles();
@@ -440,6 +515,8 @@ public partial class UIClip : PanelContainer, IDragCancellable
 		// the scale may have changed, and any head preview is over
 		UpdateThumbnail();
 		strip?.SetPreviewShift(TimeSpan.Zero);
+		waveform?.SetPreviewShift(TimeSpan.Zero);
+		waveform?.SetPreviewSpeed(null);
 	}
 
 	// show the clip spanning start to end, leaving the data alone - an edge
@@ -451,7 +528,9 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 		// the head moving is the edge sliding over the content, not the
 		// content moving with the edge - tell the strip how far
-		strip?.SetPreviewShift(TimeSpan.FromSeconds((start - Clip.Start).TotalSeconds * Clip.Speed));
+		TimeSpan shift = TimeSpan.FromSeconds((start - Clip.Start).TotalSeconds * Clip.Speed);
+		strip?.SetPreviewShift(shift);
+		waveform?.SetPreviewShift(shift);
 	}
 
 	// move clip ui relative to what is actually stored in data
@@ -504,35 +583,61 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	// ---- the thumbnail ----
 
-	// the filmstrip filling the thumbnail panel, from the scene. video
-	// clips only - an audio clip will get a waveform there instead, later.
-	// it is fed the first time the cache is there to feed it, since the
-	// timeline may hand the cache over after this clip exists
+	// the filmstrip filling the thumbnail panel, from the scene, for video
+	// clips; the waveform beside it, for audio clips. each is fed the first
+	// time its cache is there to feed it, since the timeline may hand the
+	// caches over after this clip exists
 	[Export] ThumbnailStrip strip;
+	[Export] WaveformStrip waveform;
 	bool stripFed;
 
 	void UpdateThumbnail()
 	{
-		if (strip is null || Clip is not VideoClip video) return;
-
-		if (!stripFed)
+		if (Clip is VideoClip video)
 		{
-			if (ClipsView?.UITimeline?.Thumbnails is not ThumbnailCache cache) return;
+			if (waveform is not null) waveform.Visible = false;
+			if (strip is null) return;
 
-			strip.Setup(cache, video);
-			stripFed = true;
+			if (!stripFed)
+			{
+				if (ClipsView?.UITimeline?.Thumbnails is not ThumbnailCache cache) return;
+
+				strip.Setup(cache, video);
+				stripFed = true;
+			}
+
+			strip.SetScale(ClipsView.UITimeline.PixelsPerSecond);
 		}
+		else if (Clip is AudioClip audio)
+		{
+			if (strip is not null) strip.Visible = false;
+			if (waveform is null) return;
 
-		strip.SetScale(ClipsView.UITimeline.PixelsPerSecond);
+			if (!stripFed)
+			{
+				if (ClipsView?.UITimeline?.Waveforms is not WaveformCache cache) return;
+
+				waveform.Setup(cache, audio);
+				waveform.SetColor(ClipColors.Waveform(this, Color));
+				waveform.Visible = true;
+				stripFed = true;
+			}
+
+			waveform.SetScale(ClipsView.UITimeline.PixelsPerSecond);
+		}
 	}
 
 	// the view's window, in the strip's own x. the strip sits inset from
 	// the clip's edge by the scene's margins
 	void KeepThumbnailInView(float left, float right)
 	{
-		if (strip is null) return;
+		Control shown = Clip is VideoClip ? strip : waveform;
+		if (shown is null) return;
 
-		float offset = strip.GlobalPosition.X - GlobalPosition.X;
-		strip.SetVisibleRange(left - Position.X - offset, right - Position.X - offset);
+		float offset = shown.GlobalPosition.X - GlobalPosition.X;
+		float from = left - Position.X - offset, to = right - Position.X - offset;
+
+		strip?.SetVisibleRange(from, to);
+		waveform?.SetVisibleRange(from, to);
 	}
 }

@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://c24hvkyrk1yim"]
 
 [ext_resource type="Script" uid="uid://cbjg1iy54ks5k" path="res://Scripts/UI/Components/UIChannelEdit.cs" id="1_vnlxm"]
+[ext_resource type="Resource" path="res://Menus/Channel.tres" id="2_menu"]
 
-[node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName")]
+[node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName", "muteOrHide", "solo")]
 custom_minimum_size = Vector2(0, 80)
 anchors_preset = 10
 anchor_right = 1.0
@@ -11,6 +12,9 @@ grow_horizontal = 2
 theme_type_variation = &"ChannelHeader"
 script = ExtResource("1_vnlxm")
 channelName = NodePath("Options/Channel Name")
+muteOrHide = NodePath("Options/Toggles/Mute")
+solo = NodePath("Options/Toggles/Solo")
+menu = ExtResource("2_menu")
 
 [node name="Options" type="VBoxContainer" parent="." unique_id=843101200]
 layout_mode = 2
@@ -22,15 +26,22 @@ size_flags_vertical = 0
 theme_type_variation = &"ChannelName"
 text = "Channel 1"
 
-[node name="HFlowContainer" type="HFlowContainer" parent="Options" unique_id=394633359]
+[node name="Toggles" type="HBoxContainer" parent="Options"]
 layout_mode = 2
+theme_type_variation = &"InspectorEditor"
 
-[node name="Button" type="Button" parent="Options/HFlowContainer" unique_id=957318263]
+[node name="Mute" type="Button" parent="Options/Toggles"]
 layout_mode = 2
-size_flags_horizontal = 4
-text = "Hide"
+tooltip_text = "Mute or hide this channel"
+focus_mode = 0
+toggle_mode = true
+theme_type_variation = &"ChannelToggle"
+text = "Mute"
 
-[node name="Button2" type="Button" parent="Options/HFlowContainer" unique_id=579579758]
+[node name="Solo" type="Button" parent="Options/Toggles"]
 layout_mode = 2
-size_flags_horizontal = 4
-text = "Hide"
+tooltip_text = "Solo this channel"
+focus_mode = 0
+toggle_mode = true
+theme_type_variation = &"ChannelToggle"
+text = "Solo"

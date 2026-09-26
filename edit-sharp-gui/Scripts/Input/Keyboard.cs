@@ -23,6 +23,8 @@ public static class Shortcuts
     public const string RippleDeleteAll = "clips.rippleDeleteAll";
     public const string Split = "clips.split";
     public const string SplitAll = "clips.splitAll";
+    public const string MediaRename = "media.rename";
+    public const string MediaImport = "media.import";
 }
 
 // one key plus the modifiers that have to be held with it. Control folds cmd
@@ -106,6 +108,8 @@ public sealed class ShortcutMap
         [Shortcuts.RippleDeleteAll] = [new(Key.Delete, Shift: true)],
         [Shortcuts.Split] = [new(Key.B, Control: true)],
         [Shortcuts.SplitAll] = [new(Key.B, Control: true, Shift: true)],
+        [Shortcuts.MediaRename] = [new(Key.F2)],
+        [Shortcuts.MediaImport] = [new(Key.I, Control: true)],
     };
 
     readonly Dictionary<string, List<KeyCombo>> bindings = Defaults.ToDictionary(d => d.Key, d => d.Value.ToList());

@@ -1,22 +1,114 @@
 [gd_scene format=3 uid="uid://dejc4onqqkvog"]
 
-[node name="Media Item" type="Control" unique_id=1189208708]
-custom_minimum_size = Vector2(120, 70)
-layout_mode = 3
-anchors_preset = 0
-offset_right = 120.0
-offset_bottom = 80.0
+[ext_resource type="Script" path="res://Scripts/UI/Components/UIMediaItem.cs" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="1_c1vod"]
+[ext_resource type="Script" path="res://Scripts/UI/Thumbnails/WaveformView.cs" id="2_wave"]
 
-[node name="Content" type="Panel" parent="." unique_id=618798168]
+[node name="Media Item" type="VBoxContainer" node_paths=PackedStringArray("content", "picture", "waveform", "kindIcon", "options", "outline", "proxy", "nameLabel", "nameEdit")]
+custom_minimum_size = Vector2(120, 0)
+offset_right = 120.0
+offset_bottom = 90.0
+theme_type_variation = &"InspectorVBox"
+script = ExtResource("1_item")
+content = NodePath("Content")
+picture = NodePath("Content/Picture")
+waveform = NodePath("Content/Waveform")
+kindIcon = NodePath("Content/Icon")
+options = NodePath("Content/Options")
+outline = NodePath("Content/Outline")
+proxy = NodePath("Content/Proxy")
+nameLabel = NodePath("Name")
+nameEdit = NodePath("NameEdit")
+
+[node name="Content" type="Panel" parent="."]
+clip_contents = true
+custom_minimum_size = Vector2(120, 67.5)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"MediaContent"
+
+[node name="Picture" type="TextureRect" parent="Content"]
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_type_variation = &"MediaContent"
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Outline" type="Panel" parent="." unique_id=933648710]
+[node name="Waveform" type="Control" parent="Content"]
+visible = false
+layout_mode = 1
+script = ExtResource("2_wave")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Proxy" type="ProgressBar" parent="Content"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = -6.0
+offset_right = -3.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="Icon" type="TextureRect" parent="Content"]
+texture_filter = 4
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = -21.0
+offset_right = 21.0
+offset_bottom = -3.0
+grow_vertical = 0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Options" type="Button" parent="Content"]
+texture_filter = 4
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -27.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = 27.0
+grow_horizontal = 0
+tooltip_text = "Media options"
+focus_mode = 0
+theme_type_variation = &"MediaOptions"
+icon = ExtResource("1_c1vod")
+expand_icon = true
+
+[node name="Outline" type="Panel" parent="Content"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -27,7 +119,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"ClipOutline"
 
-[node name="Inner" type="Panel" parent="Outline" unique_id=1820067490]
+[node name="Inner" type="Panel" parent="Content/Outline"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -37,7 +129,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"ClipOutlineInner"
 
-[node name="Outer" type="Panel" parent="Outline" unique_id=1049982670]
+[node name="Outer" type="Panel" parent="Content/Outline"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -50,3 +142,22 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"ClipOutlineOuter"
+
+[node name="Name" type="Label" parent="."]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"MediaName"
+text = "Media name"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="NameEdit" type="LineEdit" parent="."]
+visible = false
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+theme_type_variation = &"ClipNameEdit"
+text = "Media name"
+alignment = 1

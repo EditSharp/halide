@@ -5,12 +5,16 @@ using EditSharp.History;
 using EditSharpGUI.Scripts;
 using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI;
+using EditSharpGUI.Scripts.UI.ContextMenu;
+using EditSharpGUI.Scripts.UI.DragDrop;
+using EditSharp.Components.Media;
+using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public partial class UIClipsView : PanelContainer, IDragCancellable
+public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 {
 	[ExportGroup("Controls")]
 
@@ -20,8 +24,18 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 
 	[Export] PackedScene clipScene;
 
+	[ExportGroup("Menus")]
+
+	// the clip menu, cloned for every showing so its state and handlers are
+	// the clip's; and the menu for empty space
+	[Export] ContextMenu clipMenu;
+	[Export] ContextMenu viewMenu;
+
 	public UITimeline UITimeline;
 	public List<UIClip> UIClips { get; private set; } = [];
+
+	// a clip's graph button was pressed; the page opens an editor for it
+	public event Action<UIClip> GraphRequested;
 
 
 	// a captured drag can end without a release - the window lost focus, or the
@@ -355,6 +369,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 				break;
 		}
 
+		ContextTrigger.Handle(this, ShowViewMenu);
+
 		if (InputManager.Singleton.Mouse.IsScrolling)
 		{
 			Modifiers mods = InputManager.Singleton.Modifiers;
@@ -378,6 +394,526 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 				AcceptEvent();
 			}
 		}
+	}
+
+	// ---- menus ----
+
+	// the clip's menu, at a point or under its options button. a right click
+	// on a clip that is part of a larger selection offers both the clip and
+	// the whole selection, as two submenus of the same items; the options
+	// button, or a clip on its own, gets the flat menu for that clip
+	public void ShowClipMenu(UIClip clip, Vector2 at) => ShowClipMenu(clip, at, null);
+
+	public void ShowClipMenu(UIClip clip, Control button) => ShowClipMenu(clip, null, button);
+
+	void ShowClipMenu(UIClip clip, Vector2? at, Control button)
+	{
+		if (clipMenu is null) return;
+
+		ClaimKeyboard();
+		MarkTarget(clip);
+
+		bool ofSelection = button is null && Selection.Contains(clip) && Selection.Count > 1;
+		ContextMenu shown;
+
+		if (ofSelection)
+		{
+			ContextMenu one = clipMenu.Clone();
+			ContextMenu all = clipMenu.Clone();
+			ConfigureClipMenu(one, [clip]);
+			ConfigureClipMenu(all, [.. Selection]);
+
+			shown = new ContextMenu
+			{
+				HideOnCheckableItemSelect = clipMenu.HideOnCheckableItemSelect,
+				Elements = [
+					new ContextSubmenu { Id = "clip.this", Text = new("This Clip"), Elements = one.Elements },
+					new ContextSubmenu { Id = "clip.selection", Text = new($"Entire Selection ({Selection.Count})"), Elements = all.Elements },
+				]
+			};
+		}
+		else
+		{
+			shown = clipMenu.Clone();
+			ConfigureClipMenu(shown, [clip]);
+		}
+
+		if (button is not null) ContextMenus.ShowContextMenu(shown, button);
+		else ContextMenus.ShowContextMenu(shown, at);
+	}
+
+	// the menu's state and handlers for a set of clips
+	void ConfigureClipMenu(ContextMenu menu, List<UIClip> targets)
+	{
+		TimeSpan playhead = UITimeline.PlayheadTime;
+		bool spanning = targets.Any(c => c.Clip.Start < playhead && c.Clip.End > playhead);
+		bool anySpanning = UITimeline.Timeline.Channels.SelectMany(c => c.Clips).Any(c => c.Start < playhead && c.End > playhead);
+
+		Wire(menu, "clip.cut", Shortcuts.Cut, true, () => WithTargets(targets, CutSelection));
+		Wire(menu, "clip.copy", Shortcuts.Copy, true, () => WithTargets(targets, CopySelection));
+		Wire(menu, "clip.paste", Shortcuts.Paste, Clipboard.Shared.TryGet(out ClipsItem _), Paste);
+		Wire(menu, "clip.delete", Shortcuts.Delete, true, () => WithTargets(targets, () => DeleteSelection(RippleScope.None)));
+		Wire(menu, "clip.rippleDelete", Shortcuts.RippleDelete, true, () => WithTargets(targets, () => DeleteSelection(RippleScope.OwnChannels)));
+		Wire(menu, "clip.split", Shortcuts.Split, spanning, () => WithTargets(targets, () => SplitAtPlayhead(everything: false)));
+		Wire(menu, "clip.splitAll", Shortcuts.SplitAll, anySpanning, () => SplitAtPlayhead(everything: true));
+		Wire(menu, "clip.rename", null, targets.Count == 1, targets[0].BeginRename);
+		Wire(menu, "clip.resetSpeed", null, targets.Any(c => Math.Abs(c.Clip.Speed - 1d) > 0.0005d), () => ResetSpeed(targets));
+
+		// linked: checked when every target is in one group. one clip alone
+		// cannot be linked to anything, so it can only be unlinked
+		if (menu.Find<ContextButton>("clip.link") is ContextButton link)
+		{
+			Guid?[] groups = [.. targets.Select(c => c.Clip.LinkGroupId).Distinct()];
+			bool linked = groups.Length == 1 && groups[0] is not null;
+			link.Checked = linked;
+			link.Enabled = linked || targets.Count > 1;
+			link.Pressed += () => ToggleLink(targets, link.Checked, wholeSelection: targets.Count > 1);
+		}
+
+		ConfigureColorMenu(menu, targets);
+	}
+
+	void ConfigureColorMenu(ContextMenu menu, List<UIClip> targets)
+	{
+		string[] colors = [.. targets.Select(c => c.Clip.Color).Distinct()];
+
+		// the colour they all share; a mix matches nothing
+		bool mixed = colors.Length != 1;
+		string shared = mixed ? null : colors[0];
+
+		if (menu.Find<ContextRadioList>("clip.color.swatches") is ContextRadioList swatches)
+		{
+			swatches.SelectedButton = -1;
+
+			for (int i = 0; i < swatches.Buttons.Count; i++)
+			{
+				ContextButton button = swatches.Buttons[i];
+				string name = button.Id["clip.color.".Length..];
+
+				if (ClipColors.Swatch(name) is ClipSwatch swatch)
+				{
+					button.Icon = SwatchIcon.Get(GetThemeColor(ClipColors.Item(swatch), "Clip"));
+					if (!mixed && string.Equals(shared, name, StringComparison.OrdinalIgnoreCase)) swatches.SelectedButton = i;
+				}
+			}
+
+			swatches.Selected += button => SetColor(targets, button.Id["clip.color.".Length..]);
+		}
+
+		if (menu.Find<ContextButton>("clip.color.custom") is ContextButton custom)
+		{
+			custom.Checked = !mixed && ClipColors.IsCustom(shared);
+			if (custom.Checked) custom.Icon = SwatchIcon.Get(Color.FromHtml(shared));
+			custom.Pressed += () => PickCustomColor(targets);
+		}
+
+		if (menu.Find<ContextButton>("clip.color.default") is ContextButton fallback)
+		{
+			fallback.Checked = !mixed && shared is null;
+			fallback.Icon = SwatchIcon.Get(GetThemeColor(ClipColors.Kind(targets[0].Clip), "Clip"));
+			fallback.Pressed += () => SetColor(targets, null);
+		}
+	}
+
+	void Wire(ContextMenu menu, string id, string shortcut, bool enabled, Action action)
+	{
+		if (menu.Find<ContextButton>(id) is not ContextButton button) return;
+
+		button.Enabled = enabled;
+		if (shortcut is not null) ContextMenus.SetHint(button, shortcut);
+		button.Pressed += () => action();
+	}
+
+	// runs a selection action on the given clips instead of the selection,
+	// then puts the selection back, less anything the action removed
+	void WithTargets(List<UIClip> targets, Action action)
+	{
+		if (targets.Count == Selection.Count && targets.All(Selection.Contains)) { action(); return; }
+
+		List<UIClip> before = [.. Selection];
+		Selection.Clear();
+		Selection.AddRange(targets);
+
+		action();
+
+		Selection.Clear();
+		Selection.AddRange(before.Where(UIClips.Contains));
+		UpdateSelection();
+	}
+
+	// unlinking one clip takes it out of its group and leaves the rest
+	// linked (a pair dissolves); unlinking the whole selection dissolves
+	// every group in it
+	void ToggleLink(List<UIClip> targets, bool link, bool wholeSelection)
+	{
+		Timeline timeline = UITimeline.Timeline;
+
+		using (Transaction.Scope change = UITimeline.History.Begin(link ? "Link clips" : "Unlink clips"))
+		{
+			if (link) timeline.Link(targets.Select(c => c.Clip));
+			else if (wholeSelection)
+			{
+				foreach (Guid id in targets.Select(c => c.Clip.LinkGroupId).OfType<Guid>().Distinct().ToList())
+					timeline.GetLinkGroup(id)?.Unlink();
+			}
+			else
+			{
+				foreach (UIClip c in targets) timeline.GetLinkGroup(c.Clip.LinkGroupId)?.Remove(c.Clip);
+			}
+
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	void SetColor(List<UIClip> targets, string color)
+	{
+		using (Transaction.Scope change = UITimeline.History.Begin(targets.Count == 1 ? "Colour clip" : $"Colour {targets.Count} clips"))
+		{
+			foreach (UIClip c in targets) c.Clip.Color = color;
+			change.Commit();
+		}
+
+		foreach (UIClip c in targets) c.Refresh();
+	}
+
+	// a colour picker in a popup; the clips follow it live and the pick
+	// becomes one history entry when it closes
+	void PickCustomColor(List<UIClip> targets)
+	{
+		string[] before = [.. targets.Select(c => c.Clip.Color)];
+		string current = before.FirstOrDefault(ClipColors.IsCustom);
+		Color start = current is not null ? Color.FromHtml(current) : targets[0].Color;
+
+		PopupPanel popup = new();
+		ColorPicker picker = new() { Color = start, EditAlpha = false, PickerShape = ColorPicker.PickerShapeType.HsvRectangle };
+		popup.AddChild(picker);
+		AddChild(popup);
+
+		picker.ColorChanged += colour =>
+		{
+			using IDisposable _ = Transaction.Suppress();
+			foreach (UIClip c in targets) { c.Clip.Color = "#" + colour.ToHtml(false); c.Refresh(); }
+		};
+
+		popup.PopupHide += () =>
+		{
+			string picked = "#" + picker.Color.ToHtml(false);
+
+			using (Transaction.Suppress())
+			{
+				for (int i = 0; i < targets.Count; i++) targets[i].Clip.Color = before[i];
+			}
+
+			SetColor(targets, picked);
+			popup.QueueFree();
+		};
+
+		popup.Popup(new Rect2I((Vector2I)InputManager.Singleton.Mouse.CurrentPosition.Round(), Vector2I.Zero));
+	}
+
+	void ResetSpeed(List<UIClip> targets)
+	{
+		using (Transaction.Scope change = UITimeline.History.Begin("Reset speed"))
+		{
+			foreach (UIClip c in targets) c.Clip.Speed = 1d;
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	// the menu for empty space: paste aimed at the clicked channel, the
+	// selection, and a gap opened at the clicked time
+	void ShowViewMenu(Vector2 at)
+	{
+		if (viewMenu is null) return;
+
+		ClaimKeyboard();
+		MarkTarget(GetChannelAtPoint(at));
+
+		TimeSpan time = UITimeline.SnapPoint(UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X), [], includePlayhead: true, out _);
+		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+
+		ContextMenu shown = viewMenu.Clone();
+		Wire(shown, "clips.paste", Shortcuts.Paste, Clipboard.Shared.TryGet(out ClipsItem _), Paste);
+		Wire(shown, "clips.selectAll", Shortcuts.SelectAll, UIClips.Count > 0, SelectAll);
+		Wire(shown, "clips.deselect", null, Selection.Count > 0, DeselectAll);
+		Wire(shown, "clips.insertGap", null, true, () => InsertGap(time, TimeSpan.FromSeconds(1)));
+
+		ContextMenus.ShowContextMenu(shown, at);
+	}
+
+	// opens a gap on every channel: clips spanning the time are split there,
+	// and everything from the time on moves later by the gap
+	public void InsertGap(TimeSpan at, TimeSpan length)
+	{
+		Timeline timeline = UITimeline.Timeline;
+
+		using (Transaction.Scope change = UITimeline.History.Begin("Insert gap"))
+		{
+			HashSet<Guid> groups = [];
+
+			foreach (Clip clip in timeline.Channels.SelectMany(c => c.Clips).Where(c => c.Start < at && c.End > at).ToList())
+			{
+				if (clip.LinkGroupId is Guid id) { if (groups.Add(id)) timeline.GetLinkGroup(id)?.Split(at); }
+				else clip.Split(at);
+			}
+
+			// latest first, so a move never lands on a clip still waiting its turn
+			foreach (Clip clip in timeline.Channels.SelectMany(c => c.Clips).Where(c => c.Start >= at).OrderByDescending(c => c.Start).ToList())
+				clip.Move(clip.Start + length);
+
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	// ---- media dropped in: linked clips, end to end ----
+
+	// files dropped here: the page brings them in and places what came
+	public event Action<IReadOnlyList<string>, Vector2> FilesDropped;
+
+	// where one dropped item would land
+	readonly record struct Placement(IMedia Media, Timeline Embedded, bool Video, int Channel, TimeSpan Start, TimeSpan Duration);
+
+	readonly List<UIClip> ghosts = [];
+	readonly List<Placement> ghostPlacements = [];
+
+	public bool CanDrop(DragPayload payload, Vector2 at) => payload is MediaPayload or TimelinePayload or FilesPayload;
+
+	public void DragOver(DragPayload payload, Vector2 at)
+	{
+		if (DragDrop.Ghost is not null) DragDrop.Ghost.Visible = false;
+
+		List<Placement> placements = Layout(payload, at, out TimeSpan? lineAt);
+		UITimeline.SnapLine = lineAt;
+		ShowGhosts(placements);
+	}
+
+	public void DragLeave()
+	{
+		UITimeline.SnapLine = null;
+		ClearGhosts();
+	}
+
+	public void Drop(DragPayload payload, Vector2 at)
+	{
+		UITimeline.SnapLine = null;
+		ClearGhosts();
+
+		if (payload is FilesPayload files) { FilesDropped?.Invoke(files.Paths, at); return; }
+
+		Place(Layout(payload, at, out _));
+	}
+
+	public void PlaceMediaAt(IReadOnlyList<IMedia> media, Vector2 globalPosition)
+		=> Place(Layout(new MediaPayload(media), globalPosition, out _));
+
+	public void PlaceMedia(IReadOnlyList<IMedia> media, TimeSpan at, bool video, int channelIndex)
+		=> Place(Layout(new MediaPayload(media), at, video, channelIndex));
+
+	// how long an item runs when placed: its natural length, or five
+	// seconds for a still, an unknown file or an empty timeline
+	static TimeSpan DurationOf(object item)
+	{
+		TimeSpan fallback = TimeSpan.FromSeconds(5);
+
+		return item switch
+		{
+			IMedia media => media.TryGetNaturalLength(out TimeSpan? length) && length is TimeSpan l && l > TimeSpan.Zero ? l : fallback,
+			Timeline timeline => timeline.Duration > TimeSpan.Zero ? timeline.Duration : fallback,
+			_ => fallback
+		};
+	}
+
+	List<Placement> Layout(DragPayload payload, Vector2 at, out TimeSpan? lineAt)
+	{
+		(ChannelType type, int index, bool _) = GetChannelAtPoint(at);
+		TimeSpan time = UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X);
+		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+
+		List<object> items = payload switch
+		{
+			MediaPayload m => [.. m.Media],
+			TimelinePayload t => [.. t.Timelines.Where(tl => tl != UITimeline.Timeline)],
+			FilesPayload f => [.. f.Paths.Select(p => (object)p)],
+			_ => []
+		};
+
+		// the head of the row snaps; the rest follow it
+		TimeSpan total = TimeSpan.Zero;
+		foreach (object item in items) total += DurationOf(item);
+		time = UITimeline.SnapDelta(TimeSpan.Zero, [time, time + total], time, [], includePlayhead: true, out lineAt) + time;
+		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+
+		return Layout(items, time, type == ChannelType.Video, index);
+	}
+
+	List<Placement> Layout(DragPayload payload, TimeSpan at, bool video, int channelIndex)
+		=> Layout(payload switch { MediaPayload m => [.. m.Media], TimelinePayload t => [.. t.Timelines], _ => [] }, at, video, channelIndex);
+
+	// end to end from a time, on the channel under the cursor and its
+	// mirror: video channel i pairs with audio channel i. an item that has
+	// no clip for the hovered kind is refused
+	List<Placement> Layout(List<object> items, TimeSpan at, bool video, int channelIndex)
+	{
+		List<Placement> placements = [];
+		TimeSpan cursor = at;
+
+		foreach (object item in items)
+		{
+			TimeSpan duration = DurationOf(item);
+
+			switch (item)
+			{
+				case VideoMedia media:
+					placements.Add(new(media, null, true, channelIndex, cursor, duration));
+					if (media.Audio is not null) placements.Add(new(media.Audio, null, false, channelIndex, cursor, duration));
+					else if (!video) continue;
+					break;
+
+				case AudioMedia audio:
+					if (video) continue;
+					placements.Add(new(audio, null, false, channelIndex, cursor, duration));
+					break;
+
+				case Timeline timeline:
+					placements.Add(new(null, timeline, true, channelIndex, cursor, duration));
+					placements.Add(new(null, timeline, false, channelIndex, cursor, duration));
+					break;
+
+				default:
+					// a file not yet in the library: a stand-in for the preview
+					placements.Add(new(null, null, video, channelIndex, cursor, duration));
+					break;
+			}
+
+			cursor += duration;
+		}
+
+		return placements;
+	}
+
+	// ghosts are clips of the placements, off the timeline and translucent,
+	// laid out on the rows the drop would land on. they are remade when
+	// the items change and only moved otherwise
+	void ShowGhosts(List<Placement> placements)
+	{
+		bool same = ghosts.Count == placements.Count && ghostPlacements.Count == placements.Count
+			&& placements.Zip(ghostPlacements).All(p => ReferenceEquals(p.First.Media, p.Second.Media) && ReferenceEquals(p.First.Embedded, p.Second.Embedded) && p.First.Video == p.Second.Video);
+
+		if (!same)
+		{
+			ClearGhosts();
+
+			foreach (Placement p in placements)
+			{
+				Clip clip = GhostClip(p);
+				if (clip is null) continue;
+
+				UIClip ghost = clipScene.Instantiate<UIClip>();
+				ghost.Clip = clip;
+				ghost.ClipsView = this;
+				ghost.GhostRow = 0;
+				ghosts.Add(ghost);
+				clipsControl.AddChild(ghost);
+			}
+
+			ghostPlacements.Clear();
+			ghostPlacements.AddRange(placements);
+		}
+
+		int videoCount = UITimeline.Timeline.VideoChannels.Count;
+
+		for (int i = 0; i < ghosts.Count && i < placements.Count; i++)
+		{
+			Placement p = placements[i];
+			int row = p.Video ? videoCount - 1 - p.Channel : videoCount + p.Channel;
+
+			using (Transaction.Suppress())
+			{
+				ghosts[i].Clip.Start = p.Start;
+				ghosts[i].Clip.Duration = p.Duration;
+			}
+
+			ghosts[i].GhostRow = row;
+			ghosts[i].Visible = row >= 0;
+			ghosts[i].Refresh();
+		}
+
+		// above every clip, selected or not, like a selection being dragged
+		int top = UIClips.Select(c => c.ZIndex).DefaultIfEmpty(0).Max() + 1;
+		foreach (UIClip ghost in ghosts)
+		{
+			ghost.ZIndex = top;
+			clipsControl.MoveChild(ghost, -1);
+		}
+	}
+
+	// a clip of what the placement would make, never placed
+	static Clip GhostClip(Placement p) => Transaction.Suppressed<Clip>(() =>
+	{
+		if (p.Embedded is Timeline embedded)
+			return p.Video ? VideoClip.CreateTimelineEmbed(embedded, p.Start, p.Duration) : AudioClip.CreateTimelineEmbed(embedded, p.Start, p.Duration);
+		if (p.Media is VideoMedia video) return VideoClip.CreateFromMedia(video, p.Start, p.Duration);
+		if (p.Media is AudioMedia audio) return AudioClip.CreateFromMedia(audio, p.Start, p.Duration);
+
+		// a file not in the library yet stands in as an empty clip
+		Clip blank = p.Video ? VideoClip.CreateColorGenerator(new SkiaSharp.SKColor(0, 0, 0, 0), p.Start, p.Duration) : AudioClip.CreateTone(p.Start, p.Duration);
+		blank.Name = "Import";
+		return blank;
+	});
+
+	void ClearGhosts()
+	{
+		foreach (UIClip ghost in ghosts) ghost.QueueFree();
+		ghosts.Clear();
+		ghostPlacements.Clear();
+	}
+
+	// the clips, made and placed in one entry. a video and its soundtrack,
+	// or a timeline's picture and sound, are linked
+	void Place(List<Placement> placements)
+	{
+		List<Clip> made = [];
+		if (placements.Count == 0) return;
+
+		using (Transaction.Scope change = UITimeline.History.Begin(placements.Count == 1 ? "Add clip" : "Add clips"))
+		{
+			Dictionary<(object Source, TimeSpan Start), List<Clip>> pairs = [];
+
+			foreach (Placement p in placements)
+			{
+				Clip clip;
+
+				if (p.Embedded is Timeline embedded)
+					clip = p.Video ? VideoClip.CreateTimelineEmbed(embedded, p.Start, p.Duration) : AudioClip.CreateTimelineEmbed(embedded, p.Start, p.Duration);
+				else if (p.Media is VideoMedia video)
+					clip = VideoClip.CreateFromMedia(video, p.Start, p.Duration);
+				else if (p.Media is AudioMedia audio)
+					clip = AudioClip.CreateFromMedia(audio, p.Start, p.Duration);
+				else continue;
+
+				clip.Name = p.Embedded is not null ? "Timeline" : p.Media.Name;
+				EnsureChannel(p.Video, p.Channel).AddClip(clip);
+				made.Add(clip);
+
+				object source = p.Embedded ?? (object)(p.Media is AudioMedia a && placements.Any(o => o.Media is VideoMedia v && ReferenceEquals(v.Audio, a)) ? placements.First(o => o.Media is VideoMedia v && ReferenceEquals(v.Audio, a)).Media : p.Media);
+				if (!pairs.TryGetValue((source, p.Start), out List<Clip> group)) pairs[(source, p.Start)] = group = [];
+				group.Add(clip);
+			}
+
+			foreach (List<Clip> group in pairs.Values) if (group.Count > 1) UITimeline.Timeline.Link(group);
+
+			change.Commit();
+		}
+
+		UITimeline.RefreshChannelEdits();
+		Reconcile();
+		SelectClips(made);
 	}
 
 	// ---- rubber-band selection: a drag on empty space ----
@@ -541,6 +1077,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 		clip.ClipsView = this;
 
 		UIClips.Add(clip);
+		clip.GraphRequested += c => GraphRequested?.Invoke(c);
 
 		clipsControl.AddChild(clip);
 
@@ -699,7 +1236,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable
 	// middle of one must not vanish
 	void FollowCursorWithHandles()
 	{
-		if (dragClip is not null || edgeDrag is not null || box.Active) return;
+		if (dragClip is not null || edgeDrag is not null || box.Active || ghosts.Count > 0) return;
 
 		Vector2 cursor = InputManager.Singleton.Mouse.CurrentPosition;
 		if (!UITimeline.ViewContains(cursor)) return;

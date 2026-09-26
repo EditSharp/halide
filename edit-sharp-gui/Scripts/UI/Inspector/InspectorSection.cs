@@ -2,6 +2,7 @@ using EditSharp.Components.Media;
 using EditSharp.Components.Nodes;
 using EditSharp.Editing;
 using EditSharp.History;
+using EditSharpGUI.Scripts.UI.DragDrop;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,23 @@ namespace EditSharpGUI.Scripts.UI.Inspecting;
 // media a media property holds. Section.tscn and Subsection.tscn lay the
 // two kinds out; the inspector instantiates whichever fits
 [Tool]
-public partial class InspectorSection : VBoxContainer
+public partial class InspectorSection : VBoxContainer, IDropTarget
 {
+	// a media dropped on a section with a media picker becomes that property's
+	// media; a file is brought in first
+	public bool CanDrop(DragPayload payload, Vector2 at) => mediaDescriptor is not null && inspector is not null && payload switch
+	{
+		MediaPayload m => m.Media.Count == 1 && mediaDescriptor.ValueType.IsInstanceOfType(m.Media[0]),
+		FilesPayload f => f.Paths.Count == 1,
+		_ => false
+	};
+
+	public void Drop(DragPayload payload, Vector2 at)
+	{
+		if (payload is MediaPayload m) Assign(m.Media[0], $"Change {Title}");
+		else if (payload is FilesPayload f) Bring(f.Paths[0]);
+	}
+
 	[Export] SectionHeader header;
 	[Export] Control headerControls;
 	[Export] Control indent;

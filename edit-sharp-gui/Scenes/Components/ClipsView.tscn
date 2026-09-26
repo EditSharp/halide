@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://bbw047hdqq7rv" path="res://Scripts/UI/Components/UIClipsView.cs" id="1_htyfg"]
 [ext_resource type="Script" uid="uid://6dhsh8k0xxmq" path="res://Scripts/UI/FitToChildren.cs" id="2_4clo1"]
 [ext_resource type="PackedScene" uid="uid://beu01cbn6y6ug" path="res://Scenes/Components/Clip.tscn" id="3_nspqo"]
+[ext_resource type="Resource" path="res://Menus/Clip.tres" id="4_clipmenu"]
+[ext_resource type="Resource" path="res://Menus/ClipsView.tres" id="5_viewmenu"]
 
 [node name="Clips View" type="PanelContainer" unique_id=1508855282 node_paths=PackedStringArray("clipsControl", "chasm")]
 anchors_preset = 15
@@ -14,6 +16,8 @@ script = ExtResource("1_htyfg")
 clipsControl = NodePath("Clips")
 chasm = NodePath("")
 clipScene = ExtResource("3_nspqo")
+clipMenu = ExtResource("4_clipmenu")
+viewMenu = ExtResource("5_viewmenu")
 
 [node name="Clips" type="Control" parent="." unique_id=361613671]
 layout_mode = 2

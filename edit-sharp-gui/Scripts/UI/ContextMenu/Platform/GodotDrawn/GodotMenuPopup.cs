@@ -117,6 +117,27 @@ public partial class GodotMenuPopup : PopupPanel
         // to the right of the row, in the same space this popup is positioned in
         Vector2I at = Position + (Vector2I)row.GlobalPosition.Round() + new Vector2I((int)row.Size.X, -(int)column.Position.Y);
         submenu.Popup(new Rect2I(at, Vector2I.Zero));
+        submenu.KeepOnScreen();
+    }
+
+    // the popup's top-left stays where it was asked for unless that would put
+    // part of it off the screen (or the main window, when embedded); then it
+    // moves the least distance that brings it inside
+    public void KeepOnScreen()
+    {
+        Rect2I bounds;
+        if (IsEmbedded()) bounds = new Rect2I(Vector2I.Zero, (Vector2I)GetTree().Root.GetVisibleRect().Size);
+        else bounds = DisplayServer.ScreenGetUsableRect(DisplayServer.WindowGetCurrentScreen(GetWindowId()));
+
+        Vector2I position = Position;
+        Vector2I size = Size;
+
+        if (position.X + size.X > bounds.End.X) position.X = bounds.End.X - size.X;
+        if (position.Y + size.Y > bounds.End.Y) position.Y = bounds.End.Y - size.Y;
+        if (position.X < bounds.Position.X) position.X = bounds.Position.X;
+        if (position.Y < bounds.Position.Y) position.Y = bounds.Position.Y;
+
+        if (position != Position) Position = position;
     }
 
     void CloseSubmenu()
@@ -196,6 +217,12 @@ public partial class GodotMenuPopup : PopupPanel
     }
 
     // ---- for previews ----
+
+    // the focused row, picked as enter would pick it
+    public void ActivateFocused()
+    {
+        foreach (Row row in rows) if (row.HasFocus()) { Activate(row); return; }
+    }
 
     // where this popup was on screen last frame, in screen pixels; safe to read from any thread
     public Rect2I LastScreenRect { get; private set; }

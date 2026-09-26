@@ -185,6 +185,7 @@ anchors_preset = 9
 anchor_bottom = 1.0
 grow_vertical = 2
 size_flags_horizontal = 0
+mouse_filter = 2
 texture = SubResource("GradientTexture1D_1s8ef")
 expand_mode = 1
 

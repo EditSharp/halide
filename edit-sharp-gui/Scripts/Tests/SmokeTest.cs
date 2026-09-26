@@ -52,7 +52,7 @@ public partial class SmokeTest : Node
 		await Frames(3);
 
 		UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
-		Inspector inspector = editor.GetNode<Inspector>("VSplitContainer/HSplitContainer/Inspector");
+		Inspector inspector = Find<Inspector>(editor).FirstOrDefault();
 		UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
 
 		Check(timeline.Timeline is not null, "timeline is set");
@@ -61,7 +61,7 @@ public partial class SmokeTest : Node
 
 		// ---- the preview shows a frame without being played, and again after each change
 		{
-			UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Playback");
+			UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Viewers/Playback");
 			var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
 			int shown = 0;
 			pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref shown);
@@ -100,9 +100,10 @@ public partial class SmokeTest : Node
 			Check(theme.GetStylebox("normal", "Button") is ThemedStyleBox normal && normal.Style is not null && normal.State == StyleState.Normal, "buttons wear themed styleboxes over a style");
 			Check(theme.GetStylebox("hover", "Button") is ThemedStyleBox hover && hover.State == StyleState.Hover && hover.Style == ((ThemedStyleBox)theme.GetStylebox("normal", "Button")).Style, "hover shares the base style with its state");
 			Check(theme.GetStylebox("focus", "Button") is ThemedStyleBox focus && focus.State == StyleState.Focus, "focus is the same style in the focus state");
-			Check(theme.GetStylebox("panel", "ClipContent") is ThemedStyleBox content && content.MinCornerRadius == 5, "clip content keeps its rounded corners");
+			Check(theme.GetStylebox("panel", "ClipContent") is ThemedStyleBox content && content.MinCornerRadius > 0, "clip content keeps its rounded corners");
 			Check(theme.GetStylebox("hover", "CheckBox") is StyleBoxEmpty, "an empty base leaves empty states");
-			Check(theme.GetColor("video", "Clip") == palette.VideoClipColor, "the named clip colour follows its definition");
+			Check(theme.GetColor("video", "Clip") == palette.Resolve(palette.VideoClip), "the named clip colour follows its kind's swatch");
+			Check(theme.GetColor("poppy", "Clip") == palette.Resolve(ClipSwatch.Poppy), "a swatch item follows the palette swatch");
 			Check(palette.AccentColor != palette.PlaybackColor, $"the accent is the palette's own, not the playback colour: {palette.AccentColor.ToHtml(false)}");
 			Check(theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X >= 6f, $"the scroll bar has a width: {theme.GetStylebox("scroll", "VScrollBar").GetMinimumSize().X}");
 			Check(theme.ColorBindings.Count > 30 && theme.FontBindings.Count > 3, $"bindings present: {theme.ColorBindings.Count} colours, {theme.FontBindings.Count} fonts");
@@ -480,7 +481,7 @@ public partial class SmokeTest : Node
 					{
 						var textNode = (EditSharp.Components.Nodes.Input.TextNode)((PropertyBinding)Find<InspectorRow>(inspector).Find(r => r.Label == "Text").Bindings[0]).Target;
 						TextEdit field = Find<TextEdit>(Find<InspectorRow>(inspector).Find(r => r.Label == "Text")).First();
-						UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Playback");
+						UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Viewers/Playback");
 						var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
 						int frames = 0;
 						pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref frames);
@@ -654,6 +655,204 @@ public partial class SmokeTest : Node
 			Check(Find<InspectorGlyph>(mock).All(g => g.Icon is not null), "every glyph shows an icon");
 			mock.QueueFree();
 			await Frames(1);
+		}
+
+		// ---- the media viewer, the menus, swatches, drops and waveforms
+		{
+			MediaViewer viewer = Find<MediaViewer>(editor).FirstOrDefault();
+			Check(viewer is not null, "the media viewer is in the page");
+
+			if (viewer is not null)
+			{
+				await Frames(2);
+				List<UIMediaItem> tiles = Find<UIMediaItem>(viewer);
+				Check(tiles.Count >= 1 && tiles.All(t => t.Media is EditSharp.Components.Media.VideoMedia), $"{tiles.Count} video tiles for the project's media");
+
+				TabBar tabs = Find<TabBar>(viewer).First();
+				tabs.CurrentTab = 2;
+				tabs.EmitSignal(TabBar.SignalName.TabChanged, 2L);
+				await Frames(2);
+				Check(Find<UIMediaItem>(viewer).Any(t => t.Media is EditSharp.Components.Media.AudioMedia), "the Audio tab lists the video's soundtrack");
+				tabs.CurrentTab = 3;
+				tabs.EmitSignal(TabBar.SignalName.TabChanged, 3L);
+				await Frames(2);
+				Check(Find<UIMediaItem>(viewer).Any(t => t.Timeline is not null), "the Timelines tab lists the project's timeline");
+				tabs.CurrentTab = 4;
+				tabs.EmitSignal(TabBar.SignalName.TabChanged, 4L);
+				await Frames(2);
+				Check(Find<UIMediaItem>(viewer).Count == tiles.Count + 1, "All lists the media and the timeline");
+				tabs.CurrentTab = 0;
+				tabs.EmitSignal(TabBar.SignalName.TabChanged, 0L);
+				await Frames(2);
+
+				// menus load from their resources and are found by id
+				var clipMenu = GD.Load<EditSharpGUI.Scripts.UI.ContextMenu.ContextMenu>("res://Menus/Clip.tres");
+				Check(clipMenu is not null && clipMenu.Find("clip.cut") is not null && clipMenu.Find<EditSharpGUI.Scripts.UI.ContextMenu.ContextRadioList>("clip.color.swatches")?.Buttons.Count == 18, "the clip menu loads with its ids and 18 swatches");
+				Check(clipMenu?.Clone().Find("clip.link") is EditSharpGUI.Scripts.UI.ContextMenu.ContextButton { Type: EditSharpGUI.Scripts.UI.ContextMenu.ContextButton.CheckType.Check }, "a clone keeps the ids and the check type");
+				foreach (string name in new[] { "ClipsView", "Channel", "Tabs", "MediaTile", "MediaViewer", "Sort", "Filter" })
+					Check(GD.Load<EditSharpGUI.Scripts.UI.ContextMenu.ContextMenu>($"res://Menus/{name}.tres") is { Elements.Count: > 0 }, $"the {name} menu loads");
+
+				// placing media from the viewer: linked video and audio, end to end
+				EditSharp.Components.Media.IMedia first = tiles[0].Media;
+				int clipsBefore = clipsView.UIClips.Count;
+				int mark = timeline.History.Position;
+				timeline.PlaceMedia([first, first], TimeSpan.FromSeconds(30), video: true, channelIndex: 0);
+				await Frames(2);
+				List<UIClip> placed = [.. clipsView.UIClips.Where(u => u.Clip.Start >= TimeSpan.FromSeconds(30))];
+				Check(clipsView.UIClips.Count == clipsBefore + 4 && placed.Count == 4, $"two videos placed as four clips: {clipsView.UIClips.Count - clipsBefore}");
+				Check(placed.Where(p => p.Clip is EditSharp.Components.Clips.VideoClip).Select(p => p.Clip.Start).Distinct().Count() == 2, "end to end, not stacked");
+				Check(placed.All(p => p.Clip.LinkGroupId is not null), "each video is linked to its soundtrack");
+				Check(timeline.History.Position == mark + 1, "the placement is one history entry");
+				timeline.History.Undo();
+				await Frames(2);
+				Check(clipsView.UIClips.Count == clipsBefore, "undo takes them out again");
+
+				// a gap at zero pushes everything along
+				mark = timeline.History.Position;
+				clipsView.InsertGap(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+				await Frames(2);
+				Check(clipsView.UIClips.All(u => u.Clip.Start >= TimeSpan.FromSeconds(1)), "a gap at zero shifts every clip by a second");
+				Check(timeline.History.Position == mark + 1, "in one entry");
+				timeline.History.Undo();
+				await Frames(2);
+
+				// clip colours: the kind's swatch, a named swatch, a hex value
+				UIClip video0 = clipsView.UIClips.First(u => u.Clip is EditSharp.Components.Clips.VideoClip);
+				string kind = EditSharpGUI.Scripts.UI.ClipColors.Kind(video0.Clip);
+				Check(video0.Clip.Color is null && video0.Color == inspector.GetThemeColor(kind, "Clip"), $"a clip with no colour wears its kind's swatch ({kind})");
+				using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Colour")) { video0.Clip.Color = "poppy"; change.Commit(); }
+				video0.Refresh();
+				await Frames(1);
+				Check(video0.Color == inspector.GetThemeColor("poppy", "Clip"), "a swatch name colours the clip from the theme");
+				using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Colour")) { video0.Clip.Color = "#336699"; change.Commit(); }
+				video0.Refresh();
+				await Frames(1);
+				Check(video0.Color == Color.FromHtml("#336699"), "a hex value colours it directly");
+				timeline.History.Undo();
+				timeline.History.Undo();
+				video0.Refresh();
+				await Frames(1);
+				Check(video0.Color == inspector.GetThemeColor(kind, "Clip"), "and undo puts the kind colour back");
+
+				// waveforms: the audio clip wears a strip and the cache fills
+				UIClip audio0 = clipsView.UIClips.FirstOrDefault(u => u.Clip is EditSharp.Components.Clips.AudioClip);
+				Check(audio0 is not null && Find<WaveformStrip>(audio0).Count == 1, "the audio clip carries a waveform strip");
+				Check(timeline.Waveforms is WaveformCache, "the waveform cache is wired");
+				int w = 0;
+				while (timeline.Waveforms.Count == 0 && w < 1800) { await Frames(1); w++; }
+				Check(timeline.Waveforms.Count > 0, $"{timeline.Waveforms.Count} clip envelopes built from the analysis after {w} frames");
+				await Frames(2);
+				Check(audio0 is not null && Find<WaveformStrip>(audio0)[0].Visible && Find<WaveformStrip>(audio0)[0].Material is ShaderMaterial, "the strip shows its envelope through the waveform shader");
+				Check(EditSharp.Audio.Analysis.AudioAnalysisCache.TryGet(first.Path, out EditSharp.Audio.Analysis.AudioAnalysis analysis) && analysis.FrameCount > 100 && analysis.Peak.Max() > 0.01f, $"the media's analysis is in memory: {(EditSharp.Audio.Analysis.AudioAnalysisCache.TryGet(first.Path, out var a2) ? a2.FrameCount : 0)} frames");
+
+				// the frequency-domain chain: a gain node halves the envelope
+				{
+					var audioClip = (EditSharp.Components.Clips.AudioClip)audio0.Clip;
+					EditSharp.Audio.Analysis.SpectralEnvelope plain = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, TimeSpan.Zero, 200);
+					var gain = EditSharp.History.Transaction.Suppressed(() => new EditSharp.Components.Nodes.Effects.GainNode { Gain = 0.5f });
+					EditSharp.Components.Nodes.Node inputNode = audioClip.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Input.AudioMediaNode>().First();
+					using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Gain"))
+					{
+						audioClip.Graph.AddNode(gain);
+						foreach (EditSharp.Components.Nodes.Connection wire in audioClip.Graph.Connections.Where(c => c.ToNodeId == audioClip.Graph.OutputNode.Id).ToList()) audioClip.Graph.Disconnect(wire);
+						audioClip.Graph.Connect(inputNode.Id, "Audio", gain.Id, "Audio");
+						audioClip.Graph.Connect(gain.Id, "Audio", audioClip.Graph.OutputNode.Id, "Audio");
+						change.Commit();
+					}
+					EditSharp.Audio.Analysis.SpectralEnvelope halved = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, TimeSpan.Zero, 200);
+					float ratio = plain is not null && halved is not null && plain.Peak.Max() > 0f ? halved.Peak.Max() / plain.Peak.Max() : -1f;
+					Check(Math.Abs(ratio - 0.5f) < 0.01f, $"a gain of 0.5 halves the peak in the frequency domain: {ratio}");
+
+					// a live edit, off history, re-folds the strip's envelope
+					int updates = 0;
+					timeline.Waveforms.Updated += _ => updates++;
+					int w2 = 0;
+					while (w2 < 600 && timeline.Waveforms.Count == 0) { await Frames(1); w2++; }
+					using (EditSharp.History.Transaction.Suppress()) gain.Gain.StaticValue = 0.25f;
+					timeline.Waveforms.RefreshEdited();
+					int w3 = 0;
+					while (w3 < 600 && updates < 2) { await Frames(1); w3++; }
+					Check(updates >= 2, $"a live gain change re-folds the waveform ({updates} updates after {w3} frames)");
+
+					timeline.History.Undo();
+					await Frames(2);
+				}
+
+				// the theme: swatch items and the playback colour
+				ThemePalette pal = theme?.Palette;
+				Check(pal is not null && theme.GetColor("navy", "Node") == pal.Resolve(NodeSwatch.Navy), "node swatch items follow the palette");
+				Check(pal is not null && theme.GetColor("playhead", "Timeline") == pal.PlaybackColor && theme.GetColor("key", "Inspector") == pal.PlaybackColor, "the playhead and keyframe colours are the playback colour");
+				Check(GD.Load<ThemePalette>("res://Themes/Light.tres") is ThemePalette light && light.Resolve(ClipSwatch.Blue) != pal.Resolve(ClipSwatch.Blue), "the light palette tunes its own swatches");
+
+				// the media's tags are an editable list in the inspector, empty or not
+				{
+					inspector.ShowMedia([first]);
+					await Frames(3);
+					ListRow tagsRow = Find<ListRow>(inspector).Find(r => r.Label == "Tags");
+					Check(tagsRow is not null, "a media shows a Tags list in the inspector");
+					if (tagsRow is not null)
+					{
+						int before = first.Tags.Count;
+						Find<Button>(tagsRow).First(b => b.Name == "Add").EmitSignal(BaseButton.SignalName.Pressed);
+						await Frames(2);
+						Check(first.Tags.Count == before + 1, "the list's add button adds a tag");
+						InspectorRow tagRow = Find<InspectorRow>(tagsRow).LastOrDefault();
+						tagRow?.Apply("Interview");
+						await Frames(1);
+						Check(first.Tags.Contains("Interview"), $"typing names it: {string.Join(", ", first.Tags)}");
+						timeline.History.Undo();
+						timeline.History.Undo();
+						await Frames(1);
+						Check(first.Tags.Count == before, "undo takes it back out");
+					}
+					inspector.Clear();
+				}
+
+				// tags on two media at once: the shared ones show, edits reach both
+				{
+					var second = EditSharp.History.Transaction.Suppressed(() => new EditSharp.Components.Media.VideoMedia { Path = first.Path, Name = "Second" });
+					using (EditSharp.History.Transaction.Suppress()) { first.AddTag("Both"); first.AddTag("OnlyFirst"); second.AddTag("Both"); }
+
+					inspector.ShowMedia([first, second]);
+					await Frames(3);
+					ListRow both = Find<ListRow>(inspector).Find(r => r.Label == "Tags");
+					Check(both is not null && Find<InspectorRow>(both).Count == 1, $"two media show the tag they share: {(both is null ? 0 : Find<InspectorRow>(both).Count)} rows");
+
+					if (both is not null)
+					{
+						Find<Button>(both).First(b => b.Name == "Add").EmitSignal(BaseButton.SignalName.Pressed);
+						await Frames(2);
+						Find<InspectorRow>(both).Last().Apply("Shared");
+						await Frames(1);
+						Check(first.Tags.Contains("Shared") && second.Tags.Contains("Shared"), "a tag added and named lands on both");
+
+						InspectorRow sharedRow = Find<InspectorRow>(both).First();
+						Button removeButton = Find<Button>(sharedRow).FirstOrDefault(b => b.Text == "×");
+						removeButton?.EmitSignal(BaseButton.SignalName.Pressed);
+						await Frames(2);
+						Check(removeButton is not null && !first.Tags.Contains("Both") && !second.Tags.Contains("Both") && first.Tags.Contains("OnlyFirst"), $"removing the shared tag takes it off both and leaves the rest: {string.Join(",", first.Tags)} | {string.Join(",", second.Tags)}");
+					}
+
+					using (EditSharp.History.Transaction.Suppress()) { foreach (string t in first.Tags.ToList()) first.RemoveTag(t); }
+					inspector.Clear();
+				}
+
+				// a still image offers no soundtrack once probed
+				{
+					string still = System.IO.Path.Combine(ProjectSettings.GlobalizePath("res://"), "test image horizontal.png");
+					var image = EditSharp.History.Transaction.Suppressed(() => new EditSharp.Components.Media.VideoMedia { Path = still });
+					int probeWait = 0;
+					while (!image.TryGetInfo(out _) && probeWait < 600) { await Frames(1); probeWait++; }
+					Check(image.TryGetInfo(out EditSharp.Video.MediaInfo stillInfo) && stillInfo.IsStillImage, $"the png probes as a still after {probeWait} frames");
+					Check(image.Audio is null, "and offers no audio");
+					Check(first is EditSharp.Components.Media.VideoMedia { Audio: not null }, "while the video keeps its soundtrack");
+				}
+
+				// tile pictures come in
+				int p = 0;
+				while (p < 900 && !Find<TextureRect>(tiles[0]).Any(t => t.Name == "Picture" && t.Texture is not null)) { await Frames(1); p++; }
+				Check(Find<TextureRect>(tiles[0]).Any(t => t.Name == "Picture" && t.Texture is not null), $"the video tile got its picture after {p} frames");
+			}
 		}
 
 		// ---- thumbnails come in

@@ -40,12 +40,26 @@ public partial class UIPlayback : Control
 
 	public void SetPlayback(Playback p)
 	{
+		// the one before is let go of: unhooked, stopped and disposed
+		if (playback is not null)
+		{
+			playback.VideoFrame -= OnVideoFrame;
+			playback.AudioSample -= OnAudioSample;
+			playback.EndReached -= OnEndReached;
+			if (playback.State != PlaybackState.Inactive) playback.Stop();
+			playback.Dispose();
+			SetPlayButtonText("Play");
+		}
+
 		playback = p;
+		if (playback is null) return;
 
 		playback.VideoFrame += OnVideoFrame;
 		playback.AudioSample += OnAudioSample;
 		playback.EndReached += OnEndReached;
 	}
+
+	public Playback Playback => playback;
 
 	// where playback is, as far as anything watching from outside should know -
 	// a timeline playhead, say. raised on the main thread only: from _Process

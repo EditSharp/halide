@@ -15,4 +15,7 @@ public abstract class PlatformHandler
 
     // for previews: moves the keyboard highlight down one item, as the down arrow would. safe from any thread
     public virtual void HighlightNext() { }
+
+    // for previews: picks the highlighted item, as enter would. safe from any thread
+    public virtual void ActivateHighlighted() { }
 }

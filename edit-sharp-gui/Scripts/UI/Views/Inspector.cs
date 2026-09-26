@@ -175,10 +175,10 @@ public partial class Inspector : Control
 		return row;
 	}
 
-	internal ListRow CreateListRow(string label, PropertyDescriptor descriptor, PropertyBinding binding)
+	internal ListRow CreateListRow(string label, PropertyDescriptor descriptor, IReadOnlyList<PropertyBinding> bindings)
 	{
 		ListRow row = listRowScene.Instantiate<ListRow>();
-		row.Configure(this, label, descriptor, binding);
+		row.Configure(this, label, descriptor, bindings);
 		return row;
 	}
 
@@ -210,7 +210,7 @@ public partial class Inspector : Control
 	// the same name - the objects behind it are only ever bindings
 	sealed record RowPlan(string Label, EditorSpec Spec, IReadOnlyList<Binding> Bindings) : Plan;
 
-	sealed record ListPlan(string Label, PropertyDescriptor Descriptor, PropertyBinding Binding) : Plan;
+	sealed record ListPlan(string Label, PropertyDescriptor Descriptor, IReadOnlyList<PropertyBinding> Bindings) : Plan;
 
 	// a line of text where rows would go: "(none)"
 	sealed record NotePlan(string Text) : Plan;
@@ -305,6 +305,16 @@ public partial class Inspector : Control
 
 	Color ClipAccent(Clip clip) => GetThemeColor(clip is AudioClip ? "audio" : "video", "Clip");
 
+	// media from the library: one section of what they all have, named for
+	// the one media or the count
+	public void ShowMedia(IReadOnlyList<IMedia> media)
+	{
+		if (media is null || media.Count == 0) { Clear(); return; }
+
+		string title = media.Count == 1 ? media[0].Name : $"{media.Count} media";
+		Show([new InspectorSectionSpec(title, [.. media.Select(m => new InspectorTarget(m))])]);
+	}
+
 	// the rows for a set of objects edited together, built into a body that
 	// is already in the tree - a list's item, from ListRow
 	internal void BuildRows(VBoxContainer into, IReadOnlyList<InspectorTarget> targets, string skip = null)
@@ -364,11 +374,13 @@ public partial class Inspector : Control
 
 	Plan PlanRow(PropertyDescriptor descriptor, IReadOnlyList<InspectorTarget> targets)
 	{
-		// a list: one object at a time
+		// a list: values edit across every object, objects one at a time
 		if (descriptor.IsCollection)
 		{
-			if (targets.Count == 1)
-				return new ListPlan(descriptor.DisplayName, descriptor, new PropertyBinding(descriptor, targets[0].Object) { Clip = targets[0].Clip });
+			bool objectItems = descriptor.ItemEditor is PropertyEditor.Object or PropertyEditor.Media && descriptor.ItemValueType is not null && Inspect.Of(descriptor.ItemValueType).Count > 0;
+
+			if (targets.Count == 1 || !objectItems)
+				return new ListPlan(descriptor.DisplayName, descriptor, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
 
 			return new RowPlan(descriptor.DisplayName, EditorSpec.Of(descriptor) with { Editor = PropertyEditor.Auto, ReadOnly = true }, [.. targets.Select(t => new PropertyBinding(descriptor, t.Object) { Clip = t.Clip })]);
 		}
@@ -490,7 +502,7 @@ public partial class Inspector : Control
 				break;
 
 			case (ListRow l, ListPlan p):
-				l.Rebind(p.Binding);
+				l.Rebind(p.Bindings);
 				break;
 		}
 	}
@@ -513,7 +525,7 @@ public partial class Inspector : Control
 				return CreateRow(p.Label, p.Spec, p.Bindings);
 
 			case ListPlan p:
-				return CreateListRow(p.Label, p.Descriptor, p.Binding);
+				return CreateListRow(p.Label, p.Descriptor, p.Bindings);
 
 			case NotePlan p:
 				return new Label { Text = p.Text, ThemeTypeVariation = "InspectorLabel" };

@@ -10,7 +10,7 @@ namespace EditSharpGUI.Scripts.UI.Theming;
 // made once per size and shared
 public static class IconRaster
 {
-	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot, Check, Bullet, Chevron }
+	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot, Check, Bullet, Chevron, Film, Picture, Speaker, Timeline, Plus }
 
 	static readonly Dictionary<(Shape, int), ImageTexture> cache = [];
 
@@ -122,6 +122,44 @@ public static class IconRaster
 
 			case Shape.Chevron:
 				return Segment(x, y, -0.18f, -0.48f, 0.26f, 0f, 0.085f) || Segment(x, y, 0.26f, 0f, -0.18f, 0.48f, 0.085f);
+
+			// media kinds: a film frame, a picture, a speaker, timeline bars, a plus
+			case Shape.Film:
+			{
+				bool frame = Math.Abs(x) <= 0.8f && Math.Abs(y) <= 0.6f;
+				bool inner = Math.Abs(x) <= 0.5f && Math.Abs(y) <= 0.42f;
+				bool hole = Math.Abs(x) >= 0.58f && Math.Abs(x) <= 0.72f && (Math.Abs(y) <= 0.1f || (Math.Abs(y) >= 0.3f && Math.Abs(y) <= 0.5f));
+				return frame && !inner && !hole;
+			}
+
+			case Shape.Picture:
+			{
+				bool frame = Math.Abs(x) <= 0.8f && Math.Abs(y) <= 0.62f;
+				bool inner = Math.Abs(x) <= 0.66f && Math.Abs(y) <= 0.48f;
+				bool hill = y >= -0.1f && y <= 0.48f && Math.Abs(x) <= 0.66f && y >= Math.Abs(x + 0.15f) * 1.1f - 0.42f;
+				bool sun = (x + 0.35f) * (x + 0.35f) + (y + 0.25f) * (y + 0.25f) <= 0.02f;
+				return (frame && !inner) || hill || sun;
+			}
+
+			case Shape.Speaker:
+			{
+				bool body = x >= -0.75f && x <= -0.35f && Math.Abs(y) <= 0.25f;
+				bool cone = x >= -0.35f && x <= 0.1f && Math.Abs(y) <= 0.25f + (x + 0.35f) * 1.1f;
+				bool wave1 = Ring(x - 0.05f, y, 0.42f, 0.1f) && x > 0.2f;
+				bool wave2 = Ring(x - 0.05f, y, 0.72f, 0.1f) && x > 0.25f;
+				return body || cone || wave1 || wave2;
+			}
+
+			case Shape.Timeline:
+			{
+				bool top = y >= -0.62f && y <= -0.28f && x >= -0.8f && x <= 0.2f;
+				bool middle = Math.Abs(y) <= 0.17f && x >= -0.4f && x <= 0.8f;
+				bool bottom = y >= 0.28f && y <= 0.62f && x >= -0.8f && x <= 0.5f;
+				return top || middle || bottom;
+			}
+
+			case Shape.Plus:
+				return (Math.Abs(x) <= 0.12f && Math.Abs(y) <= 0.6f) || (Math.Abs(y) <= 0.12f && Math.Abs(x) <= 0.6f);
 
 			default:
 				return false;

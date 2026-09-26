@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using EditSharpGUI.Scripts.Input;
 using EditSharpGUI.Scripts.UI.ContextMenu.Platform;
 using EditSharpGUI.Scripts.UI.ContextMenu.Platform.GodotDrawn;
 using EditSharpGUI.Scripts.UI.ContextMenu.Platform.MacOS;
@@ -29,6 +31,27 @@ public static class ContextMenus
     {
         ArgumentNullException.ThrowIfNull(menu);
         Callable.From(() => Handler.HandleMenu(menu, position)).CallDeferred();
+    }
+
+    // the menu's top-left at the button's bottom-left corner, like a dropdown
+    public static void ShowContextMenu(ContextMenu menu, Control button)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+        Rect2 rect = button.GetGlobalRect();
+        ShowContextMenu(menu, new Vector2(rect.Position.X, rect.End.Y));
+    }
+
+    // the first key bound to a shortcut action, as a hint: "Ctrl+X"; null when none is
+    public static ContextText Hint(string action)
+    {
+        IReadOnlyList<KeyCombo> combos = InputManager.Singleton?.Keyboard.Shortcuts.Get(action) ?? [];
+        return combos.Count == 0 ? null : new ContextText(combos[0].ToString());
+    }
+
+    // the hint on a button, from the shortcut map
+    public static void SetHint(ContextBaseButton button, string action)
+    {
+        if (button is not null) button.ShortcutHint = Hint(action);
     }
 
     public static ContextMenu Example { get; } = BuildExample();

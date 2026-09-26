@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://8lbvmv4hp6qe"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://b1pmqmfq84y1x" path="res://Scripts/UI/ContextMenu/Elements/ContextRadioList.cs" id="radio"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Name"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "sort.name"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "Date Added"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Text = SubResource("text_3")
+Id = "sort.added"
+
+[sub_resource type="Resource" id="text_5"]
+script = ExtResource("text")
+Text = "Duration"
+
+[sub_resource type="Resource" id="button_6"]
+script = ExtResource("button")
+Text = SubResource("text_5")
+Id = "sort.duration"
+
+[sub_resource type="Resource" id="text_7"]
+script = ExtResource("text")
+Text = "Frame Rate"
+
+[sub_resource type="Resource" id="button_8"]
+script = ExtResource("button")
+Text = SubResource("text_7")
+Id = "sort.fps"
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Tags"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "sort.tags"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Online Status"
+
+[sub_resource type="Resource" id="button_12"]
+script = ExtResource("button")
+Text = SubResource("text_11")
+Id = "sort.online"
+
+[sub_resource type="Resource" id="text_13"]
+script = ExtResource("text")
+Text = "Resolution"
+
+[sub_resource type="Resource" id="button_14"]
+script = ExtResource("button")
+Text = SubResource("text_13")
+Id = "sort.resolution"
+
+[sub_resource type="Resource" id="radio_15"]
+script = ExtResource("radio")
+Buttons = Array[ExtResource("button")]([SubResource("button_2"), SubResource("button_4"), SubResource("button_6"), SubResource("button_8"), SubResource("button_10"), SubResource("button_12"), SubResource("button_14")])
+SelectedButton = 1
+Id = "sort.key"
+
+[sub_resource type="Resource" id="divider_16"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_17"]
+script = ExtResource("text")
+Text = "Descending"
+
+[sub_resource type="Resource" id="button_18"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_17")
+Id = "sort.descending"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("radio_15"), SubResource("divider_16"), SubResource("button_18")])

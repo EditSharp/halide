@@ -34,7 +34,10 @@ public partial class TypeThemeProxy : GodotObject
 
 		foreach (string item in theme.GetColorList(type).OrderBy(i => i))
 		{
+			list.Add(Property($"colors/{item}/source", Variant.Type.Int, PropertyHint.Enum, Names<ColorSource>()));
 			list.Add(Property($"colors/{item}/definition", Variant.Type.Int, PropertyHint.Enum, Names<ThemeDefinition>()));
+			list.Add(Property($"colors/{item}/clip_swatch", Variant.Type.Int, PropertyHint.Enum, Names<ClipSwatch>()));
+			list.Add(Property($"colors/{item}/node_swatch", Variant.Type.Int, PropertyHint.Enum, Names<NodeSwatch>()));
 			list.Add(Property($"colors/{item}/shade", Variant.Type.Int, PropertyHint.Enum, Names<ThemeShade>()));
 			list.Add(Property($"colors/{item}/alpha", Variant.Type.Float, PropertyHint.Range, "0,1,0.01"));
 		}
@@ -70,7 +73,10 @@ public partial class TypeThemeProxy : GodotObject
 
 			return field switch
 			{
+				"source" => (int)(binding?.Source ?? ColorSource.Definition),
 				"definition" => (int)(binding?.Definition ?? ThemeDefinition.None),
+				"clip_swatch" => (int)(binding?.ClipSwatch ?? ClipSwatch.Poppy),
+				"node_swatch" => (int)(binding?.NodeSwatch ?? NodeSwatch.Poppy),
 				"shade" => (int)(binding?.Shade ?? ThemeShade.None),
 				"alpha" => binding?.Alpha ?? 1f,
 				_ => default
@@ -117,7 +123,10 @@ public partial class TypeThemeProxy : GodotObject
 
 			switch (field)
 			{
+				case "source": binding.Source = (ColorSource)value.AsInt32(); break;
 				case "definition": binding.Definition = (ThemeDefinition)value.AsInt32(); break;
+				case "clip_swatch": binding.ClipSwatch = (ClipSwatch)value.AsInt32(); break;
+				case "node_swatch": binding.NodeSwatch = (NodeSwatch)value.AsInt32(); break;
 				case "shade": binding.Shade = (ThemeShade)value.AsInt32(); break;
 				case "alpha": binding.Alpha = (float)value.AsDouble(); break;
 				default: return false;

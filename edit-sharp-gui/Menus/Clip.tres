@@ -1,0 +1,319 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://dxj4sn0hfi0k2"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://b1pmqmfq84y1x" path="res://Scripts/UI/ContextMenu/Elements/ContextRadioList.cs" id="radio"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_45"]
+script = ExtResource("text")
+Text = "Cut"
+
+[sub_resource type="Resource" id="button_46"]
+script = ExtResource("button")
+Text = SubResource("text_45")
+Id = "clip.cut"
+
+[sub_resource type="Resource" id="text_47"]
+script = ExtResource("text")
+Text = "Copy"
+
+[sub_resource type="Resource" id="button_48"]
+script = ExtResource("button")
+Text = SubResource("text_47")
+Id = "clip.copy"
+
+[sub_resource type="Resource" id="text_49"]
+script = ExtResource("text")
+Text = "Paste"
+
+[sub_resource type="Resource" id="button_50"]
+script = ExtResource("button")
+Text = SubResource("text_49")
+Id = "clip.paste"
+
+[sub_resource type="Resource" id="divider_51"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_52"]
+script = ExtResource("text")
+Text = "Delete"
+
+[sub_resource type="Resource" id="button_53"]
+script = ExtResource("button")
+Text = SubResource("text_52")
+Id = "clip.delete"
+
+[sub_resource type="Resource" id="text_54"]
+script = ExtResource("text")
+Text = "Ripple Delete"
+
+[sub_resource type="Resource" id="button_55"]
+script = ExtResource("button")
+Text = SubResource("text_54")
+Id = "clip.rippleDelete"
+
+[sub_resource type="Resource" id="divider_56"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_57"]
+script = ExtResource("text")
+Text = "Split at Playhead"
+
+[sub_resource type="Resource" id="button_58"]
+script = ExtResource("button")
+Text = SubResource("text_57")
+Id = "clip.split"
+
+[sub_resource type="Resource" id="text_59"]
+script = ExtResource("text")
+Text = "Split All"
+
+[sub_resource type="Resource" id="button_60"]
+script = ExtResource("button")
+Text = SubResource("text_59")
+Id = "clip.splitAll"
+
+[sub_resource type="Resource" id="divider_61"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_62"]
+script = ExtResource("text")
+Text = "Linked"
+
+[sub_resource type="Resource" id="button_63"]
+script = ExtResource("button")
+Type = 1
+Text = SubResource("text_62")
+Id = "clip.link"
+
+[sub_resource type="Resource" id="divider_64"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Poppy"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "clip.color.poppy"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "Red"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Text = SubResource("text_3")
+Id = "clip.color.red"
+
+[sub_resource type="Resource" id="text_5"]
+script = ExtResource("text")
+Text = "Orange"
+
+[sub_resource type="Resource" id="button_6"]
+script = ExtResource("button")
+Text = SubResource("text_5")
+Id = "clip.color.orange"
+
+[sub_resource type="Resource" id="text_7"]
+script = ExtResource("text")
+Text = "Mango"
+
+[sub_resource type="Resource" id="button_8"]
+script = ExtResource("button")
+Text = SubResource("text_7")
+Id = "clip.color.mango"
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Yellow"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "clip.color.yellow"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Green"
+
+[sub_resource type="Resource" id="button_12"]
+script = ExtResource("button")
+Text = SubResource("text_11")
+Id = "clip.color.green"
+
+[sub_resource type="Resource" id="text_13"]
+script = ExtResource("text")
+Text = "Turquoise"
+
+[sub_resource type="Resource" id="button_14"]
+script = ExtResource("button")
+Text = SubResource("text_13")
+Id = "clip.color.turquoise"
+
+[sub_resource type="Resource" id="text_15"]
+script = ExtResource("text")
+Text = "Lime"
+
+[sub_resource type="Resource" id="button_16"]
+script = ExtResource("button")
+Text = SubResource("text_15")
+Id = "clip.color.lime"
+
+[sub_resource type="Resource" id="text_17"]
+script = ExtResource("text")
+Text = "Cyan"
+
+[sub_resource type="Resource" id="button_18"]
+script = ExtResource("button")
+Text = SubResource("text_17")
+Id = "clip.color.cyan"
+
+[sub_resource type="Resource" id="text_19"]
+script = ExtResource("text")
+Text = "Purple"
+
+[sub_resource type="Resource" id="button_20"]
+script = ExtResource("button")
+Text = SubResource("text_19")
+Id = "clip.color.purple"
+
+[sub_resource type="Resource" id="text_21"]
+script = ExtResource("text")
+Text = "Pink"
+
+[sub_resource type="Resource" id="button_22"]
+script = ExtResource("button")
+Text = SubResource("text_21")
+Id = "clip.color.pink"
+
+[sub_resource type="Resource" id="text_23"]
+script = ExtResource("text")
+Text = "Lavender"
+
+[sub_resource type="Resource" id="button_24"]
+script = ExtResource("button")
+Text = SubResource("text_23")
+Id = "clip.color.lavender"
+
+[sub_resource type="Resource" id="text_25"]
+script = ExtResource("text")
+Text = "Magenta"
+
+[sub_resource type="Resource" id="button_26"]
+script = ExtResource("button")
+Text = SubResource("text_25")
+Id = "clip.color.magenta"
+
+[sub_resource type="Resource" id="text_27"]
+script = ExtResource("text")
+Text = "Brown"
+
+[sub_resource type="Resource" id="button_28"]
+script = ExtResource("button")
+Text = SubResource("text_27")
+Id = "clip.color.brown"
+
+[sub_resource type="Resource" id="text_29"]
+script = ExtResource("text")
+Text = "Tan"
+
+[sub_resource type="Resource" id="button_30"]
+script = ExtResource("button")
+Text = SubResource("text_29")
+Id = "clip.color.tan"
+
+[sub_resource type="Resource" id="text_31"]
+script = ExtResource("text")
+Text = "Gray"
+
+[sub_resource type="Resource" id="button_32"]
+script = ExtResource("button")
+Text = SubResource("text_31")
+Id = "clip.color.gray"
+
+[sub_resource type="Resource" id="text_33"]
+script = ExtResource("text")
+Text = "Blue"
+
+[sub_resource type="Resource" id="button_34"]
+script = ExtResource("button")
+Text = SubResource("text_33")
+Id = "clip.color.blue"
+
+[sub_resource type="Resource" id="text_35"]
+script = ExtResource("text")
+Text = "Navy"
+
+[sub_resource type="Resource" id="button_36"]
+script = ExtResource("button")
+Text = SubResource("text_35")
+Id = "clip.color.navy"
+
+[sub_resource type="Resource" id="radio_37"]
+script = ExtResource("radio")
+Buttons = Array[ExtResource("button")]([SubResource("button_2"), SubResource("button_4"), SubResource("button_6"), SubResource("button_8"), SubResource("button_10"), SubResource("button_12"), SubResource("button_14"), SubResource("button_16"), SubResource("button_18"), SubResource("button_20"), SubResource("button_22"), SubResource("button_24"), SubResource("button_26"), SubResource("button_28"), SubResource("button_30"), SubResource("button_32"), SubResource("button_34"), SubResource("button_36")])
+SelectedButton = -1
+Id = "clip.color.swatches"
+
+[sub_resource type="Resource" id="divider_38"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_39"]
+script = ExtResource("text")
+Text = "Custom..."
+
+[sub_resource type="Resource" id="button_40"]
+script = ExtResource("button")
+Type = 2
+Text = SubResource("text_39")
+Id = "clip.color.custom"
+
+[sub_resource type="Resource" id="text_41"]
+script = ExtResource("text")
+Text = "Default"
+
+[sub_resource type="Resource" id="button_42"]
+script = ExtResource("button")
+Checked = true
+Type = 2
+Text = SubResource("text_41")
+Id = "clip.color.default"
+
+[sub_resource type="Resource" id="text_43"]
+script = ExtResource("text")
+Text = "Color"
+
+[sub_resource type="Resource" id="submenu_44"]
+script = ExtResource("submenu")
+Elements = Array[ExtResource("element")]([SubResource("radio_37"), SubResource("divider_38"), SubResource("button_40"), SubResource("button_42")])
+Text = SubResource("text_43")
+Id = "clip.color"
+
+[sub_resource type="Resource" id="text_65"]
+script = ExtResource("text")
+Text = "Rename"
+
+[sub_resource type="Resource" id="button_66"]
+script = ExtResource("button")
+Text = SubResource("text_65")
+Id = "clip.rename"
+
+[sub_resource type="Resource" id="text_67"]
+script = ExtResource("text")
+Text = "Reset Speed"
+
+[sub_resource type="Resource" id="button_68"]
+script = ExtResource("button")
+Text = SubResource("text_67")
+Id = "clip.resetSpeed"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_46"), SubResource("button_48"), SubResource("button_50"), SubResource("divider_51"), SubResource("button_53"), SubResource("button_55"), SubResource("divider_56"), SubResource("button_58"), SubResource("button_60"), SubResource("divider_61"), SubResource("button_63"), SubResource("divider_64"), SubResource("submenu_44"), SubResource("button_66"), SubResource("button_68")])
+HideOnCheckableItemSelect = true

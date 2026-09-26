@@ -3,8 +3,12 @@
 [ext_resource type="Script" uid="uid://bo0yqt1giq2jb" path="res://Scripts/UI/Views/MediaViewer.cs" id="1_8jcd3"]
 [ext_resource type="Texture2D" uid="uid://cq446xk6os5i2" path="res://Images/Icons/Add.png" id="1_rsgum"]
 [ext_resource type="PackedScene" uid="uid://dejc4onqqkvog" path="res://Scenes/Components/MediaItem.tscn" id="1_vc5xv"]
+[ext_resource type="Resource" path="res://Menus/MediaTile.tres" id="2_tile"]
+[ext_resource type="Resource" path="res://Menus/MediaViewer.tres" id="3_viewer"]
+[ext_resource type="Resource" path="res://Menus/Sort.tres" id="4_sort"]
+[ext_resource type="Resource" path="res://Menus/Filter.tres" id="5_filter"]
 
-[node name="Media" type="Control" unique_id=861251413]
+[node name="Media" type="Control" unique_id=861251413 node_paths=PackedStringArray("tabs", "sortButton", "filterButton", "search", "scroll", "flow", "addTile", "addContent", "empty", "overlay")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,6 +18,21 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_8jcd3")
+tabs = NodePath("VBoxContainer/Media Options/HBoxContainer/TabBar")
+sortButton = NodePath("VBoxContainer/Media Options/HBoxContainer/Sort")
+filterButton = NodePath("VBoxContainer/Media Options/HBoxContainer/Filter")
+search = NodePath("VBoxContainer/Media Options/HBoxContainer/Search")
+scroll = NodePath("VBoxContainer/ScrollContainer")
+flow = NodePath("VBoxContainer/ScrollContainer/Margin/Media Flow")
+addTile = NodePath("VBoxContainer/ScrollContainer/Margin/Media Flow/Add")
+addContent = NodePath("VBoxContainer/ScrollContainer/Margin/Media Flow/Add/Content")
+empty = NodePath("Empty")
+overlay = NodePath("Overlay")
+itemScene = ExtResource("1_vc5xv")
+tileMenu = ExtResource("2_tile")
+viewerMenu = ExtResource("3_viewer")
+sortMenu = ExtResource("4_sort")
+filterMenu = ExtResource("5_filter")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=859593589]
 layout_mode = 1
@@ -43,8 +62,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = -3.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"InspectorEditor"
 
 [node name="TabBar" type="TabBar" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=835062150]
 layout_mode = 2
@@ -52,136 +73,128 @@ size_flags_horizontal = 3
 current_tab = 0
 clip_tabs = false
 close_with_middle_mouse = false
-tab_count = 4
+tab_count = 5
 tab_0/title = "Video"
 tab_0/tooltip = "Show only video media"
-tab_1/title = "Audio"
-tab_1/tooltip = "Show only audio media"
-tab_2/title = "Timelines"
-tab_2/tooltip = "Show this project's timelines"
-tab_3/title = "All"
-tab_3/tooltip = "Show all imported media"
+tab_1/title = "Images"
+tab_1/tooltip = "Show only image media"
+tab_2/title = "Audio"
+tab_2/tooltip = "Show only audio media"
+tab_3/title = "Timelines"
+tab_3/tooltip = "Show this project's timelines"
+tab_4/title = "All"
+tab_4/tooltip = "Show all imported media"
+
+[node name="Search" type="LineEdit" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1389012710]
+custom_minimum_size = Vector2(120, 24)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Filter by name"
+theme_type_variation = &"InspectorField"
+placeholder_text = "Search"
+clear_button_enabled = true
 
 [node name="Sort" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1340147264]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-tooltip_text = "Opens a right-click menu of sort options by metadata"
+size_flags_vertical = 4
+tooltip_text = "Sort the media by a detail"
+focus_mode = 0
 text = "Sort"
 
 [node name="Filter" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1389012709]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
-tooltip_text = "Opens a right-click menu of filter options"
+size_flags_vertical = 4
+tooltip_text = "Choose which media are shown"
+focus_mode = 0
 text = "Filter"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=866422693]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="Media Flow" type="HFlowContainer" parent="VBoxContainer/ScrollContainer" unique_id=1880662620]
+[node name="Margin" type="MarginContainer" parent="VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-alignment = 1
-last_wrap_alignment = 1
+mouse_filter = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
 
-[node name="Add" type="Control" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1189208708]
-custom_minimum_size = Vector2(120, 70)
+[node name="Media Flow" type="HFlowContainer" parent="VBoxContainer/ScrollContainer/Margin" unique_id=1880662620]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
 
-[node name="Content" type="Panel" parent="VBoxContainer/ScrollContainer/Media Flow/Add" unique_id=618798168]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Add" type="VBoxContainer" parent="VBoxContainer/ScrollContainer/Margin/Media Flow" unique_id=1189208708]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_type_variation = &"InspectorVBox"
+
+[node name="Content" type="Panel" parent="VBoxContainer/ScrollContainer/Margin/Media Flow/Add" unique_id=618798168]
+custom_minimum_size = Vector2(120, 68)
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"MediaContent"
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/ScrollContainer/Media Flow/Add/Content" unique_id=243429872]
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/ScrollContainer/Margin/Media Flow/Add/Content" unique_id=243429872]
 texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 12.0
+offset_right = -30.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("1_rsgum")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Media2" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1001363172 instance=ExtResource("1_vc5xv")]
+[node name="Name" type="Label" parent="VBoxContainer/ScrollContainer/Margin/Media Flow/Add"]
+custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"MediaName"
+text = "Import"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Media3" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=297873994 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
+[node name="Empty" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = 3.0
+offset_right = 150.0
+offset_bottom = 33.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"InspectorLabel"
+text = "Nothing here yet. Drop files in, or press + to import."
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Media4" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1920712769 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media5" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=330971803 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media6" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=291857006 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media7" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=85961048 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media8" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=990099019 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media9" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=319203037 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media10" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=141368733 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media11" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=974838260 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media12" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2127508100 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media13" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2101591980 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media14" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1760424391 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media15" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=360601518 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media16" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1160134423 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media17" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1488818197 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media18" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1577428804 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media19" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=291933444 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media20" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1535616419 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media21" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=571305331 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media22" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1590510857 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media23" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2048995694 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media24" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=744578399 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media25" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2075838506 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media26" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=2085563833 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
-
-[node name="Media27" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=588324231 instance=ExtResource("1_vc5xv")]
-layout_mode = 2
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

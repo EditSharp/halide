@@ -1,0 +1,89 @@
+using EditSharp.Components.Clips;
+using EditSharp.Editing;
+using Godot;
+using System;
+
+namespace EditSharpGUI.Scripts.UI.Thumbnails;
+
+// the waveform along one audio clip: the clip's envelope from the cache,
+// painted by the shader with the clip's head at the strip's left edge.
+// the strip is told the scale, the colour and any head or speed edit
+// being previewed, and moves the window rather than the data
+public partial class WaveformStrip : WaveformView
+{
+	WaveformCache cache;
+	AudioClip clip;
+
+	double pixelsPerSecond;
+	double? previewSpeed;
+	TimeSpan previewShift;
+
+	public void Setup(WaveformCache cache, AudioClip clip)
+	{
+		if (this.cache is not null) this.cache.Updated -= OnUpdated;
+
+		this.cache = cache;
+		this.clip = clip;
+
+		if (cache is not null) cache.Updated += OnUpdated;
+
+		Refresh();
+	}
+
+	public void SetScale(double pixelsPerSecond)
+	{
+		if (this.pixelsPerSecond == pixelsPerSecond) return;
+
+		this.pixelsPerSecond = pixelsPerSecond;
+		Refresh();
+	}
+
+	public void SetColor(Color color)
+	{
+		SetColors(color, color.Lightened(0.35f));
+	}
+
+	// a head edit in progress moves the clip's head over the content
+	public void SetPreviewShift(TimeSpan contentShift)
+	{
+		if (previewShift == contentShift) return;
+
+		previewShift = contentShift;
+		Refresh();
+	}
+
+	// a timeshift in progress plays the content at another speed
+	public void SetPreviewSpeed(double? speed)
+	{
+		if (previewSpeed == speed) return;
+
+		previewSpeed = speed;
+		Refresh();
+	}
+
+	// the strip is the whole clip, so nothing depends on the window
+	public void SetVisibleRange(float left, float right) { }
+
+	void OnUpdated(Clip updated)
+	{
+		if (updated == clip) Refresh();
+	}
+
+	void Refresh()
+	{
+		if (cache is null || clip is null || pixelsPerSecond <= 0d) return;
+
+		EnvelopeTexture envelope = cache.Get(clip);
+		SetEnvelope(envelope);
+		if (envelope is null) return;
+
+		double speed = previewSpeed ?? clip.Speed;
+		SetAnchor(ClipFingerprint.Anchor(clip));
+		SetWindow(previewShift.TotalSeconds, speed / pixelsPerSecond);
+	}
+
+	public override void _ExitTree()
+	{
+		if (cache is not null) cache.Updated -= OnUpdated;
+	}
+}

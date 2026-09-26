@@ -36,6 +36,7 @@ public class GodotHandler : PlatformHandler
 
         current = popup;
         popup.Popup(new Rect2I((Vector2I)at.Round(), Vector2I.Zero));
+        popup.KeepOnScreen();
     }
 
     // the popup keeps its rect current on the main thread, so this is safe from the preview thread
@@ -44,4 +45,6 @@ public class GodotHandler : PlatformHandler
     public override void Dismiss() => Callable.From(() => current?.Hide()).CallDeferred();
 
     public override void HighlightNext() => Callable.From(() => current?.FocusNext()).CallDeferred();
+
+    public override void ActivateHighlighted() => Callable.From(() => current?.ActivateFocused()).CallDeferred();
 }

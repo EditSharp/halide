@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://bbwi2ilna2yoc"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Paste"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "clips.paste"
+
+[sub_resource type="Resource" id="divider_3"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_4"]
+script = ExtResource("text")
+Text = "Select All"
+
+[sub_resource type="Resource" id="button_5"]
+script = ExtResource("button")
+Text = SubResource("text_4")
+Id = "clips.selectAll"
+
+[sub_resource type="Resource" id="text_6"]
+script = ExtResource("text")
+Text = "Deselect"
+
+[sub_resource type="Resource" id="button_7"]
+script = ExtResource("button")
+Text = SubResource("text_6")
+Id = "clips.deselect"
+
+[sub_resource type="Resource" id="divider_8"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Insert 1 s Gap"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "clips.insertGap"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("divider_3"), SubResource("button_5"), SubResource("button_7"), SubResource("divider_8"), SubResource("button_10")])

@@ -115,8 +115,8 @@ public static class ThemeMock
 
 		inspector.Show(
 		[
-			new InspectorSectionSpec("Every editor", [new InspectorTarget(sample)], theme.Resolve(ThemeDefinition.VideoClipColor)),
-			new InspectorSectionSpec("Two objects at once", [new InspectorTarget(sample), new InspectorTarget(other)], theme.Resolve(ThemeDefinition.EffectNodeColor)),
+			new InspectorSectionSpec("Every editor", [new InspectorTarget(sample)], theme.GetColor("video", "Clip")),
+			new InspectorSectionSpec("Two objects at once", [new InspectorTarget(sample), new InspectorTarget(other)], theme.GetColor("effect", "Node")),
 		]);
 
 		inspector.Playhead = TimeSpan.FromSeconds(0.5);

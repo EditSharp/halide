@@ -78,35 +78,189 @@ public partial class ThemePalette : Resource
 	[Export] public Color BlackColor { get => _blackColor; set => Define(ref _blackColor, value); }
 	[Export] public Color PlaybackColor { get => _playbackColor; set => Define(ref _playbackColor, value); }
 
-	Color _videoClipColor = new(0.102f, 0.373f, 0.706f);
-	Color _audioClipColor = new(0.267f, 0.561f, 0.392f);
-	Color _textClipColor = new(0.55f, 0.35f, 0.7f);
-	Color _generatorVideoClipColor = new(0.7f, 0.45f, 0.15f);
-	Color _generatorAudioClipColor = new(0.2f, 0.55f, 0.55f);
+	// ---- swatches: the colours clips and nodes wear ----
 
-	[ExportGroup("Clip Colors")]
-	[Export] public Color VideoClipColor { get => _videoClipColor; set => Define(ref _videoClipColor, value); }
-	[Export] public Color AudioClipColor { get => _audioClipColor; set => Define(ref _audioClipColor, value); }
-	[Export] public Color TextClipColor { get => _textClipColor; set => Define(ref _textClipColor, value); }
-	[Export] public Color GeneratorVideoClipColor { get => _generatorVideoClipColor; set => Define(ref _generatorVideoClipColor, value); }
-	[Export] public Color GeneratorAudioClipColor { get => _generatorAudioClipColor; set => Define(ref _generatorAudioClipColor, value); }
+	// one colour per swatch name, for clips and for nodes apart, so a
+	// palette can tune each set to its background
+	Color _clipPoppy = new(0.76f, 0.36f, 0.36f);
+	Color _clipRed = new(0.85f, 0.22f, 0.23f);
+	Color _clipOrange = new(0.88f, 0.48f, 0.18f);
+	Color _clipMango = new(0.94f, 0.63f, 0.19f);
+	Color _clipYellow = new(0.9f, 0.78f, 0.29f);
+	Color _clipGreen = new(0.3f, 0.6f, 0.37f);
+	Color _clipTurquoise = new(0.2f, 0.65f, 0.63f);
+	Color _clipLime = new(0.56f, 0.82f, 0.31f);
+	Color _clipCyan = new(0.23f, 0.7f, 0.9f);
+	Color _clipPurple = new(0.55f, 0.36f, 0.71f);
+	Color _clipPink = new(0.88f, 0.44f, 0.6f);
+	Color _clipLavender = new(0.66f, 0.61f, 0.78f);
+	Color _clipMagenta = new(0.78f, 0.31f, 0.75f);
+	Color _clipBrown = new(0.55f, 0.38f, 0.26f);
+	Color _clipTan = new(0.79f, 0.66f, 0.51f);
+	Color _clipGray = new(0.54f, 0.56f, 0.59f);
+	Color _clipBlue = new(0.102f, 0.373f, 0.706f);
+	Color _clipNavy = new(0.18f, 0.29f, 0.5f);
 
-	Color _effectNodeColor = new(0.35f, 0.5f, 0.8f);
-	Color _maskNodeColor = new(0.6f, 0.6f, 0.3f);
-	Color _mathNodeColor = new(0.5f, 0.5f, 0.5f);
-	Color _keyingNodeColor = new(0.3f, 0.7f, 0.4f);
-	Color _inputNodeColor = new(0.75f, 0.4f, 0.3f);
-	Color _audioNodeColor = new(0.3f, 0.6f, 0.45f);
-	Color _compositeNodeColor = new(0.6f, 0.4f, 0.7f);
+	[ExportGroup("Clip Swatches")]
+	[Export] public Color ClipPoppy { get => _clipPoppy; set => Define(ref _clipPoppy, value); }
+	[Export] public Color ClipRed { get => _clipRed; set => Define(ref _clipRed, value); }
+	[Export] public Color ClipOrange { get => _clipOrange; set => Define(ref _clipOrange, value); }
+	[Export] public Color ClipMango { get => _clipMango; set => Define(ref _clipMango, value); }
+	[Export] public Color ClipYellow { get => _clipYellow; set => Define(ref _clipYellow, value); }
+	[Export] public Color ClipGreen { get => _clipGreen; set => Define(ref _clipGreen, value); }
+	[Export] public Color ClipTurquoise { get => _clipTurquoise; set => Define(ref _clipTurquoise, value); }
+	[Export] public Color ClipLime { get => _clipLime; set => Define(ref _clipLime, value); }
+	[Export] public Color ClipCyan { get => _clipCyan; set => Define(ref _clipCyan, value); }
+	[Export] public Color ClipPurple { get => _clipPurple; set => Define(ref _clipPurple, value); }
+	[Export] public Color ClipPink { get => _clipPink; set => Define(ref _clipPink, value); }
+	[Export] public Color ClipLavender { get => _clipLavender; set => Define(ref _clipLavender, value); }
+	[Export] public Color ClipMagenta { get => _clipMagenta; set => Define(ref _clipMagenta, value); }
+	[Export] public Color ClipBrown { get => _clipBrown; set => Define(ref _clipBrown, value); }
+	[Export] public Color ClipTan { get => _clipTan; set => Define(ref _clipTan, value); }
+	[Export] public Color ClipGray { get => _clipGray; set => Define(ref _clipGray, value); }
+	[Export] public Color ClipBlue { get => _clipBlue; set => Define(ref _clipBlue, value); }
+	[Export] public Color ClipNavy { get => _clipNavy; set => Define(ref _clipNavy, value); }
 
-	[ExportGroup("Node Colors")]
-	[Export] public Color EffectNodeColor { get => _effectNodeColor; set => Define(ref _effectNodeColor, value); }
-	[Export] public Color MaskNodeColor { get => _maskNodeColor; set => Define(ref _maskNodeColor, value); }
-	[Export] public Color MathNodeColor { get => _mathNodeColor; set => Define(ref _mathNodeColor, value); }
-	[Export] public Color KeyingNodeColor { get => _keyingNodeColor; set => Define(ref _keyingNodeColor, value); }
-	[Export] public Color InputNodeColor { get => _inputNodeColor; set => Define(ref _inputNodeColor, value); }
-	[Export] public Color AudioNodeColor { get => _audioNodeColor; set => Define(ref _audioNodeColor, value); }
-	[Export] public Color CompositeNodeColor { get => _compositeNodeColor; set => Define(ref _compositeNodeColor, value); }
+	Color _nodePoppy = new(0.76f, 0.36f, 0.36f);
+	Color _nodeRed = new(0.85f, 0.22f, 0.23f);
+	Color _nodeOrange = new(0.88f, 0.48f, 0.18f);
+	Color _nodeMango = new(0.94f, 0.63f, 0.19f);
+	Color _nodeYellow = new(0.9f, 0.78f, 0.29f);
+	Color _nodeGreen = new(0.3f, 0.6f, 0.37f);
+	Color _nodeTurquoise = new(0.2f, 0.65f, 0.63f);
+	Color _nodeLime = new(0.56f, 0.82f, 0.31f);
+	Color _nodeCyan = new(0.23f, 0.7f, 0.9f);
+	Color _nodePurple = new(0.55f, 0.36f, 0.71f);
+	Color _nodePink = new(0.88f, 0.44f, 0.6f);
+	Color _nodeLavender = new(0.66f, 0.61f, 0.78f);
+	Color _nodeMagenta = new(0.78f, 0.31f, 0.75f);
+	Color _nodeBrown = new(0.55f, 0.38f, 0.26f);
+	Color _nodeTan = new(0.79f, 0.66f, 0.51f);
+	Color _nodeGray = new(0.54f, 0.56f, 0.59f);
+	Color _nodeBlue = new(0.102f, 0.373f, 0.706f);
+	Color _nodeNavy = new(0.18f, 0.29f, 0.5f);
+
+	[ExportGroup("Node Swatches")]
+	[Export] public Color NodePoppy { get => _nodePoppy; set => Define(ref _nodePoppy, value); }
+	[Export] public Color NodeRed { get => _nodeRed; set => Define(ref _nodeRed, value); }
+	[Export] public Color NodeOrange { get => _nodeOrange; set => Define(ref _nodeOrange, value); }
+	[Export] public Color NodeMango { get => _nodeMango; set => Define(ref _nodeMango, value); }
+	[Export] public Color NodeYellow { get => _nodeYellow; set => Define(ref _nodeYellow, value); }
+	[Export] public Color NodeGreen { get => _nodeGreen; set => Define(ref _nodeGreen, value); }
+	[Export] public Color NodeTurquoise { get => _nodeTurquoise; set => Define(ref _nodeTurquoise, value); }
+	[Export] public Color NodeLime { get => _nodeLime; set => Define(ref _nodeLime, value); }
+	[Export] public Color NodeCyan { get => _nodeCyan; set => Define(ref _nodeCyan, value); }
+	[Export] public Color NodePurple { get => _nodePurple; set => Define(ref _nodePurple, value); }
+	[Export] public Color NodePink { get => _nodePink; set => Define(ref _nodePink, value); }
+	[Export] public Color NodeLavender { get => _nodeLavender; set => Define(ref _nodeLavender, value); }
+	[Export] public Color NodeMagenta { get => _nodeMagenta; set => Define(ref _nodeMagenta, value); }
+	[Export] public Color NodeBrown { get => _nodeBrown; set => Define(ref _nodeBrown, value); }
+	[Export] public Color NodeTan { get => _nodeTan; set => Define(ref _nodeTan, value); }
+	[Export] public Color NodeGray { get => _nodeGray; set => Define(ref _nodeGray, value); }
+	[Export] public Color NodeBlue { get => _nodeBlue; set => Define(ref _nodeBlue, value); }
+	[Export] public Color NodeNavy { get => _nodeNavy; set => Define(ref _nodeNavy, value); }
+
+	// which swatch each kind of clip and node wears until the user picks
+	ClipSwatch _videoClip = ClipSwatch.Blue;
+	ClipSwatch _audioClip = ClipSwatch.Green;
+	ClipSwatch _textClip = ClipSwatch.Purple;
+	ClipSwatch _generatorVideoClip = ClipSwatch.Orange;
+	ClipSwatch _generatorAudioClip = ClipSwatch.Turquoise;
+
+	[ExportGroup("Clip Defaults")]
+	[Export] public ClipSwatch VideoClip { get => _videoClip; set => Define(ref _videoClip, value); }
+	[Export] public ClipSwatch AudioClip { get => _audioClip; set => Define(ref _audioClip, value); }
+	[Export] public ClipSwatch TextClip { get => _textClip; set => Define(ref _textClip, value); }
+	[Export] public ClipSwatch GeneratorVideoClip { get => _generatorVideoClip; set => Define(ref _generatorVideoClip, value); }
+	[Export] public ClipSwatch GeneratorAudioClip { get => _generatorAudioClip; set => Define(ref _generatorAudioClip, value); }
+
+	NodeSwatch _effectNode = NodeSwatch.Blue;
+	NodeSwatch _maskNode = NodeSwatch.Purple;
+	NodeSwatch _mathNode = NodeSwatch.Green;
+	NodeSwatch _keyingNode = NodeSwatch.Cyan;
+	NodeSwatch _inputNode = NodeSwatch.Mango;
+	NodeSwatch _audioNode = NodeSwatch.Magenta;
+	NodeSwatch _compositeNode = NodeSwatch.Pink;
+
+	[ExportGroup("Node Defaults")]
+	[Export] public NodeSwatch EffectNode { get => _effectNode; set => Define(ref _effectNode, value); }
+	[Export] public NodeSwatch MaskNode { get => _maskNode; set => Define(ref _maskNode, value); }
+	[Export] public NodeSwatch MathNode { get => _mathNode; set => Define(ref _mathNode, value); }
+	[Export] public NodeSwatch KeyingNode { get => _keyingNode; set => Define(ref _keyingNode, value); }
+	[Export] public NodeSwatch InputNode { get => _inputNode; set => Define(ref _inputNode, value); }
+	[Export] public NodeSwatch AudioNode { get => _audioNode; set => Define(ref _audioNode, value); }
+	[Export] public NodeSwatch CompositeNode { get => _compositeNode; set => Define(ref _compositeNode, value); }
+
+	public Color Resolve(ClipSwatch swatch) => swatch switch
+	{
+		ClipSwatch.Poppy => _clipPoppy,
+		ClipSwatch.Red => _clipRed,
+		ClipSwatch.Orange => _clipOrange,
+		ClipSwatch.Mango => _clipMango,
+		ClipSwatch.Yellow => _clipYellow,
+		ClipSwatch.Green => _clipGreen,
+		ClipSwatch.Turquoise => _clipTurquoise,
+		ClipSwatch.Lime => _clipLime,
+		ClipSwatch.Cyan => _clipCyan,
+		ClipSwatch.Purple => _clipPurple,
+		ClipSwatch.Pink => _clipPink,
+		ClipSwatch.Lavender => _clipLavender,
+		ClipSwatch.Magenta => _clipMagenta,
+		ClipSwatch.Brown => _clipBrown,
+		ClipSwatch.Tan => _clipTan,
+		ClipSwatch.Gray => _clipGray,
+		ClipSwatch.Blue => _clipBlue,
+		ClipSwatch.Navy => _clipNavy,
+		_ => Colors.Magenta
+	};
+
+	public Color Resolve(NodeSwatch swatch) => swatch switch
+	{
+		NodeSwatch.Poppy => _nodePoppy,
+		NodeSwatch.Red => _nodeRed,
+		NodeSwatch.Orange => _nodeOrange,
+		NodeSwatch.Mango => _nodeMango,
+		NodeSwatch.Yellow => _nodeYellow,
+		NodeSwatch.Green => _nodeGreen,
+		NodeSwatch.Turquoise => _nodeTurquoise,
+		NodeSwatch.Lime => _nodeLime,
+		NodeSwatch.Cyan => _nodeCyan,
+		NodeSwatch.Purple => _nodePurple,
+		NodeSwatch.Pink => _nodePink,
+		NodeSwatch.Lavender => _nodeLavender,
+		NodeSwatch.Magenta => _nodeMagenta,
+		NodeSwatch.Brown => _nodeBrown,
+		NodeSwatch.Tan => _nodeTan,
+		NodeSwatch.Gray => _nodeGray,
+		NodeSwatch.Blue => _nodeBlue,
+		NodeSwatch.Navy => _nodeNavy,
+		_ => Colors.Magenta
+	};
+
+	// the swatch a clip kind wears by default, by the Clip theme type's item
+	// name; null for a name that is not a kind
+	public ClipSwatch? ClipKindSwatch(string kind) => kind switch
+	{
+		"video" => _videoClip,
+		"audio" => _audioClip,
+		"text" => _textClip,
+		"generator_video" => _generatorVideoClip,
+		"generator_audio" => _generatorAudioClip,
+		_ => null
+	};
+
+	// the swatch a node category wears by default, by the Node theme type's item name
+	public NodeSwatch? NodeKindSwatch(string kind) => kind switch
+	{
+		"effect" => _effectNode,
+		"mask" => _maskNode,
+		"math" => _mathNode,
+		"keying" => _keyingNode,
+		"input" => _inputNode,
+		"audio" => _audioNode,
+		"composite" => _compositeNode,
+		_ => null
+	};
 
 	// ---- shades: how a base colour becomes a state's ----
 
@@ -165,9 +319,11 @@ public partial class ThemePalette : Resource
 	public bool Dark => _backgroundColor1.Luminance < 0.5f;
 
 	public Color Resolve(ThemeDefinition definition, ThemeShade shade = ThemeShade.None, float alpha = 1f)
-	{
-		Color c = Base(definition);
+		=> Shade(Base(definition), shade, alpha);
 
+	// a colour shifted by a shade and faded by an alpha, the palette's way
+	public Color Shade(Color c, ThemeShade shade, float alpha = 1f)
+	{
 		c = shade switch
 		{
 			ThemeShade.Hover => Dark ? c.Lightened(_hoverShift) : c.Darkened(_hoverShift),
@@ -204,18 +360,6 @@ public partial class ThemePalette : Resource
 		ThemeDefinition.WhiteColor => _whiteColor,
 		ThemeDefinition.BlackColor => _blackColor,
 		ThemeDefinition.PlaybackColor => _playbackColor,
-		ThemeDefinition.VideoClipColor => _videoClipColor,
-		ThemeDefinition.AudioClipColor => _audioClipColor,
-		ThemeDefinition.TextClipColor => _textClipColor,
-		ThemeDefinition.GeneratorVideoClipColor => _generatorVideoClipColor,
-		ThemeDefinition.GeneratorAudioClipColor => _generatorAudioClipColor,
-		ThemeDefinition.EffectNodeColor => _effectNodeColor,
-		ThemeDefinition.MaskNodeColor => _maskNodeColor,
-		ThemeDefinition.MathNodeColor => _mathNodeColor,
-		ThemeDefinition.KeyingNodeColor => _keyingNodeColor,
-		ThemeDefinition.InputNodeColor => _inputNodeColor,
-		ThemeDefinition.AudioNodeColor => _audioNodeColor,
-		ThemeDefinition.CompositeNodeColor => _compositeNodeColor,
 		_ => Colors.Magenta
 	};
 

@@ -74,6 +74,10 @@ public partial class EditSharpTheme : Theme
 	public Color Resolve(ThemeDefinition definition, ThemeShade shade = ThemeShade.None, float alpha = 1f)
 		=> _palette?.Resolve(definition, shade, alpha) ?? Colors.Magenta;
 
+	public Color Resolve(ClipSwatch swatch) => _palette?.Resolve(swatch) ?? Colors.Magenta;
+
+	public Color Resolve(NodeSwatch swatch) => _palette?.Resolve(swatch) ?? Colors.Magenta;
+
 	// ---- bindings: the items godot reads as values ----
 
 	[ExportGroup("Bindings")]

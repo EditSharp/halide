@@ -27,18 +27,32 @@ public class MacOSHandler : PlatformHandler
         ApplyAppearance();
 
         NSPoint at = position is Vector2 p ? ScreenPoint(p) : SendPoint(Class("NSEvent"), Sel("mouseLocation"));
+        Track(menu, at);
+    }
 
-        // appkit closes the menu on a pick, so staying open means showing it again
-        while (true)
+    // one showing. appkit closes the menu on a pick, so a pick that keeps it
+    // open shows it again at the same spot on the next frame, once godot has
+    // laid out and drawn what the pick changed (the popup's own loop gives it
+    // no frame while it's up)
+    void Track(ContextMenu menu, NSPoint at)
+    {
+        bool stayOpen = false;
+
+        using (Built built = new(menu))
         {
-            using Built built = new(menu);
             picked = 0;
             currentMenu = built.Menu;
             SendBool(built.Menu, Sel("popUpMenuPositioningItem:atLocation:inView:"), 0, at, 0);
             currentMenu = 0;
 
-            if (picked == 0 || !built.Entries.TryGetValue(picked, out MenuEntry entry)) break;
-            if (MenuModel.Activate(entry) ? menu.HideOnCheckableItemSelect : menu.HideOnItemSelect) break;
+            if (picked != 0 && built.Entries.TryGetValue(picked, out MenuEntry entry))
+                stayOpen = !(MenuModel.Activate(entry) ? menu.HideOnCheckableItemSelect : menu.HideOnItemSelect);
+        }
+
+        if (stayOpen)
+        {
+            Callable.From(() => Track(menu, at)).CallDeferred();
+            return;
         }
 
         menu.EmitSignal(ContextMenu.SignalName.Closed);

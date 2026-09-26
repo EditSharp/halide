@@ -1,0 +1,112 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://duvsp30gv4eau"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Add to Timeline at Playhead"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "media.add"
+
+[sub_resource type="Resource" id="divider_3"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_4"]
+script = ExtResource("text")
+Text = "Rename"
+
+[sub_resource type="Resource" id="button_5"]
+script = ExtResource("button")
+Text = SubResource("text_4")
+Id = "media.rename"
+
+[sub_resource type="Resource" id="text_6"]
+script = ExtResource("text")
+Text = "Tags"
+
+[sub_resource type="Resource" id="submenu_7"]
+script = ExtResource("submenu")
+Text = SubResource("text_6")
+Id = "media.tags"
+
+[sub_resource type="Resource" id="divider_8"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Reveal in Explorer"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "media.reveal"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Relink..."
+
+[sub_resource type="Resource" id="button_12"]
+script = ExtResource("button")
+Text = SubResource("text_11")
+Id = "media.relink"
+
+[sub_resource type="Resource" id="text_13"]
+script = ExtResource("text")
+Text = "Build"
+
+[sub_resource type="Resource" id="button_14"]
+script = ExtResource("button")
+Text = SubResource("text_13")
+Id = "media.proxy.build"
+
+[sub_resource type="Resource" id="text_15"]
+script = ExtResource("text")
+Text = "Cancel"
+
+[sub_resource type="Resource" id="button_16"]
+script = ExtResource("button")
+Text = SubResource("text_15")
+Id = "media.proxy.cancel"
+
+[sub_resource type="Resource" id="text_17"]
+script = ExtResource("text")
+Text = "Rebuild"
+
+[sub_resource type="Resource" id="button_18"]
+script = ExtResource("button")
+Text = SubResource("text_17")
+Id = "media.proxy.rebuild"
+
+[sub_resource type="Resource" id="text_19"]
+script = ExtResource("text")
+Text = "Proxy"
+
+[sub_resource type="Resource" id="submenu_20"]
+script = ExtResource("submenu")
+Elements = Array[ExtResource("element")]([SubResource("button_14"), SubResource("button_16"), SubResource("button_18")])
+Text = SubResource("text_19")
+Id = "media.proxy"
+
+[sub_resource type="Resource" id="divider_21"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_22"]
+script = ExtResource("text")
+Text = "Remove from Project"
+
+[sub_resource type="Resource" id="button_23"]
+script = ExtResource("button")
+Text = SubResource("text_22")
+Id = "media.remove"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("divider_3"), SubResource("button_5"), SubResource("submenu_7"), SubResource("divider_8"), SubResource("button_10"), SubResource("button_12"), SubResource("submenu_20"), SubResource("divider_21"), SubResource("button_23")])

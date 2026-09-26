@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cu8ts4x8xkhe2" path="res://Images/Icons/Time.png" id="6_3pjoj"]
 [ext_resource type="Script" uid="uid://cl65r35xlwikt" path="res://Scripts/UI/Components/UIDragHandle.cs" id="6_fdvya"]
 [ext_resource type="Script" uid="uid://cvvbnvm2uvt6e" path="res://Scripts/UI/Thumbnails/ThumbnailStrip.cs" id="7_strip"]
+[ext_resource type="Script" path="res://Scripts/UI/Thumbnails/WaveformStrip.cs" id="7_wave"]
 [ext_resource type="Shader" uid="uid://drirp0g11rs8c" path="res://Shaders/RoundedMask.gdshader" id="8_mask"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_strip"]
@@ -15,7 +16,7 @@ shader = ExtResource("8_mask")
 shader_parameter/size = Vector2(100, 50)
 shader_parameter/radius = 2.0
 
-[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "controlsBox", "clipName", "speed", "speedPercentage", "widthPriority", "thumbnail", "outline", "extends", "timeshifts", "startControls", "endControls", "strip")]
+[node name="Clip" type="PanelContainer" unique_id=1527009326 node_paths=PackedStringArray("content", "controlsBox", "clipName", "nameEdit", "speed", "speedPercentage", "graph", "options", "widthPriority", "thumbnail", "outline", "extends", "timeshifts", "startControls", "endControls", "strip", "waveform")]
 oversampling_with_scale = 1
 offset_right = 300.0
 offset_bottom = 100.0
@@ -25,8 +26,11 @@ script = ExtResource("1_fin3e")
 content = NodePath("Content")
 controlsBox = NodePath("Content/VBoxContainer/HBoxContainer")
 clipName = NodePath("Content/VBoxContainer/HBoxContainer/Name")
+nameEdit = NodePath("Content/VBoxContainer/HBoxContainer/NameEdit")
 speed = NodePath("Content/VBoxContainer/HBoxContainer/Speed")
 speedPercentage = NodePath("Content/VBoxContainer/HBoxContainer/Speed/Percentage")
+graph = NodePath("Content/VBoxContainer/HBoxContainer/Graph")
+options = NodePath("Content/VBoxContainer/HBoxContainer/Options")
 widthPriority = [NodePath("Content/VBoxContainer/HBoxContainer/Name"), NodePath("Content/VBoxContainer/HBoxContainer/Speed"), NodePath("Content/VBoxContainer/HBoxContainer/Graph"), NodePath("Content/VBoxContainer/HBoxContainer/Options")]
 thumbnail = NodePath("Content/VBoxContainer/Thumbnail")
 outline = NodePath("Content/Outline")
@@ -35,6 +39,7 @@ timeshifts = [NodePath("Clip Start Controls/Timeshift"), NodePath("Clip End Cont
 startControls = NodePath("Clip Start Controls")
 endControls = NodePath("Clip End Controls")
 strip = NodePath("Content/VBoxContainer/Thumbnail/Strip")
+waveform = NodePath("Content/VBoxContainer/Thumbnail/Waveform")
 
 [node name="Content" type="Panel" parent="." unique_id=1654615429]
 layout_mode = 2
@@ -70,6 +75,14 @@ text = "Clip name"
 vertical_alignment = 1
 clip_text = true
 text_overrun_behavior = 3
+
+[node name="NameEdit" type="LineEdit" parent="Content/VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"ClipNameEdit"
+text = "Clip name"
 
 [node name="Speed" type="HBoxContainer" parent="Content/VBoxContainer/HBoxContainer" unique_id=544668007]
 visible = false
@@ -143,6 +156,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("7_strip")
+
+[node name="Waveform" type="Control" parent="Content/VBoxContainer/Thumbnail"]
+visible = false
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_wave")
 
 [node name="Inner Shadow" type="Panel" parent="Content" unique_id=1578119766]
 layout_mode = 1

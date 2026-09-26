@@ -1,0 +1,63 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3 uid="uid://cl8tegvvmqeel"]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Import Files..."
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "viewer.import"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "New Timeline"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Text = SubResource("text_3")
+Id = "viewer.newTimeline"
+
+[sub_resource type="Resource" id="divider_5"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_6"]
+script = ExtResource("text")
+Text = "Select All"
+
+[sub_resource type="Resource" id="button_7"]
+script = ExtResource("button")
+Text = SubResource("text_6")
+Id = "viewer.selectAll"
+
+[sub_resource type="Resource" id="divider_8"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Sort"
+
+[sub_resource type="Resource" id="submenu_10"]
+script = ExtResource("submenu")
+Text = SubResource("text_9")
+Id = "viewer.sort"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Filter"
+
+[sub_resource type="Resource" id="submenu_12"]
+script = ExtResource("submenu")
+Text = SubResource("text_11")
+Id = "viewer.filter"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("button_4"), SubResource("divider_5"), SubResource("button_7"), SubResource("divider_8"), SubResource("submenu_10"), SubResource("submenu_12")])
