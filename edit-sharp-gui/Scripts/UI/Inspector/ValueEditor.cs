@@ -128,20 +128,21 @@ public abstract partial class ValueEditor : HBoxContainer
 		return double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
 	}
 
-	public static string FormatTime(TimeSpan t)
+	public static string FormatTime(Time t)
 	{
-		string sign = t < TimeSpan.Zero ? "-" : "";
-		t = t.Duration();
+		string sign = t < Time.Zero ? "-" : "";
+		long ms = Time.MulDiv(t.Abs().Ticks, 1000, Time.TicksPerSecond, Rounding.Nearest);
+		long hours = ms / 3_600_000, minutes = ms / 60_000 % 60, seconds = ms / 1000 % 60;
 
-		return t.Hours > 0
-			? $"{sign}{t.Hours}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"
-			: $"{sign}{t.Minutes}:{t.Seconds:00}.{t.Milliseconds:000}";
+		return hours > 0
+			? $"{sign}{hours}:{minutes:00}:{seconds:00}.{ms % 1000:000}"
+			: $"{sign}{minutes}:{seconds:00}.{ms % 1000:000}";
 	}
 
 	// "12.5", "1:02.5", "0:01:02.500" - seconds, minutes and seconds, or all three
-	public static bool TryParseTime(string text, out TimeSpan value)
+	public static bool TryParseTime(string text, out Time value)
 	{
-		value = TimeSpan.Zero;
+		value = Time.Zero;
 		if (string.IsNullOrWhiteSpace(text)) return false;
 
 		text = text.Trim();
@@ -151,17 +152,19 @@ public abstract partial class ValueEditor : HBoxContainer
 		string[] parts = text.Split(':');
 		if (parts.Length > 3) return false;
 
-		double total = 0d;
-		double scale = 1d;
+		// decimal, so "0.1" is exactly a tenth of a second
+		decimal total = 0m;
+		decimal scale = 1m;
 
 		for (int i = parts.Length - 1; i >= 0; i--)
 		{
-			if (!double.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out double part)) return false;
+			if (!decimal.TryParse(parts[i], NumberStyles.Float, CultureInfo.InvariantCulture, out decimal part)) return false;
 			total += part * scale;
-			scale *= 60d;
+			scale *= 60m;
 		}
 
-		value = TimeSpan.FromSeconds(negative ? -total : total);
+		try { value = Time.FromSeconds(Rational.FromDecimal(negative ? -total : total)); }
+		catch (OverflowException) { return false; }
 		return true;
 	}
 }

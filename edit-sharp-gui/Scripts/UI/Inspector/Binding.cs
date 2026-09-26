@@ -31,11 +31,9 @@ public abstract class Binding
 		return false;
 	}
 
-	public TimeSpan ContentTime(TimeSpan playhead)
-		=> Clip is null ? playhead : TimeSpan.FromSeconds((playhead - Clip.Start).TotalSeconds * Clip.Speed);
+	public Time ContentTime(Time playhead) => Clip is null ? playhead : Clip.ContentTimeAt(playhead);
 
-	public TimeSpan TimelineTime(TimeSpan content)
-		=> Clip is null ? content : Clip.Start + TimeSpan.FromSeconds(content.TotalSeconds / Clip.Speed);
+	public Time TimelineTime(Time content) => Clip is null ? content : Clip.TimelineTimeOf(content);
 }
 
 // a property on an object, through its descriptor

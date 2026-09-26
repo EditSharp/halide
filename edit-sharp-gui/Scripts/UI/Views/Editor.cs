@@ -115,7 +115,7 @@ public partial class Editor : Control
 		mediaViewer.OpenRequested += ShowSource;
 
 		// files dropped on the timeline come in through the library first
-		UITimeline.FilesDropped += (files, at) => UITimeline.PlaceMediaAt(mediaViewer.Import(files), at);
+		UITimeline.FilesDropped += PlaceDroppedFiles;
 		GetWindow().FilesDropped += files => DragDrop.DropFiles(files, GetViewport().GetMousePosition());
 		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Install();
 
@@ -216,9 +216,9 @@ public partial class Editor : Control
 
 	static async Task<Timeline> ScratchTimelineAsync(IMedia media)
 	{
-		TimeSpan? natural = null;
+		Time? natural = null;
 		try { natural = await media.GetNaturalLengthAsync(); } catch (Exception) { }
-		TimeSpan duration = natural is TimeSpan n && n > TimeSpan.Zero ? n : TimeSpan.FromSeconds(5);
+		Time duration = natural is Time n && n > Time.Zero ? n : Time.FromSeconds(5);
 
 		using IDisposable _ = Transaction.Suppress();
 
@@ -229,13 +229,13 @@ public partial class Editor : Control
 		switch (media)
 		{
 			case VideoMedia video:
-				(VideoClip v, AudioClip a) = Clip.CreateClipsFromMedia(video, TimeSpan.Zero, duration);
+				(VideoClip v, AudioClip a) = Clip.CreateClipsFromMedia(video, Time.Zero, duration);
 				timeline.VideoChannels[0].AddClip(v);
 				if (a is not null) timeline.AudioChannels[0].AddClip(a);
 				break;
 
 			case AudioMedia audio:
-				timeline.AudioChannels[0].AddClip(AudioClip.CreateFromMedia(audio, TimeSpan.Zero, duration));
+				timeline.AudioChannels[0].AddClip(AudioClip.CreateFromMedia(audio, Time.Zero, duration));
 				break;
 
 			default:
@@ -259,12 +259,70 @@ public partial class Editor : Control
 		mediaThumbnails = null;
 	}
 
+	// the files' media, imported if they are new, placed once each one's length
+	// is known so a clip runs as long as its file
+	async void PlaceDroppedFiles(IReadOnlyList<string> files, Vector2 at)
+	{
+		mediaViewer.Import(files);
+
+		List<IMedia> media = [.. files
+			.Select(path => ProjectManager.Singleton.CurrentProject.Media.FirstOrDefault(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase)))
+			.Where(m => m is not null)];
+
+		await Task.WhenAll(media.Select(async m =>
+		{
+			try { await m.GetNaturalLengthAsync(); }
+			catch (Exception) { /* unreadable: placed at the fallback length, and shown offline */ }
+		}));
+
+		if (!IsInsideTree()) return;
+		UITimeline.PlaceMediaAt(media, at);
+	}
+
+	bool stopHeld, stopUsed;
+
+	public override void _Process(double delta)
+	{
+		if (!stopHeld || InputManager.Singleton.Keyboard.IsHeld(Shortcuts.PlaybackStop)) return;
+
+		stopHeld = false;
+		if (!stopUsed) UIPlayback.ShuttleStop();
+	}
+
 	void OnShortcut(ShortcutEventArgs e)
 	{
 		switch (e.Action)
 		{
 			case Shortcuts.PlaybackToggle:
 				UIPlayback.TogglePlayback();
+				e.Handled = true;
+				break;
+
+			// J and L speed up; with K held they slow down instead
+			case Shortcuts.PlaybackForward or Shortcuts.PlaybackReverse:
+			{
+				int direction = e.Action == Shortcuts.PlaybackForward ? 1 : -1;
+
+				if (InputManager.Singleton.Keyboard.IsHeld(Shortcuts.PlaybackStop))
+				{
+					UIPlayback.SlowShuttle(direction);
+					stopUsed = true;
+				}
+				else UIPlayback.Shuttle(direction);
+
+				e.Handled = true;
+				break;
+			}
+
+			// K pauses when it comes up, and only if no J or L went with it
+			case Shortcuts.PlaybackStop:
+				stopHeld = true;
+				stopUsed = false;
+				e.Handled = true;
+				break;
+
+			case Shortcuts.StepForward or Shortcuts.StepBack:
+				UIPlayback.StepFrame(e.Action == Shortcuts.StepForward ? 1 : -1);
 				e.Handled = true;
 				break;
 

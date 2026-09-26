@@ -40,6 +40,18 @@ public sealed record EditorSpec(
 
 		if (type.IsEnum) return value is string name ? Enum.Parse(type, name, ignoreCase: true) : Enum.ToObject(type, value);
 
+		// a typed number becomes the exact decimal it reads as: 1.5025 is 601/400
+		if (type == typeof(Rational))
+		{
+			return value switch
+			{
+				string text => Rational.Parse(text),
+				double or float => Rational.FromDecimal((decimal)Convert.ToDouble(value, CultureInfo.InvariantCulture)),
+				IConvertible => Rational.FromDecimal(Convert.ToDecimal(value, CultureInfo.InvariantCulture)),
+				_ => value,
+			};
+		}
+
 		if (value is IConvertible) return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
 
 		return value;

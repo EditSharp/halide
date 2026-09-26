@@ -19,24 +19,24 @@ public static class TestAnimator
         ClipTransform transform = clip.Graph.Nodes.OfType<TransformNode>().Single().Transform;
 
         //start position
-        SetKeyframe(transform, TimeSpan.Zero, StartPositions[direction.Value], scale.Value, -rotation, 0f, 0f);
+        SetKeyframe(transform, Time.Zero, StartPositions[direction.Value], scale.Value, -rotation, 0f, 0f);
 
         //move into center frame
-        SetKeyframe(transform, TimeSpan.FromSeconds(1), position.Value, scale.Value, rotation, RandomRange(-0.6f, 0.6f), RandomRange(-0.6f, 0.6f));
+        SetKeyframe(transform, Time.FromSeconds(1), position.Value, scale.Value, rotation, RandomRange(-0.6f, 0.6f), RandomRange(-0.6f, 0.6f));
 
         //random pitch + yaw while on screen
-        TimeSpan currentTime = TimeSpan.FromSeconds(3f);
-        while (currentTime < clip.Duration - TimeSpan.FromSeconds(3f))
+        Time currentTime = Time.FromSeconds(3f);
+        while (currentTime < clip.Duration - Time.FromSeconds(3f))
         {
             Vector2 newPosition = position.Value + new Vector2(RandomRange(-0.0025f, 0.0025f), RandomRange(-0.0025f, 0.0025f));
             SetKeyframe(transform, currentTime, newPosition, scale.Value, rotation, RandomRange(-0.6f, 0.6f), RandomRange(-0.6f, 0.6f));
 
-            currentTime += TimeSpan.FromSeconds(2f);
+            currentTime += Time.FromSeconds(2f);
         }
 
         //move out of center frame
         Vector2 newPosition1 = position.Value + new Vector2(RandomRange(-0.0025f, 0.0025f), RandomRange(-0.0025f, 0.0025f));
-        SetKeyframe(transform, clip.Duration - TimeSpan.FromSeconds(1), newPosition1, scale.Value, rotation, RandomRange(-0.6f, 0.6f), RandomRange(-0.6f, 0.6f));
+        SetKeyframe(transform, clip.Duration - Time.FromSeconds(1), newPosition1, scale.Value, rotation, RandomRange(-0.6f, 0.6f), RandomRange(-0.6f, 0.6f));
 
         //end position.
         SetKeyframe(transform, clip.Duration, EndPositions[direction.Value], scale.Value, 0f, 0f, 0f);
@@ -79,7 +79,7 @@ public static class TestAnimator
         AnimateClip(clips[5], Direction.Left, new(0.67f, -0.325f), new(0.32f, 0.31f), -0.5f);
     }
 
-    static void SetKeyframe(ClipTransform transform, TimeSpan time, Vector2? position, Vector2? scale, float rotation = 0f, float pitch = 0f, float yaw = 0f)
+    static void SetKeyframe(ClipTransform transform, Time time, Vector2? position, Vector2? scale, float rotation = 0f, float pitch = 0f, float yaw = 0f)
     {
         position ??= Vector2.Zero;
         scale ??= Vector2.One;

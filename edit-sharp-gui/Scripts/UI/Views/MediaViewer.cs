@@ -223,7 +223,7 @@ public partial class MediaViewer : Control, IDropTarget
 			if (KindOf(media) == Kind.Video && !shownProxyStates.Contains(ProxyStateOf(media))) return false;
 			if (requireAudio && tab != Tab.Audio && !(media is AudioMedia || info?.HasAudio == true)) return false;
 			if (requireAlpha && info?.HasAlpha != true) return false;
-			if (matchFrameRate && !(info?.FrameRate is double fps && Math.Abs(fps - project.RenderSettings.Framerate) < 0.01)) return false;
+			if (matchFrameRate && info?.FrameRate != project.RenderSettings.Framerate) return false;
 			if (matchResolution && !(info is MediaInfo i && i.Width == (int)project.RenderSettings.Resolution.X && i.Height == (int)project.RenderSettings.Resolution.Y)) return false;
 			if (tagFilter.Count > 0 && !media.Tags.Any(tagFilter.Contains)) return false;
 		}
@@ -235,8 +235,8 @@ public partial class MediaViewer : Control, IDropTarget
 	IComparable SortValue(object subject) => sortKey switch
 	{
 		SortKey.Name => NameOf(subject),
-		SortKey.Duration => subject is IMedia m && m.TryGetNaturalLength(out TimeSpan? l) && l is TimeSpan d ? d.Ticks : subject is Timeline t ? t.Duration.Ticks : long.MaxValue,
-		SortKey.FrameRate => InfoOf(subject)?.FrameRate ?? double.MaxValue,
+		SortKey.Duration => subject is IMedia m && m.TryGetNaturalLength(out Time? l) && l is Time d ? d.Ticks : subject is Timeline t ? t.Duration.Ticks : long.MaxValue,
+		SortKey.FrameRate => InfoOf(subject)?.FrameRate ?? new Rational(long.MaxValue),
 		SortKey.Tags => subject is IMedia tagged && tagged.Tags.Count > 0 ? string.Join(",", tagged.Tags.OrderBy(x => x)) : "￿",
 		SortKey.Online => IsOffline(subject) ? 1 : 0,
 		SortKey.Resolution => InfoOf(subject) is MediaInfo i ? (long)i.Width * i.Height : long.MaxValue,

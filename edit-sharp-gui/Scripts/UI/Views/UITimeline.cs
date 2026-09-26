@@ -58,7 +58,7 @@ public partial class UITimeline : Control
 	public event Action<IReadOnlyList<string>, Vector2> FilesDropped;
 
 	// media placed as linked clips, end to end from a time on a channel and its mirror
-	public void PlaceMedia(IReadOnlyList<EditSharp.Components.Media.IMedia> media, TimeSpan at, bool video, int channelIndex)
+	public void PlaceMedia(IReadOnlyList<EditSharp.Components.Media.IMedia> media, Time at, bool video, int channelIndex)
 		=> clipsView.PlaceMedia(media, at, video, channelIndex);
 
 	// the same, at a point on screen
@@ -154,8 +154,8 @@ public partial class UITimeline : Control
 		}
 	} = 100d;
 
-	public double TimeSpanToPixels(TimeSpan t) => t.TotalSeconds * PixelsPerSecond;
-	public TimeSpan PixelsToTimeSpan(double p) => TimeSpan.FromSeconds(p / PixelsPerSecond);
+	public double TimeSpanToPixels(Time t) => t.Seconds * PixelsPerSecond;
+	public Time PixelsToTimeSpan(double p) => Time.FromSeconds(p / PixelsPerSecond);
 
 
 	// Called when the node enters the scene tree for the first time.
@@ -192,7 +192,7 @@ public partial class UITimeline : Control
 		playhead.Pressed += (_, _) => BeginPlayheadDrag(playhead, PlayheadTime - CursorTime);
 		playhead.Released += (_, _) => EndPlayheadDrag();
 
-		ruler.Pressed += (_, _) => BeginPlayheadDrag(ruler, TimeSpan.Zero);
+		ruler.Pressed += (_, _) => BeginPlayheadDrag(ruler, Time.Zero);
 		ruler.Released += (_, _) => EndPlayheadDrag();
 
 		ApplyThemeColors();
@@ -284,27 +284,27 @@ public partial class UITimeline : Control
 	// line: playback hears about the playhead through PlayheadDrag, never
 	// through here, so whatever drives playback can write this every frame
 	// without hearing its own echo back
-	public TimeSpan PlayheadTime
+	public Time PlayheadTime
 	{
 		get;
-		set => field = value < TimeSpan.Zero ? TimeSpan.Zero : value;
+		set => field = value < Time.Zero ? Time.Zero : value;
 	}
 
 	// the user took hold of the playhead, moved it, and let go. a click on the
 	// ruler is a zero-length drag: started, one move, ended. PlayheadDrag only
 	// fires when the time actually changed
 	public event EventHandler PlayheadDragStarted;
-	public event EventHandler<TimeSpan> PlayheadDrag;
+	public event EventHandler<Time> PlayheadDrag;
 	public event EventHandler PlayheadDragEnded;
 
 	// the drag in progress: which control holds the press, and how far the
 	// playhead sat from the cursor when it was grabbed
 	Node playheadCaptor;
-	TimeSpan? playheadGrabOffset;
+	Time? playheadGrabOffset;
 
-	TimeSpan CursorTime => PixelsToTimeSpan(ToViewContent(InputManager.Singleton.Mouse.CurrentPosition).X);
+	Time CursorTime => PixelsToTimeSpan(ToViewContent(InputManager.Singleton.Mouse.CurrentPosition).X);
 
-	void BeginPlayheadDrag(Node captor, TimeSpan grabOffset)
+	void BeginPlayheadDrag(Node captor, Time grabOffset)
 	{
 		if (playheadGrabOffset is not null) return;
 
@@ -337,11 +337,11 @@ public partial class UITimeline : Control
 
 	// magnet, clamp, move, and tell whoever is listening - but only if it moved.
 	// no snap line here: the playhead is the line, so it would only draw over itself
-	void DragPlayheadTo(TimeSpan candidate)
+	void DragPlayheadTo(Time candidate)
 	{
-		TimeSpan time = SnapPoint(candidate, [], includePlayhead: false, out _);
+		Time time = SnapPoint(candidate, [], includePlayhead: false, out _);
 
-		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+		if (time < Time.Zero) time = Time.Zero;
 
 		if (time == PlayheadTime) return;
 
@@ -354,7 +354,7 @@ public partial class UITimeline : Control
 	// user scrolling mid-drag - and the playhead has to stay with the cursor
 	void UpdatePlayheadDrag(double delta)
 	{
-		if (playheadGrabOffset is not TimeSpan offset) return;
+		if (playheadGrabOffset is not Time offset) return;
 
 		MouseButtonState left = InputManager.Singleton.Mouse.LeftButton;
 
@@ -389,47 +389,43 @@ public partial class UITimeline : Control
 	// reads as -1, which is nothing to snap to
 	public MagnetMode Magnet => magnetLevel.Selected < 0 ? MagnetMode.Off : (MagnetMode)magnetLevel.GetSelectedId();
 
-	static int Framerate => ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate;
+	static Rational Framerate => ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate;
 
 	// the one place a frame number becomes a time, so every grid point is
 	// rounded the same way and edges that should line up compare equal
-	static TimeSpan FrameToTime(double frame)
-		=> TimeSpan.FromTicks((long)Math.Round(frame * TimeSpan.TicksPerSecond / Framerate));
+	static Time FrameToTime(long frame) => Time.FromFrame(frame, Framerate);
 
 	// the nearest frame boundary, or t untouched when the magnet is off
-	public TimeSpan SnapToFrame(TimeSpan t)
+	public Time SnapToFrame(Time t)
 	{
 		if (Magnet == MagnetMode.Off) return t;
 
-		return FrameToTime(Math.Round(t.TotalSeconds * Framerate));
+		return FrameToTime(t.ToFrame(Framerate, Rounding.Nearest));
 	}
 
 	// the shortest a clip may be, as an edge position. under the magnet that
-	// is one whole frame on the grid - the snap runs before the clamp, so a
-	// floor of the data model's millisecond could only ever be hit by
-	// overshooting, and a release anywhere short of a frame landed on it
-	// instead of on the frame. with the magnet off the data model's own
-	// floor is the floor
-	public TimeSpan EarliestEndAfter(TimeSpan start)
+	// is one whole frame on the grid; with the magnet off it is the data
+	// model's floor of one tick
+	public Time EarliestEndAfter(Time start)
 	{
 		if (Magnet == MagnetMode.Off) return start + Clip.MinimumDuration;
 
 		// the first grid point strictly after start
-		return FrameToTime(Math.Floor(start.TotalSeconds * Framerate + 1e-6) + 1);
+		return FrameToTime(start.ToFrame(Framerate, Rounding.Floor) + 1);
 	}
 
-	public TimeSpan LatestStartBefore(TimeSpan end)
+	public Time LatestStartBefore(Time end)
 	{
 		if (Magnet == MagnetMode.Off) return end - Clip.MinimumDuration;
 
 		// the last grid point strictly before end
-		return FrameToTime(Math.Ceiling(end.TotalSeconds * Framerate - 1e-6) - 1);
+		return FrameToTime(end.ToFrame(Framerate, Rounding.Ceiling) - 1);
 	}
 
 	// snap one moving point. exclude is the clips whose own edges must not
 	// count as targets - the ones being dragged
-	public TimeSpan SnapPoint(TimeSpan candidate, IEnumerable<Clip> exclude, bool includePlayhead, out TimeSpan? lineAt)
-		=> candidate + SnapDelta(TimeSpan.Zero, [candidate], candidate, exclude, includePlayhead, out lineAt);
+	public Time SnapPoint(Time candidate, IEnumerable<Clip> exclude, bool includePlayhead, out Time? lineAt)
+		=> candidate + SnapDelta(Time.Zero, [candidate], candidate, exclude, includePlayhead, out lineAt);
 
 	// snap a set of points that all move together by delta. anchor is the one
 	// point that lands on the frame grid - the rest keep their spacing from
@@ -438,7 +434,7 @@ public partial class UITimeline : Control
 	//
 	// lineAt is where the snap line belongs, or null when nothing caught or
 	// the catch was the playhead, which is already a line
-	public TimeSpan SnapDelta(TimeSpan delta, IEnumerable<TimeSpan> points, TimeSpan anchor, IEnumerable<Clip> exclude, bool includePlayhead, out TimeSpan? lineAt)
+	public Time SnapDelta(Time delta, IEnumerable<Time> points, Time anchor, IEnumerable<Clip> exclude, bool includePlayhead, out Time? lineAt)
 	{
 		lineAt = null;
 
@@ -448,20 +444,20 @@ public partial class UITimeline : Control
 
 		if (Magnet != MagnetMode.All) return delta;
 
-		TimeSpan threshold = PixelsToTimeSpan(snapDistance);
-		TimeSpan[] moving = [.. points];
+		Time threshold = PixelsToTimeSpan(snapDistance);
+		Time[] moving = [.. points];
 		HashSet<Clip> excluded = [.. exclude];
 
-		TimeSpan? bestAdjust = null;
-		TimeSpan? bestLine = null;
-		TimeSpan bestDistance = TimeSpan.MaxValue;
+		Time? bestAdjust = null;
+		Time? bestLine = null;
+		Time bestDistance = Time.MaxValue;
 
-		foreach ((TimeSpan target, bool isClip) in SnapTargets(excluded, includePlayhead))
+		foreach ((Time target, bool isClip) in SnapTargets(excluded, includePlayhead))
 		{
-			foreach (TimeSpan point in moving)
+			foreach (Time point in moving)
 			{
-				TimeSpan adjust = target - (point + delta);
-				TimeSpan distance = adjust.Duration();
+				Time adjust = target - (point + delta);
+				Time distance = adjust.Abs();
 
 				if (distance > threshold || distance >= bestDistance) continue;
 
@@ -471,7 +467,7 @@ public partial class UITimeline : Control
 			}
 		}
 
-		if (bestAdjust is TimeSpan a)
+		if (bestAdjust is Time a)
 		{
 			delta += a;
 			lineAt = bestLine;
@@ -481,7 +477,7 @@ public partial class UITimeline : Control
 	}
 
 	// every edge on every channel, plus the playhead when asked for
-	IEnumerable<(TimeSpan time, bool isClip)> SnapTargets(HashSet<Clip> exclude, bool includePlayhead)
+	IEnumerable<(Time time, bool isClip)> SnapTargets(HashSet<Clip> exclude, bool includePlayhead)
 	{
 		foreach (Channel channel in Timeline.Channels)
 		{
@@ -499,7 +495,7 @@ public partial class UITimeline : Control
 
 	// where the snap line is drawn, in timeline time. null hides it. whoever
 	// runs a drag sets this as it goes and clears it when the drag ends
-	public TimeSpan? SnapLine { get; set; }
+	public Time? SnapLine { get; set; }
 
 	// put the playhead and snap line over the view for the current scroll.
 	// called at the end of _Process, and again by every scroll this class
@@ -514,7 +510,7 @@ public partial class UITimeline : Control
 
 		snapLine.Visible = SnapLine.HasValue;
 
-		if (SnapLine is TimeSpan t)
+		if (SnapLine is Time t)
 			snapLine.Position = new((float)TimeSpanToPixels(t) - scroll - snapLine.Size.X / 2f, snapLine.Position.Y);
 	}
 

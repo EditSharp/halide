@@ -65,11 +65,11 @@ public partial class UIPlayback : Control
 	// a timeline playhead, say. raised on the main thread only: from _Process
 	// while playing, and from a scrub as it is requested. never from the
 	// decoder's own thread, so a listener can touch scene nodes directly
-	public event EventHandler<TimeSpan> PositionChanged;
+	public event EventHandler<Time> PositionChanged;
 
 	public PlaybackState State => playback?.State ?? PlaybackState.Inactive;
 
-	TimeSpan? reportedPosition;
+	Time? reportedPosition;
 
 	// set from the playback thread when the end is hit, picked up here so the
 	// last report is the very end rather than the last frame delivered
@@ -82,19 +82,19 @@ public partial class UIPlayback : Control
 		if (playback.State == PlaybackState.Playing)
 		{
 			// the clock extrapolates, so it can read a hair past the end
-			TimeSpan position = playback.Position;
-			TimeSpan duration = playback.Timeline.Duration;
+			Time position = playback.Position;
+			Time duration = playback.Timeline.Duration;
 
 			ReportPosition(position > duration ? duration : position);
 		}
 		else if (endReached)
 		{
 			endReached = false;
-			ReportPosition(playback.Timeline.Duration);
+			ReportPosition(Speed < 0f ? Time.Zero : playback.Timeline.Duration);
 		}
 	}
 
-	void ReportPosition(TimeSpan position)
+	void ReportPosition(Time position)
 	{
 		if (reportedPosition == position) return;
 
@@ -105,41 +105,109 @@ public partial class UIPlayback : Control
 	// what the play button does, for whoever else wants to do it - a shortcut, say
 	public void TogglePlayback() => PlayButton_Pressed();
 
+	// pause while playing at any speed; otherwise play forward at normal speed
 	void PlayButton_Pressed()
-    {
-        if (playback.State == PlaybackState.Inactive)
+	{
+		if (playback is null) return;
+
+		if (playback.State == PlaybackState.Playing) Pause();
+		else PlayAt(1f);
+	}
+
+	float Speed => playback?.Speed ?? 1f;
+
+	void Pause()
+	{
+		playback.Pause();
+		SetPlayButtonText("Play");
+		SetTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
+	}
+
+	// play at a speed, carrying on in place when already playing, resuming when
+	// paused, starting a session when there is none
+	void PlayAt(float speed)
+	{
+		playback.Speed = speed;
+		if (playback.State == PlaybackState.Playing) return;
+
+		if (playback.State == PlaybackState.Inactive)
 		{
-			//setup playback
 			InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
 
 			// start from wherever the position was left - a scrub while stopped
-			// moves it. at the very end there is nothing left to play, so go
-			// round to the start instead of playing one frame and stopping
-			TimeSpan start = playback.Position;
-			TimeSpan frame = TimeSpan.FromSeconds(1d / playback.RenderSettings.Framerate);
+			// moves it. at the far end there is nothing left to play, so go
+			// round to the other end instead of playing one frame and stopping
+			Time start = playback.Position;
+			Time frame = Time.FrameLength(playback.RenderSettings.Framerate);
+			Time duration = playback.Timeline.Duration;
 
-			if (start + frame >= playback.Timeline.Duration) start = TimeSpan.Zero;
+			if (speed > 0f && start + frame >= duration) start = Time.Zero;
+			if (speed < 0f && start - frame <= Time.Zero) start = duration;
 
 			playback.Play(start);
-			SetPlayButtonText("Pause");
 		}
-		else
-		{
-			if (playback.State == PlaybackState.Paused || playback.State == PlaybackState.Scrubbing)
-			{
-				//unpause
-				playback.Play();
-				SetPlayButtonText("Pause");
-			}
-			else
-			{
-				//pause
-				playback.Pause();
-				SetPlayButtonText("Play");
-				SetTimestamp(playback.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
-			}
-		}
-    }
+		else playback.Play();
+
+		SetPlayButtonText("Pause");
+	}
+
+	// ---- shuttle: J, K and L ----
+
+	// J and L double from 1x up to this
+	const float FastestSpeed = 128f;
+
+	// K with J or L starts at half speed and halves down to this
+	const float SlowestSpeed = 1f / 16f;
+
+	// the speed playing that way, or 0 when paused or going the other way
+	float SpeedToward(int direction)
+		=> playback.State == PlaybackState.Playing && Math.Sign(playback.Speed) == direction ? Math.Abs(playback.Speed) : 0f;
+
+	// L (direction 1) or J (-1): twice as fast when already going that way at
+	// 1x or more, otherwise 1x that way
+	public void Shuttle(int direction)
+	{
+		if (playback is null) return;
+
+		float current = SpeedToward(direction);
+		PlayAt(direction * (current >= 1f ? Math.Min(current * 2f, FastestSpeed) : 1f));
+	}
+
+	// K with L or J: half as fast when already creeping that way below 1x,
+	// otherwise half speed that way
+	public void SlowShuttle(int direction)
+	{
+		if (playback is null) return;
+
+		float current = SpeedToward(direction);
+		PlayAt(direction * (current > 0f && current < 1f ? Math.Max(current / 2f, SlowestSpeed) : 0.5f));
+	}
+
+	// K
+	public void ShuttleStop()
+	{
+		if (playback is null) return;
+		if (playback.State == PlaybackState.Playing) Pause();
+	}
+
+	// one frame either way from where playback is, pausing first
+	public void StepFrame(int direction)
+	{
+		if (playback is null) return;
+
+		if (playback.State == PlaybackState.Playing) Pause();
+
+		Rational fps = playback.RenderSettings.Framerate;
+		long frame = playback.Position.ToFrame(fps, Rounding.Nearest) + direction;
+		Time target = Time.Clamp(Time.FromFrame(frame, fps), Time.Zero, playback.Timeline.Duration);
+
+		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
+
+		// the step is playback's own move, so whatever follows along hears about it
+		ReportPosition(target);
+		ScrubTo(target);
+	}
+
 
 	// the slider is one way to scrub. anything outside - a timeline playhead -
 	// is another, through BeginScrub/ScrubTo/EndScrub below. same rules either
@@ -157,7 +225,7 @@ public partial class UIPlayback : Control
 	{
 		if (!dragging) return;
 
-		TimeSpan position = playback.Timeline.Duration * value;
+		Time position = playback.Timeline.Duration.Scale(value);
 
 		// the slider is playback's own control, so a scrub from it is
 		// playback moving - anything following along should hear about it.
@@ -196,20 +264,20 @@ public partial class UIPlayback : Control
 
 	// show the frame at position. clamped to the timeline, since playback
 	// refuses anything outside it and a playhead can be dragged past the end
-	public void ScrubTo(TimeSpan position)
+	public void ScrubTo(Time position)
 	{
 		if (playback is null) return;
 
-		TimeSpan duration = playback.Timeline.Duration;
+		Time duration = playback.Timeline.Duration;
 
-		if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+		if (position < Time.Zero) position = Time.Zero;
 		if (position > duration) position = duration;
 
 		// so the next report after this scrub is the real change, not a repeat
 		reportedPosition = position;
 
 		// keep the slider in step unless the slider is what is doing the scrubbing
-		if (!dragging) SetSliderValue(duration > TimeSpan.Zero ? position / duration : 0d);
+		if (!dragging) SetSliderValue(duration > Time.Zero ? position / duration : 0d);
 
 		try
 		{
@@ -256,10 +324,10 @@ public partial class UIPlayback : Control
 
 		InitializeFramebuffer((int)playback.RenderSettings.Resolution.X, (int)playback.RenderSettings.Resolution.Y);
 
-		TimeSpan position = playback.Position;
-		TimeSpan duration = playback.Timeline.Duration;
+		Time position = playback.Position;
+		Time duration = playback.Timeline.Duration;
 		if (position > duration) position = duration;
-		if (position < TimeSpan.Zero) position = TimeSpan.Zero;
+		if (position < Time.Zero) position = Time.Zero;
 
 		try
 		{
@@ -309,7 +377,7 @@ public partial class UIPlayback : Control
 		Debug.WriteLine("end reached");
 		endReached = true;
 		SetPlayButtonText("Play");
-		SetTimestamp(playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate);
+		SetTimestamp(Speed < 0f ? Time.Zero : playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate);
 	}
 
 	
@@ -338,23 +406,25 @@ public partial class UIPlayback : Control
 		slider.SetDeferred("value", v);
 	}
 
-	void SetTimestamp(TimeSpan position, TimeSpan duration, int framerate)
+	void SetTimestamp(Time position, Time duration, Rational framerate)
 	{
-		timestamp.SetDeferred("text", CalculateTimestamp(position, duration, framerate));
+		// the shuttle speed, while playing at anything but normal speed
+		float speed = Speed;
+		string shuttle = playback.State == PlaybackState.Playing && speed != 1f ? $"  {Rational.Approximate(speed, 1024)}x" : "";
+
+		timestamp.SetDeferred("text", CalculateTimestamp(position, duration, framerate) + shuttle);
 		if (playback.State == PlaybackState.Playing) SetSliderValue(position / duration);
 	}
 
-	static string CalculateTimestamp(TimeSpan position, TimeSpan duration, int framerate)
+	static string CalculateTimestamp(Time position, Time duration, Rational framerate)
+		=> $"{Timecode(position, framerate)} / {Timecode(duration, framerate)}";
+
+	// hh:mm:ss.ff, the frame counted within its second
+	static string Timecode(Time t, Rational framerate)
 	{
-		string positionString = position.ToString(@"hh\:mm\:ss");
-		string positionFrames = ((int)(position.TotalSeconds % 1d * framerate)).ToString();
-		positionFrames = positionFrames.Length == 1 ? string.Concat("0", positionFrames) : positionFrames;
-
-		string durationString = duration.ToString(@"hh\:mm\:ss");
-		string durationFrames = ((int)(duration.TotalSeconds % 1d * framerate)).ToString();
-		durationFrames = durationFrames.Length == 1 ? string.Concat("0", durationFrames) : durationFrames;
-
-		return $"{positionString}.{positionFrames} / {durationString}.{durationFrames}";
+		long seconds = Math.Max(0, t.Ticks) / Time.TicksPerSecond;
+		long frame = new Time(Math.Max(0, t.Ticks) % Time.TicksPerSecond).ToFrame(framerate);
+		return $"{seconds / 3600:00}:{seconds / 60 % 60:00}:{seconds % 60:00}.{frame:00}";
 	}
 
 	public Vector2[] samples;

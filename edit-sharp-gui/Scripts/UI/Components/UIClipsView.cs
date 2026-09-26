@@ -108,7 +108,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		if (!Clipboard.Shared.TryGet(out ClipsItem item) || item.Entries.Count == 0) return;
 
 		List<ClipsItem.Entry> entries = item.Materialize();
-		TimeSpan at = UITimeline.PlayheadTime;
+		Time at = UITimeline.PlayheadTime;
 
 		if (pasteTarget is (bool video, int index))
 		{
@@ -189,7 +189,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// selected, nothing ends up selected
 	public void SplitAtPlayhead(bool everything)
 	{
-		TimeSpan at = UITimeline.PlayheadTime;
+		Time at = UITimeline.PlayheadTime;
 		Timeline timeline = UITimeline.Timeline;
 
 		IEnumerable<Clip> candidates = everything || Selection.Count == 0
@@ -203,7 +203,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 		// where the selected clips were, so their pieces can be found afterwards
 		List<Clip> selected = [.. Selection.Select(s => s.Clip)];
-		List<(Channel channel, TimeSpan start, TimeSpan end)> selectedSpans = [.. selected.Select(c => (c.Channel, c.Start, c.End))];
+		List<(Channel channel, Time start, Time end)> selectedSpans = [.. selected.Select(c => (c.Channel, c.Start, c.End))];
 
 		using (Transaction.Scope change = UITimeline.History.Begin(spanning.Count == 1 ? "Split clip" : $"Split {spanning.Count} clips"))
 		{
@@ -267,7 +267,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 					break;
 
 				case RippleScope.AllChannels:
-					foreach ((TimeSpan start, TimeSpan end) in MergeRanges(clips).OrderByDescending(r => r.start))
+					foreach ((Time start, Time end) in MergeRanges(clips).OrderByDescending(r => r.start))
 						timeline.RippleRemoveRange(start, end);
 					break;
 			}
@@ -280,9 +280,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	}
 
 	// the clips' spans, with any that touch or overlap joined into one
-	static List<(TimeSpan start, TimeSpan end)> MergeRanges(IEnumerable<Clip> clips)
+	static List<(Time start, Time end)> MergeRanges(IEnumerable<Clip> clips)
 	{
-		List<(TimeSpan start, TimeSpan end)> merged = [];
+		List<(Time start, Time end)> merged = [];
 
 		foreach (Clip c in clips.OrderBy(c => c.Start))
 		{
@@ -445,7 +445,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// the menu's state and handlers for a set of clips
 	void ConfigureClipMenu(ContextMenu menu, List<UIClip> targets)
 	{
-		TimeSpan playhead = UITimeline.PlayheadTime;
+		Time playhead = UITimeline.PlayheadTime;
 		bool spanning = targets.Any(c => c.Clip.Start < playhead && c.Clip.End > playhead);
 		bool anySpanning = UITimeline.Timeline.Channels.SelectMany(c => c.Clips).Any(c => c.Start < playhead && c.End > playhead);
 
@@ -457,7 +457,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		Wire(menu, "clip.split", Shortcuts.Split, spanning, () => WithTargets(targets, () => SplitAtPlayhead(everything: false)));
 		Wire(menu, "clip.splitAll", Shortcuts.SplitAll, anySpanning, () => SplitAtPlayhead(everything: true));
 		Wire(menu, "clip.rename", null, targets.Count == 1, targets[0].BeginRename);
-		Wire(menu, "clip.resetSpeed", null, targets.Any(c => Math.Abs(c.Clip.Speed - 1d) > 0.0005d), () => ResetSpeed(targets));
+		Wire(menu, "clip.resetSpeed", null, targets.Any(c => c.Clip.Speed != Rational.One), () => ResetSpeed(targets));
 
 		// linked: checked when every target is in one group. one clip alone
 		// cannot be linked to anything, so it can only be unlinked
@@ -617,7 +617,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	{
 		using (Transaction.Scope change = UITimeline.History.Begin("Reset speed"))
 		{
-			foreach (UIClip c in targets) c.Clip.Speed = 1d;
+			foreach (UIClip c in targets) c.Clip.Speed = Rational.One;
 			change.Commit();
 		}
 
@@ -633,21 +633,21 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		ClaimKeyboard();
 		MarkTarget(GetChannelAtPoint(at));
 
-		TimeSpan time = UITimeline.SnapPoint(UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X), [], includePlayhead: true, out _);
-		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+		Time time = UITimeline.SnapPoint(UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X), [], includePlayhead: true, out _);
+		if (time < Time.Zero) time = Time.Zero;
 
 		ContextMenu shown = viewMenu.Clone();
 		Wire(shown, "clips.paste", Shortcuts.Paste, Clipboard.Shared.TryGet(out ClipsItem _), Paste);
 		Wire(shown, "clips.selectAll", Shortcuts.SelectAll, UIClips.Count > 0, SelectAll);
 		Wire(shown, "clips.deselect", null, Selection.Count > 0, DeselectAll);
-		Wire(shown, "clips.insertGap", null, true, () => InsertGap(time, TimeSpan.FromSeconds(1)));
+		Wire(shown, "clips.insertGap", null, true, () => InsertGap(time, Time.FromSeconds(1)));
 
 		ContextMenus.ShowContextMenu(shown, at);
 	}
 
 	// opens a gap on every channel: clips spanning the time are split there,
 	// and everything from the time on moves later by the gap
-	public void InsertGap(TimeSpan at, TimeSpan length)
+	public void InsertGap(Time at, Time length)
 	{
 		Timeline timeline = UITimeline.Timeline;
 
@@ -677,7 +677,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	public event Action<IReadOnlyList<string>, Vector2> FilesDropped;
 
 	// where one dropped item would land
-	readonly record struct Placement(IMedia Media, Timeline Embedded, bool Video, int Channel, TimeSpan Start, TimeSpan Duration);
+	readonly record struct Placement(IMedia Media, Timeline Embedded, bool Video, int Channel, Time Start, Time Duration);
 
 	readonly List<UIClip> ghosts = [];
 	readonly List<Placement> ghostPlacements = [];
@@ -688,7 +688,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	{
 		if (DragDrop.Ghost is not null) DragDrop.Ghost.Visible = false;
 
-		List<Placement> placements = Layout(payload, at, out TimeSpan? lineAt);
+		List<Placement> placements = Layout(payload, at, out Time? lineAt);
 		UITimeline.SnapLine = lineAt;
 		ShowGhosts(placements);
 	}
@@ -712,28 +712,28 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	public void PlaceMediaAt(IReadOnlyList<IMedia> media, Vector2 globalPosition)
 		=> Place(Layout(new MediaPayload(media), globalPosition, out _));
 
-	public void PlaceMedia(IReadOnlyList<IMedia> media, TimeSpan at, bool video, int channelIndex)
+	public void PlaceMedia(IReadOnlyList<IMedia> media, Time at, bool video, int channelIndex)
 		=> Place(Layout(new MediaPayload(media), at, video, channelIndex));
 
 	// how long an item runs when placed: its natural length, or five
 	// seconds for a still, an unknown file or an empty timeline
-	static TimeSpan DurationOf(object item)
+	static Time DurationOf(object item)
 	{
-		TimeSpan fallback = TimeSpan.FromSeconds(5);
+		Time fallback = Time.FromSeconds(5);
 
 		return item switch
 		{
-			IMedia media => media.TryGetNaturalLength(out TimeSpan? length) && length is TimeSpan l && l > TimeSpan.Zero ? l : fallback,
-			Timeline timeline => timeline.Duration > TimeSpan.Zero ? timeline.Duration : fallback,
+			IMedia media => media.TryGetNaturalLength(out Time? length) && length is Time l && l > Time.Zero ? l : fallback,
+			Timeline timeline => timeline.Duration > Time.Zero ? timeline.Duration : fallback,
 			_ => fallback
 		};
 	}
 
-	List<Placement> Layout(DragPayload payload, Vector2 at, out TimeSpan? lineAt)
+	List<Placement> Layout(DragPayload payload, Vector2 at, out Time? lineAt)
 	{
 		(ChannelType type, int index, bool _) = GetChannelAtPoint(at);
-		TimeSpan time = UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X);
-		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+		Time time = UITimeline.PixelsToTimeSpan(UITimeline.ToViewContent(at).X);
+		if (time < Time.Zero) time = Time.Zero;
 
 		List<object> items = payload switch
 		{
@@ -744,28 +744,28 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		};
 
 		// the head of the row snaps; the rest follow it
-		TimeSpan total = TimeSpan.Zero;
+		Time total = Time.Zero;
 		foreach (object item in items) total += DurationOf(item);
-		time = UITimeline.SnapDelta(TimeSpan.Zero, [time, time + total], time, [], includePlayhead: true, out lineAt) + time;
-		if (time < TimeSpan.Zero) time = TimeSpan.Zero;
+		time = UITimeline.SnapDelta(Time.Zero, [time, time + total], time, [], includePlayhead: true, out lineAt) + time;
+		if (time < Time.Zero) time = Time.Zero;
 
 		return Layout(items, time, type == ChannelType.Video, index);
 	}
 
-	List<Placement> Layout(DragPayload payload, TimeSpan at, bool video, int channelIndex)
+	List<Placement> Layout(DragPayload payload, Time at, bool video, int channelIndex)
 		=> Layout(payload switch { MediaPayload m => [.. m.Media], TimelinePayload t => [.. t.Timelines], _ => [] }, at, video, channelIndex);
 
 	// end to end from a time, on the channel under the cursor and its
 	// mirror: video channel i pairs with audio channel i. an item that has
 	// no clip for the hovered kind is refused
-	List<Placement> Layout(List<object> items, TimeSpan at, bool video, int channelIndex)
+	List<Placement> Layout(List<object> items, Time at, bool video, int channelIndex)
 	{
 		List<Placement> placements = [];
-		TimeSpan cursor = at;
+		Time cursor = at;
 
 		foreach (object item in items)
 		{
-			TimeSpan duration = DurationOf(item);
+			Time duration = DurationOf(item);
 
 			switch (item)
 			{
@@ -883,7 +883,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 		using (Transaction.Scope change = UITimeline.History.Begin(placements.Count == 1 ? "Add clip" : "Add clips"))
 		{
-			Dictionary<(object Source, TimeSpan Start), List<Clip>> pairs = [];
+			Dictionary<(object Source, Time Start), List<Clip>> pairs = [];
 
 			foreach (Placement p in placements)
 			{
@@ -1135,8 +1135,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// all selected clips
 	public class ClipsSelection : Selection<UIClip>
 	{
-		public TimeSpan EarliestPosition => this.Min(c => c.Clip.Start);
-		public TimeSpan LatestPosition => this.Max(c => c.Clip.End);
+		public Time EarliestPosition => this.Min(c => c.Clip.Start);
+		public Time LatestPosition => this.Max(c => c.Clip.End);
 
 		public int ZIndex 
 		{ 
@@ -1639,7 +1639,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		// selection front-first along the direction of travel - that way each clip only
 		// ever lands on space another selected clip has already vacated
 		int channelOrder = move.channelDelta >= 0 ? -1 : 1;
-		long timeOrder = move.timeDelta >= TimeSpan.Zero ? -1 : 1;
+		long timeOrder = move.timeDelta >= Time.Zero ? -1 : 1;
 
 		List<UIClip> ordered = [.. Selection
 			.OrderBy(c => channelOrder * c.Clip.Channel.Index)
@@ -1647,7 +1647,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 		// resolve every target before moving anything, so relocating one clip
 		// can never perturb another clip's own target
-		List<(Clip clip, TimeSpan start, Channel channel)> moves = [];
+		List<(Clip clip, Time start, Channel channel)> moves = [];
 		foreach (UIClip s in ordered)
 		{
 			int targetIndex = s.Clip.Channel.Index + move.channelDelta;
@@ -1660,7 +1660,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		}
 
 		// edit underlying clip data
-		foreach ((Clip clip, TimeSpan start, Channel channel) in moves) clip.Move(start, channel);
+		foreach ((Clip clip, Time start, Channel channel) in moves) clip.Move(start, channel);
 
 		change.Commit();
 		}
@@ -1716,11 +1716,11 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		UITimeline.RefreshChannelEdits();
 	}
 
-	(TimeSpan timeDelta, int channelDelta) GetClipMove(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
+	(Time timeDelta, int channelDelta) GetClipMove(UIClip uiClip, (Vector2 start, Vector2 delta) drag)
 	{
 		int channelDragDelta = GetChannelDragDelta(uiClip, drag);
 
-		TimeSpan timeDelta = UITimeline.PixelsToTimeSpan(drag.delta.X);
+		Time timeDelta = UITimeline.PixelsToTimeSpan(drag.delta.X);
 
 		// magnet: the grabbed clip's start is what lands on the frame grid,
 		// and every edge in the selection can catch on another clip or the
@@ -1731,11 +1731,11 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 			uiClip.Clip.Start,
 			Selection.Select(c => c.Clip),
 			includePlayhead: true,
-			out TimeSpan? lineAt
+			out Time? lineAt
 		);
 
 		// don't let the selection move past zero
-		if (Selection.EarliestPosition + timeDelta < TimeSpan.Zero)
+		if (Selection.EarliestPosition + timeDelta < Time.Zero)
 		{
 			// reign it back in
 			timeDelta = -Selection.EarliestPosition;
@@ -1769,8 +1769,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		public List<UIClip> Clips;
 
 		// where the edge was when grabbed, and where it currently previews
-		public TimeSpan EdgeAtStart;
-		public TimeSpan Edge;
+		public Time EdgeAtStart;
+		public Time Edge;
 
 		public Vector2 ScrollAtStart;
 	}
@@ -1793,7 +1793,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		if (ClipsBounds is not null) ClipsBounds.GrowOnly = true;
 
 		bool left = handle.Side == UIDragHandle.HandleSide.Left;
-		TimeSpan edge = left ? uiClip.Clip.Start : uiClip.Clip.End;
+		Time edge = left ? uiClip.Clip.Start : uiClip.Clip.End;
 
 		List<UIClip> clips = [.. Selection.Where(c => (left ? c.Clip.Start : c.Clip.End) == edge)];
 		if (!clips.Contains(uiClip)) clips.Insert(0, uiClip);
@@ -1836,12 +1836,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		// the edge follows the cursor in content space, so scrolling since the
 		// drag began counts as extra travel
 		float travel = InputManager.Singleton.Mouse.GetDragDelta(left).X + (UITimeline.ViewScroll.X - edgeDrag.ScrollAtStart.X);
-		TimeSpan candidate = edgeDrag.EdgeAtStart + UITimeline.PixelsToTimeSpan(travel);
+		Time candidate = edgeDrag.EdgeAtStart + UITimeline.PixelsToTimeSpan(travel);
 
 		// magnet first, then what the clips themselves allow. a snap the clip
 		// cannot reach is not a snap, so the line goes if the clamp moved it
-		candidate = UITimeline.SnapPoint(candidate, edgeDrag.Clips.Select(c => c.Clip), includePlayhead: true, out TimeSpan? lineAt);
-		TimeSpan edge = ClampEdge(candidate);
+		candidate = UITimeline.SnapPoint(candidate, edgeDrag.Clips.Select(c => c.Clip), includePlayhead: true, out Time? lineAt);
+		Time edge = ClampEdge(candidate);
 
 		UITimeline.SnapLine = edge == candidate ? lineAt : null;
 
@@ -1856,8 +1856,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 			// would land on, not the one it still has
 			if (edgeDrag.Kind == EdgeDragKind.Timeshift)
 			{
-				TimeSpan duration = edgeDrag.Left ? c.Clip.End - edge : edge - c.Clip.Start;
-				c.PreviewSpeed((double)c.Clip.ContentDuration.Ticks / duration.Ticks);
+				Time duration = edgeDrag.Left ? c.Clip.End - edge : edge - c.Clip.Start;
+				c.PreviewSpeed(new Rational(c.Clip.ContentDuration.Ticks, duration.Ticks));
 			}
 		}
 	}
@@ -1865,7 +1865,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// the tightest range every clip in the drag can accept: nothing shorter
 	// than the minimum duration, nothing before zero, and no extend past
 	// either end of the content - a timeshift has no content limit, it stretches
-	TimeSpan ClampEdge(TimeSpan edge)
+	Time ClampEdge(Time edge)
 	{
 		foreach (UIClip c in edgeDrag.Clips)
 		{
@@ -1873,27 +1873,27 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 			if (edgeDrag.Left)
 			{
-				TimeSpan min = TimeSpan.Zero;
+				Time min = Time.Zero;
 
 				if (edgeDrag.Kind == EdgeDragKind.Extend)
 				{
-					TimeSpan limit = clip.HeadExtendLimit;
-					if (limit != TimeSpan.MaxValue && clip.Start - limit > min) min = clip.Start - limit;
+					Time limit = clip.HeadExtendLimit;
+					if (limit != Time.MaxValue && clip.Start - limit > min) min = clip.Start - limit;
 				}
 
-				TimeSpan max = UITimeline.LatestStartBefore(clip.End);
+				Time max = UITimeline.LatestStartBefore(clip.End);
 
 				if (edge < min) edge = min;
 				if (edge > max) edge = max;
 			}
 			else
 			{
-				TimeSpan min = UITimeline.EarliestEndAfter(clip.Start);
+				Time min = UITimeline.EarliestEndAfter(clip.Start);
 
 				if (edgeDrag.Kind == EdgeDragKind.Extend)
 				{
-					TimeSpan limit = clip.TailExtendLimit;
-					if (limit != TimeSpan.MaxValue && edge > clip.End + limit) edge = clip.End + limit;
+					Time limit = clip.TailExtendLimit;
+					if (limit != Time.MaxValue && edge > clip.End + limit) edge = clip.End + limit;
 				}
 
 				if (edge < min) edge = min;
@@ -1931,18 +1931,18 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 	static void ApplyEdge(Clip clip, EdgeDrag drag)
 	{
-		TimeSpan delta = drag.Edge - (drag.Left ? clip.Start : clip.End);
-		if (delta == TimeSpan.Zero) return;
+		Time delta = drag.Edge - (drag.Left ? clip.Start : clip.End);
+		if (delta == Time.Zero) return;
 
 		switch (drag.Kind, drag.Left)
 		{
 			case (EdgeDragKind.Extend, true):
-				if (delta < TimeSpan.Zero) clip.ExtendStart(-delta);
+				if (delta < Time.Zero) clip.ExtendStart(-delta);
 				else clip.TrimStart(delta);
 				break;
 
 			case (EdgeDragKind.Extend, false):
-				if (delta > TimeSpan.Zero) clip.ExtendEnd(delta);
+				if (delta > Time.Zero) clip.ExtendEnd(delta);
 				else clip.TrimEnd(-delta);
 				break;
 

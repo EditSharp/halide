@@ -61,10 +61,10 @@ public sealed class GallerySample
 	public Animatable<Vector2> Vector { get; set; } = new(new Vector2(0.5f, 0.25f));
 
 	[Editable("Time", Order = 15)]
-	public TimeSpan Time { get; set; } = TimeSpan.FromSeconds(83.5);
+	public Time Time { get; set; } = Time.FromSeconds(83.5);
 
 	[Editable("Optional time", Order = 16)]
-	public TimeSpan? OptionalTime { get; set; }
+	public Time? OptionalTime { get; set; }
 
 	[Editable("Read only", Order = 17, ReadOnly = true)]
 	public string ReadOnly { get; set; } = "Shown, not edited";

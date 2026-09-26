@@ -42,7 +42,7 @@ public sealed class ClipsItem : ClipboardItem
 {
 	// LinkGroup is the group the original belonged to, so clips linked when
 	// copied can be linked again when pasted
-	public readonly record struct Entry(Clip Clip, TimeSpan Offset, bool Video, int ChannelIndex, Guid? LinkGroup);
+	public readonly record struct Entry(Clip Clip, Time Offset, bool Video, int ChannelIndex, Guid? LinkGroup);
 
 	readonly List<Entry> entries;
 
@@ -66,7 +66,7 @@ public sealed class ClipsItem : ClipboardItem
 	public static ClipsItem From(IEnumerable<Clip> clips, Clip anchor = null)
 	{
 		List<Clip> list = [.. clips.Where(c => c.Channel is not null)];
-		TimeSpan origin = list.Count == 0 ? TimeSpan.Zero : list.Min(c => c.Start);
+		Time origin = list.Count == 0 ? Time.Zero : list.Min(c => c.Start);
 
 		// copies are construction, not edits - see Transaction's remarks
 		using IDisposable _ = Transaction.Suppress();

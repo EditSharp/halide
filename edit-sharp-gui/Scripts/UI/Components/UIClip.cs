@@ -247,7 +247,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	{
 		if (IsGhost) return;
 		if (endControls is not null) endControls.Visible = handlesEnabled;
-		if (startControls is not null) startControls.Visible = handlesEnabled && Clip.Start > TimeSpan.Zero;
+		if (startControls is not null) startControls.Visible = handlesEnabled && Clip.Start > Time.Zero;
 	}
 
 	// ---- keeping the inner controls on screen ----
@@ -313,18 +313,18 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 	// what a timeshift in progress would set the speed to. Refresh puts the
 	// real value back
-	public void PreviewSpeed(double value)
+	public void PreviewSpeed(Rational value)
 	{
 		ShowSpeed(value);
-		waveform?.SetPreviewSpeed(value);
+		waveform?.SetPreviewSpeed(value.Value);
 	}
 
-	void ShowSpeed(double value)
+	void ShowSpeed(Rational value)
 	{
 		if (speed is null || speedPercentage is null) return;
 
-		speedPercentage.Text = $"{Math.Round(value * 100d)}%";
-		SetWanted(speed, Math.Abs(value - 1d) > 0.0005d);
+		speedPercentage.Text = $"{Math.Round(value.Value * 100d)}%";
+		SetWanted(speed, value != Rational.One);
 	}
 
 	// ---- fitting the inner controls to the clip's width ----
@@ -514,27 +514,27 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 		// the scale may have changed, and any head preview is over
 		UpdateThumbnail();
-		strip?.SetPreviewShift(TimeSpan.Zero);
-		waveform?.SetPreviewShift(TimeSpan.Zero);
+		strip?.SetPreviewShift(Time.Zero);
+		waveform?.SetPreviewShift(Time.Zero);
 		waveform?.SetPreviewSpeed(null);
 	}
 
 	// show the clip spanning start to end, leaving the data alone - an edge
 	// drag in progress. Refresh puts it back
-	public void PreviewSpan(TimeSpan start, TimeSpan end)
+	public void PreviewSpan(Time start, Time end)
 	{
 		Position = new((float)ClipsView.UITimeline.TimeSpanToPixels(start), Position.Y);
 		Size = new((float)ClipsView.UITimeline.TimeSpanToPixels(end - start), Size.Y);
 
 		// the head moving is the edge sliding over the content, not the
 		// content moving with the edge - tell the strip how far
-		TimeSpan shift = TimeSpan.FromSeconds((start - Clip.Start).TotalSeconds * Clip.Speed);
+		Time shift = Clip.ToContentTime(start - Clip.Start);
 		strip?.SetPreviewShift(shift);
 		waveform?.SetPreviewShift(shift);
 	}
 
 	// move clip ui relative to what is actually stored in data
-	public void MoveGUI(TimeSpan timeDelta, int channelDelta)
+	public void MoveGUI(Time timeDelta, int channelDelta)
 	{
 		Position = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start + timeDelta),

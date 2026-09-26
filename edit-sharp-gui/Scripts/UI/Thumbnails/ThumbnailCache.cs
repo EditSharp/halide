@@ -185,7 +185,7 @@ public sealed class ThumbnailCache : IDisposable
 	// a render to do: everything it needs from the model, read on the main
 	// thread when it was asked for, so the worker touches the clip only
 	// through the render itself
-	readonly record struct Job(Key Key, VideoClip Clip, TimeSpan Content, int Fingerprint);
+	readonly record struct Job(Key Key, VideoClip Clip, Time Content, int Fingerprint);
 
 	readonly object gate = new();
 	readonly List<Job> queue = [];
@@ -205,14 +205,14 @@ public sealed class ThumbnailCache : IDisposable
 
 		if (failed.TryGetValue(key, out ulong at))
 		{
-			if (Time.GetTicksMsec() - at < RetryMs) return;
+			if (Godot.Time.GetTicksMsec() - at < RetryMs) return;
 			failed.Remove(key);
 		}
 
 		if (!fingerprints.TryGetValue(key.Clip, out int fingerprint))
 			fingerprints[key.Clip] = fingerprint = ClipFingerprint.Of(key.Clip);
 
-		TimeSpan anchored = TimeSpan.FromSeconds(key.Index * GridSeconds(key.Grid));
+		Time anchored = Time.FromSeconds(key.Index * GridSeconds(key.Grid));
 		Job job = new(key, video, anchored - ClipFingerprint.Anchor(key.Clip), fingerprint);
 
 		lock (gate)
@@ -292,7 +292,7 @@ public sealed class ThumbnailCache : IDisposable
 
 		if (disposed) return;
 
-		failed[key] = Time.GetTicksMsec();
+		failed[key] = Godot.Time.GetTicksMsec();
 	}
 
 	// ---- knowing when a frame is stale ----
@@ -350,7 +350,7 @@ public sealed class ThumbnailCache : IDisposable
 
 		cancel.Cancel();
 
-		try { worker?.Wait(TimeSpan.FromSeconds(5)); }
+		try { worker?.Wait(Time.FromSeconds(5).ToTimeout()); }
 		catch (AggregateException) { /* cancelled, as asked */ }
 
 		playback.Dispose();

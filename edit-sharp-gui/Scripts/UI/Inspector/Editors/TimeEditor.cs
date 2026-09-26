@@ -17,7 +17,7 @@ public partial class TimeEditor : ValueEditor
 
 	public override bool IsEditing => clock.HasFocus() || frames.IsEditing;
 
-	int Framerate => Math.Max(1, Inspector?.Framerate ?? 30);
+	Rational Framerate => Inspector?.Framerate is { IsPositive: true } rate ? rate : 30;
 
 	protected override void Build()
 	{
@@ -39,7 +39,7 @@ public partial class TimeEditor : ValueEditor
 		toggle.Pressed += () => { if (Inspector is not null) Inspector.ShowFrames = !Inspector.ShowFrames; };
 	}
 
-	TimeSpan FromFrames(double f) => TimeSpan.FromTicks((long)Math.Round(f / Framerate * TimeSpan.TicksPerSecond));
+	Time FromFrames(double f) => Time.FromFrame((long)Math.Round(f), Framerate);
 
 	void CommitClock()
 	{
@@ -52,7 +52,7 @@ public partial class TimeEditor : ValueEditor
 			return;
 		}
 
-		if (!TryParseTime(clock.Text, out TimeSpan t))
+		if (!TryParseTime(clock.Text, out Time t))
 		{
 			clock.Text = shownClock;
 			return;
@@ -70,7 +70,7 @@ public partial class TimeEditor : ValueEditor
 		clock.Visible = !showFrames;
 		toggle.Text = showFrames ? "f" : "t";
 
-		if (mixed || value is not TimeSpan t)
+		if (mixed || value is not Time t)
 		{
 			frames.Display(null);
 			shownClock = "";
@@ -79,7 +79,7 @@ public partial class TimeEditor : ValueEditor
 			return;
 		}
 
-		frames.Display(Math.Round(t.TotalSeconds * Framerate));
+		frames.Display(t.ToFrame(Framerate, Rounding.Nearest));
 		shownClock = FormatTime(t);
 		clock.PlaceholderText = "";
 		if (!clock.HasFocus()) clock.Text = shownClock;

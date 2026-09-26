@@ -20,7 +20,7 @@ public partial class UIRuler : Control, IDragCancellable
 	Color submarkColor => GetThemeColor("submark", "Ruler");
 
 	double lastPixelsPerSecond;
-	int lastFramerate;
+	Rational lastFramerate;
 
 	public override void _Notification(int what)
 	{
@@ -62,12 +62,15 @@ public partial class UIRuler : Control, IDragCancellable
 	public void CancelDrag(MouseButtonState button) => Released?.Invoke(this, EventArgs.Empty);
 
 
-	public void Update(double pixelsPerSecond, int framerate)
+	public void Update(double pixelsPerSecond, Rational framerate)
 	{
 		lastPixelsPerSecond = pixelsPerSecond;
 		lastFramerate = framerate;
 
-		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, framerate)))
+		// marks per second use the nominal rate: 30 for 30000/1001
+		int nominal = Math.Max(1, (int)Math.Round(framerate.Value));
+
+		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, nominal)))
 		{
 			marksTexture.SetImage(marksImage);
 		}

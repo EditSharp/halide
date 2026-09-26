@@ -98,7 +98,7 @@ public sealed class WaveformCache : IDisposable
 
 		if (failed.TryGetValue(clip, out ulong at))
 		{
-			if (Time.GetTicksMsec() - at < RetryMs) return;
+			if (Godot.Time.GetTicksMsec() - at < RetryMs) return;
 			failed.Remove(clip);
 		}
 
@@ -123,8 +123,8 @@ public sealed class WaveformCache : IDisposable
 		fingerprints[clip] = fingerprint;
 		pending.Add(clip);
 
-		(TimeSpan start, int frames) = Extent(clip);
-		TimeSpan anchor = ClipFingerprint.Anchor(clip);
+		(Time start, int frames) = Extent(clip);
+		Time anchor = ClipFingerprint.Anchor(clip);
 
 		Task.Run(() =>
 		{
@@ -143,19 +143,19 @@ public sealed class WaveformCache : IDisposable
 
 	// what the envelope covers: for a clip reading media, the whole media
 	// around the in-point; for a generator, the clip plus room to extend
-	static (TimeSpan Start, int Frames) Extent(AudioClip clip)
+	static (Time Start, int Frames) Extent(AudioClip clip)
 	{
 		AudioMediaNode media = clip.Graph.AllNodes.OfType<AudioMediaNode>().FirstOrDefault(n => n.Media is not null);
 
 		if (media is not null && AudioAnalysisCache.TryGet(media.Media.Path, out AudioAnalysis analysis))
 		{
-			TimeSpan inPoint = media.Start ?? TimeSpan.Zero;
+			Time inPoint = media.Start ?? Time.Zero;
 			int frames = analysis.FrameCount;
 			return (-inPoint, frames);
 		}
 
-		TimeSpan span = clip.ContentDuration + TimeSpan.FromSeconds(30);
-		return (TimeSpan.Zero, (int)Math.Ceiling(span.TotalSeconds / AudioAnalysis.FrameSeconds));
+		Time span = clip.ContentDuration + Time.FromSeconds(30);
+		return (Time.Zero, (int)Math.Ceiling(span.Seconds / AudioAnalysis.FrameSeconds));
 	}
 
 	void Deliver(Clip clip, EnvelopeTexture envelope, int fingerprint)
@@ -163,7 +163,7 @@ public sealed class WaveformCache : IDisposable
 		pending.Remove(clip);
 		if (disposed) return;
 
-		if (envelope is null) { failed[clip] = Time.GetTicksMsec(); return; }
+		if (envelope is null) { failed[clip] = Godot.Time.GetTicksMsec(); return; }
 
 		// the clip changed while this built: build again for what it is now
 		if (!fingerprints.TryGetValue(clip, out int current) || current != fingerprint)

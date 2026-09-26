@@ -16,7 +16,7 @@ public partial class WaveformStrip : WaveformView
 
 	double pixelsPerSecond;
 	double? previewSpeed;
-	TimeSpan previewShift;
+	Time previewShift;
 
 	public void Setup(WaveformCache cache, AudioClip clip)
 	{
@@ -44,7 +44,7 @@ public partial class WaveformStrip : WaveformView
 	}
 
 	// a head edit in progress moves the clip's head over the content
-	public void SetPreviewShift(TimeSpan contentShift)
+	public void SetPreviewShift(Time contentShift)
 	{
 		if (previewShift == contentShift) return;
 
@@ -77,9 +77,9 @@ public partial class WaveformStrip : WaveformView
 		SetEnvelope(envelope);
 		if (envelope is null) return;
 
-		double speed = previewSpeed ?? clip.Speed;
+		double speed = previewSpeed ?? clip.Speed.Value;
 		SetAnchor(ClipFingerprint.Anchor(clip));
-		SetWindow(previewShift.TotalSeconds, speed / pixelsPerSecond);
+		SetWindow(previewShift.Seconds, speed / pixelsPerSecond);
 	}
 
 	public override void _ExitTree()

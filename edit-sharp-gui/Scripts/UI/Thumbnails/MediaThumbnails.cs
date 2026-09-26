@@ -89,7 +89,7 @@ public sealed class MediaThumbnails : IDisposable
 
 		if (failed.TryGetValue(subject, out ulong at))
 		{
-			if (Time.GetTicksMsec() - at < RetryMs) return;
+			if (Godot.Time.GetTicksMsec() - at < RetryMs) return;
 			failed.Remove(subject);
 		}
 
@@ -133,8 +133,8 @@ public sealed class MediaThumbnails : IDisposable
 
 	async Task<Texture2D> VideoFrameAsync(VideoMedia media, int width, int height)
 	{
-		TimeSpan? length = await media.GetNaturalLengthAsync(cancel.Token);
-		TimeSpan at = length is TimeSpan l ? TimeSpan.FromSeconds(l.TotalSeconds * FrameFraction) : TimeSpan.Zero;
+		Time? length = await media.GetNaturalLengthAsync(cancel.Token);
+		Time at = length is Time l ? Time.FromSeconds(l.Seconds * FrameFraction) : Time.Zero;
 
 		using SkiaSharp.SKImage image = await media.GetFrameAtAsync(at, SourceMode.ProxiesAndSource, width, height, cancel.Token);
 		return ToTexture(image);
@@ -144,10 +144,10 @@ public sealed class MediaThumbnails : IDisposable
 	// its own the way clip thumbnails are
 	async Task<Texture2D> TimelineFrameAsync(Timeline timeline, int width, int height)
 	{
-		VideoClip clip = VideoClip.CreateTimelineEmbed(timeline, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+		VideoClip clip = VideoClip.CreateTimelineEmbed(timeline, Time.Zero, Time.FromSeconds(1));
 
 		using Playback playback = new() { Timeline = timeline, RenderSettings = settings with { SourceMode = SourceMode.ProxiesAndSource } };
-		ClipFrame frame = await playback.RenderClipFrameAsync(clip, TimeSpan.Zero, width, height, cancel.Token);
+		ClipFrame frame = await playback.RenderClipFrameAsync(clip, Time.Zero, width, height, cancel.Token);
 
 		Image image = Image.CreateFromData(frame.Width, frame.Height, false, Image.Format.Rgba8, frame.Pixels);
 		return ImageTexture.CreateFromImage(image);
@@ -172,7 +172,7 @@ public sealed class MediaThumbnails : IDisposable
 
 		if (texture is not null) frames[subject] = texture;
 		else if (made is not null) envelopes[subject] = made;
-		else { failed[subject] = Time.GetTicksMsec(); return; }
+		else { failed[subject] = Godot.Time.GetTicksMsec(); return; }
 
 		Updated?.Invoke(subject);
 	}

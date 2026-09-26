@@ -18,7 +18,7 @@ public static class Tests
     // the media clips play 13 seconds of their file, as the old per-clip sources did
     static T Trim<T>(T clip, double seconds) where T : Clip
     {
-        foreach (InputNode input in clip.Graph.InputNodes) input.Duration = TimeSpan.FromSeconds(seconds);
+        foreach (InputNode input in clip.Graph.InputNodes) input.Duration = Time.FromSeconds(seconds);
         return clip;
     }
 
@@ -57,39 +57,39 @@ public static class Tests
             timeline.AddChannel(audioChannel2);
 
             //background
-            VideoClip noise = VideoClip.CreateNoise(TimeSpan.Zero, TimeSpan.FromSeconds(13));
+            VideoClip noise = VideoClip.CreateNoise(Time.Zero, Time.FromSeconds(13));
             noise.Name = $"Background Noise";
             timeline.Channels[0].AddClip(noise);
 
             //start blue
             noise.Graph.Nodes.OfType<TintNode>().Single().Color
                 .GetOrCreateTrack()
-                .AddKeyframe(TimeSpan.Zero, SKColors.White.WithRed(128).WithGreen(128));
+                .AddKeyframe(Time.Zero, SKColors.White.WithRed(128).WithGreen(128));
             
             //turn green
             noise.Graph.Nodes.OfType<TintNode>().Single().Color
                 .GetOrCreateTrack()
-                .AddKeyframe(TimeSpan.FromSeconds(1), SKColors.White.WithRed(128).WithBlue(128));
+                .AddKeyframe(Time.FromSeconds(1), SKColors.White.WithRed(128).WithBlue(128));
             
             //stay green until second 12
             noise.Graph.Nodes.OfType<TintNode>().Single().Color
                 .GetOrCreateTrack()
-                .AddKeyframe(TimeSpan.FromSeconds(12), SKColors.White.WithRed(128).WithBlue(128));
+                .AddKeyframe(Time.FromSeconds(12), SKColors.White.WithRed(128).WithBlue(128));
 
             //turn red
             noise.Graph.Nodes.OfType<TintNode>().Single().Color
                 .GetOrCreateTrack()
-                .AddKeyframe(TimeSpan.FromSeconds(13), SKColors.White.WithGreen(128).WithBlue(128));
+                .AddKeyframe(Time.FromSeconds(13), SKColors.White.WithGreen(128).WithBlue(128));
 
             //videos
             List<VideoClip> videos = [];
             for (int i = 1; i < 7; i++)
             {
-                VideoClip video = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.Zero, TimeSpan.FromSeconds(13)), 13);
+                VideoClip video = Trim(VideoClip.CreateFromMedia(videoMedia, Time.Zero, Time.FromSeconds(13)), 13);
 
                 video.Name = $"Video {i}";
 
-                //video.Start += TimeSpan.FromSeconds(0.1f * i);
+                //video.Start += Time.FromSeconds(0.1f * i);
 
                 RoundedCornersNode rounded = new();
                 video.Graph.AddNode(rounded);
@@ -135,15 +135,15 @@ public static class Tests
             //timeline.Link(videos);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7)), 13);
+            VideoClip extraVideo = Trim(VideoClip.CreateFromMedia(videoMedia, Time.FromSeconds(13.75), Time.FromSeconds(7)), 13);
             timeline.Channels[6].AddClip(extraVideo);
 
             // clip further out so i can test my gui
-            VideoClip extraVideo2 = Trim(VideoClip.CreateFromMedia(videoMedia, TimeSpan.FromSeconds(13.75), TimeSpan.FromSeconds(7)), 13);
+            VideoClip extraVideo2 = Trim(VideoClip.CreateFromMedia(videoMedia, Time.FromSeconds(13.75), Time.FromSeconds(7)), 13);
             timeline.Channels[7].AddClip(extraVideo2);
             
             //sound
-            AudioClip audio = Trim(AudioClip.CreateFromMedia(videoMedia.Audio, TimeSpan.Zero, TimeSpan.FromSeconds(13)), 13);
+            AudioClip audio = Trim(AudioClip.CreateFromMedia(videoMedia.Audio, Time.Zero, Time.FromSeconds(13)), 13);
             audio.Name = $"Source Audio";
             timeline.AudioChannels[0].AddClip(audio);
 

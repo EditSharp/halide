@@ -41,6 +41,6 @@ public partial class NumberEditor : ValueEditor
 	public override void Display(object value, bool mixed)
 	{
 		if (Spec.Frame != EditSharp.Editing.FrameMeasure.None) ShowFrameUnits(spin, PixelScale.X, fraction, frameToggle);
-		spin.Display(mixed || value is null ? null : Convert.ToDouble(value));
+		spin.Display(mixed || value is null ? null : value is Rational r ? r.Value : Convert.ToDouble(value));
 	}
 }

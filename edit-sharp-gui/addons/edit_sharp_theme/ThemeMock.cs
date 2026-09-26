@@ -107,10 +107,10 @@ public static class ThemeMock
 		GallerySample sample = new();
 		GallerySample other = new() { Number = 7, Text = "Different", Toggle = false, Dropdown = ShapeType.Polygon, Enabled = false };
 
-		sample.Keyed.SetKeyframe(TimeSpan.FromSeconds(0.5), 20f);
-		sample.Keyed.SetKeyframe(TimeSpan.FromSeconds(2), 80f);
-		sample.Animated.SetKeyframe(TimeSpan.FromSeconds(1), 0.2f);
-		sample.Animated.SetKeyframe(TimeSpan.FromSeconds(3), 0.9f);
+		sample.Keyed.SetKeyframe(Time.FromSeconds(0.5), 20f);
+		sample.Keyed.SetKeyframe(Time.FromSeconds(2), 80f);
+		sample.Animated.SetKeyframe(Time.FromSeconds(1), 0.2f);
+		sample.Animated.SetKeyframe(Time.FromSeconds(3), 0.9f);
 		sample.Percent = 1.5;
 
 		inspector.Show(
@@ -119,7 +119,7 @@ public static class ThemeMock
 			new InspectorSectionSpec("Two objects at once", [new InspectorTarget(sample), new InspectorTarget(other)], theme.GetColor("effect", "Node")),
 		]);
 
-		inspector.Playhead = TimeSpan.FromSeconds(0.5);
+		inspector.Playhead = Time.FromSeconds(0.5);
 	}
 
 	static Control Cell(string title, Control sample)

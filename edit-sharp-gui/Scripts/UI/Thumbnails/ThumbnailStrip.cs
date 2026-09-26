@@ -26,7 +26,7 @@ public partial class ThumbnailStrip : Control
 	// a head edit in progress moves the clip's head without moving the
 	// content under it. this is how far the head has gone, in content time,
 	// so the frames stay put while the edge slides over them
-	TimeSpan previewShift;
+	Time previewShift;
 
 	public override void _Ready()
 	{
@@ -87,7 +87,7 @@ public partial class ThumbnailStrip : Control
 		QueueRedraw();
 	}
 
-	public void SetPreviewShift(TimeSpan contentShift)
+	public void SetPreviewShift(Time contentShift)
 	{
 		if (previewShift == contentShift) return;
 
@@ -123,11 +123,11 @@ public partial class ThumbnailStrip : Control
 
 		// content seconds one slot spans, and the coarsest power-of-two grid
 		// that still puts a frame of its own in every slot
-		double slotSeconds = slotWidth / pixelsPerSecond * clip.Speed;
+		double slotSeconds = slotWidth / pixelsPerSecond * clip.Speed.Value;
 		int grid = Math.Clamp((int)Math.Floor(Math.Log2(slotSeconds)), ThumbnailCache.MinGrid, ThumbnailCache.MaxGrid);
 		double gridSeconds = ThumbnailCache.GridSeconds(grid);
 
-		double anchor = (ClipFingerprint.Anchor(clip) + previewShift).TotalSeconds;
+		double anchor = (ClipFingerprint.Anchor(clip) + previewShift).Seconds;
 
 		float left = Mathf.Max(0f, viewLeft);
 		float right = Mathf.Min(Size.X, viewRight);
@@ -143,7 +143,7 @@ public partial class ThumbnailStrip : Control
 			if (width <= 0f) continue;
 
 			// the content time at the slot's left edge, against the in-point
-			double anchored = x / pixelsPerSecond * clip.Speed + anchor;
+			double anchored = x / pixelsPerSecond * clip.Speed.Value + anchor;
 
 			// before the media starts: a head extend in preview past what
 			// the content has. nothing to show there yet

@@ -18,10 +18,10 @@ public sealed class EnvelopeTexture
 	public double FrameSeconds { get; }
 
 	// the content time of frame 0, and the in-point it was measured against
-	public TimeSpan ContentStart { get; }
-	public TimeSpan Anchor { get; }
+	public Time ContentStart { get; }
+	public Time Anchor { get; }
 
-	public EnvelopeTexture(SpectralEnvelope envelope, TimeSpan anchor)
+	public EnvelopeTexture(SpectralEnvelope envelope, Time anchor)
 	{
 		FrameCount = envelope.Count;
 		FrameSeconds = envelope.FrameSeconds;
@@ -58,7 +58,7 @@ public sealed class EnvelopeTexture
 
 	// a media's whole analysis, unprocessed
 	public static EnvelopeTexture Of(AudioAnalysis analysis)
-		=> new(new SpectralEnvelope(TimeSpan.Zero, AudioAnalysis.FrameSeconds, analysis.Bands, analysis.Peak), TimeSpan.Zero);
+		=> new(new SpectralEnvelope(Time.Zero, AudioAnalysis.FrameSeconds, analysis.Bands, analysis.Peak), Time.Zero);
 }
 
 // a control the waveform shader paints: hand it an envelope, tell it which
@@ -115,11 +115,11 @@ public partial class WaveformView : Control
 
 	// the envelope's frame 0 in the content time of a clip whose in-point
 	// is `anchor` now: the envelope was measured against its own
-	double EffectiveStart(TimeSpan anchor) => envelope is null ? 0d : (envelope.ContentStart + (envelope.Anchor - anchor)).TotalSeconds;
+	double EffectiveStart(Time anchor) => envelope is null ? 0d : (envelope.ContentStart + (envelope.Anchor - anchor)).Seconds;
 
-	TimeSpan anchor;
+	Time anchor;
 
-	public void SetAnchor(TimeSpan anchor)
+	public void SetAnchor(Time anchor)
 	{
 		if (this.anchor == anchor) return;
 		this.anchor = anchor;

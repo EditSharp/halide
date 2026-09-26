@@ -82,7 +82,7 @@ public partial class SmokeTest : Node
 			EditSharp.Components.Clips.Clip first = clipsView.UIClips[0].Clip;
 			using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Nudge"))
 			{
-				first.Move(first.Start + TimeSpan.FromSeconds(0.1));
+				first.Move(first.Start + Time.FromSeconds(0.1));
 				change.Commit();
 			}
 			Check(await NewFrame(before), "a committed edit re-renders it");
@@ -182,7 +182,7 @@ public partial class SmokeTest : Node
 		Check(rows.Count > 0, $"single clip: {rows.Count} rows");
 
 		// ---- the playhead, frames, and history all refresh without complaint
-		inspector.Playhead = TimeSpan.FromSeconds(1.5);
+		inspector.Playhead = Time.FromSeconds(1.5);
 		await Frames(2);
 		inspector.ShowFrames = true;
 		await Frames(2);
@@ -191,12 +191,12 @@ public partial class SmokeTest : Node
 
 		// ---- a move from outside any view, undone and redone under the views
 		EditSharp.Components.Clips.Clip clip = clipsView.UIClips[0].Clip;
-		TimeSpan start = clip.Start;
+		Time start = clip.Start;
 		int entries = timeline.History.Position;
 
 		using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Move"))
 		{
-			clip.Move(start + TimeSpan.FromSeconds(0.25));
+			clip.Move(start + Time.FromSeconds(0.25));
 			change.Commit();
 		}
 
@@ -207,7 +207,7 @@ public partial class SmokeTest : Node
 		Check(clip.Start == start, "undo put the clip back");
 		timeline.History.Redo();
 		await Frames(2);
-		Check(clip.Start == start + TimeSpan.FromSeconds(0.25), "redo moved it again");
+		Check(clip.Start == start + Time.FromSeconds(0.25), "redo moved it again");
 		timeline.History.Undo();
 		await Frames(2);
 		Check(clipsView.UIClips.Count == clipsView.UIClips.Count && Find<InspectorRow>(inspector).Count == rows.Count, "the inspector survived undo and redo");
@@ -221,21 +221,21 @@ public partial class SmokeTest : Node
 			entries = timeline.History.Position;
 			speed.Apply(2d);
 			await Frames(2);
-			Check(Math.Abs(clip.Speed - 2d) < 1e-9, $"Apply set the clip's speed: {clip.Speed}");
+			Check(clip.Speed == new Rational(2), $"Apply set the clip's speed: {clip.Speed}");
 			Check(timeline.History.Position == entries + 1, "and recorded one entry");
 			Check(clipsView.UIClips[0].Size.X > 0f, "the timeline re-read it");
 			timeline.History.Undo();
 			await Frames(2);
-			Check(Math.Abs(clip.Speed - 1d) < 1e-9, $"undo restored the speed: {clip.Speed}");
+			Check(clip.Speed == new Rational(1), $"undo restored the speed: {clip.Speed}");
 
 			speed.Apply(3d);
 			await Frames(1);
 			speed.ResetToDefault();
 			await Frames(1);
-			Check(Math.Abs(clip.Speed - 1d) < 1e-9, $"reset put the speed back to its default: {clip.Speed}");
+			Check(clip.Speed == new Rational(1), $"reset put the speed back to its default: {clip.Speed}");
 			timeline.History.Undo();
 			await Frames(1);
-			Check(Math.Abs(clip.Speed - 3d) < 1e-9, "and the reset is one undoable entry");
+			Check(clip.Speed == new Rational(3), "and the reset is one undoable entry");
 			timeline.History.Undo();
 			await Frames(1);
 		}
@@ -246,18 +246,18 @@ public partial class SmokeTest : Node
 		if (rotation is not null)
 		{
 			EditSharp.Components.IAnimatable animatable = rotation.Bindings[0].Animatable;
-			inspector.Playhead = clip.Start + TimeSpan.FromSeconds(0.5);
+			inspector.Playhead = clip.Start + Time.FromSeconds(0.5);
 			await Frames(1);
 
 			rotation.ToggleKeyframe();
 			await Frames(1);
-			Check(animatable.Keyframes.Count == 1 && Math.Abs((animatable.Keyframes[0].Start - TimeSpan.FromSeconds(0.5)).TotalSeconds) < 1e-3, $"the diamond keyed the value at the playhead's content time: {string.Join(",", animatable.Keyframes.Select(k => k.Start.TotalSeconds))}");
+			Check(animatable.Keyframes.Count == 1 && Math.Abs((animatable.Keyframes[0].Start - Time.FromSeconds(0.5)).Seconds) < 1e-3, $"the diamond keyed the value at the playhead's content time: {string.Join(",", animatable.Keyframes.Select(k => k.Start.Seconds))}");
 
 			rotation.Apply(45d);
 			await Frames(1);
 			Check(animatable.Keyframes.Count == 1 && Convert.ToDouble(animatable.Keyframes[0].Value) == 45d, "an edit on a keyed row updates the keyframe");
 
-			inspector.Playhead = clip.Start + TimeSpan.FromSeconds(1d);
+			inspector.Playhead = clip.Start + Time.FromSeconds(1d);
 			await Frames(1);
 			rotation.Apply(90d);
 			await Frames(1);
@@ -276,7 +276,7 @@ public partial class SmokeTest : Node
 
 			rotation.ResetToDefault();
 			await Frames(1);
-			Check(animatable.Keyframes.Count == 2 && animatable.Keyframes.Any(k => Math.Abs((k.Start - TimeSpan.FromSeconds(1d)).TotalSeconds) < 1e-3 && Convert.ToDouble(k.Value) == 0d), "reset on a keyed row keys the default at the playhead");
+			Check(animatable.Keyframes.Count == 2 && animatable.Keyframes.Any(k => Math.Abs((k.Start - Time.FromSeconds(1d)).Seconds) < 1e-3 && Convert.ToDouble(k.Value) == 0d), "reset on a keyed row keys the default at the playhead");
 
 			timeline.History.Undo();
 			timeline.History.Undo();
@@ -285,6 +285,72 @@ public partial class SmokeTest : Node
 			timeline.History.Undo();
 			await Frames(2);
 			Check(animatable.Keyframes.Count == 0, $"five undos clear the keyframes: {animatable.Keyframes.Count}");
+		}
+
+		// ---- exact time: keys found again at a retimed clip's odd playheads, flat curves stay flat
+		if (rotation is not null && speed is not null)
+		{
+			EditSharp.Components.IAnimatable animatable = rotation.Bindings[0].Animatable;
+			int undo = timeline.History.Position;
+			InspectorGlyph resetGlyph = Find<InspectorGlyph>(rotation).Find(g => g.Name == "Reset");
+
+			// typed into the field, the way a user enters it
+			SpinSlider speedSpin = Find<SpinSlider>(speed)[0];
+			typeof(SpinSlider).GetMethod("StartTyping", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(speedSpin, null);
+			((LineEdit)speedSpin.Get("entry")).Text = "150";
+			typeof(SpinSlider).GetMethod("OnEntrySubmitted", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(speedSpin, [""]);
+			await Frames(1);
+			Check(clip.Speed == new Rational(3, 2), $"a typed 150% is exactly 3/2: {clip.Speed}");
+
+			// a playhead off the frame grid by an odd number of ticks
+			Time first = clip.Start + new Time(Time.TicksPerSecond / 7 + 1);
+			Time second = clip.Start + Time.FromFrame(29, 30);
+
+			inspector.Playhead = first;
+			await Frames(1);
+			rotation.Apply(10d);
+			rotation.ToggleKeyframe();
+			await Frames(1);
+			inspector.Playhead = second;
+			await Frames(1);
+			rotation.Apply(10d);
+			await Frames(1);
+			Check(animatable.Keyframes.Count == 2, $"two keyframes: {animatable.Keyframes.Count}");
+
+			// two equal keyframes: flat everywhere between, linear and bezier alike
+			Time from = animatable.Keyframes[0].Start, to = animatable.Keyframes[1].Start;
+			bool flat = true;
+			for (int i = 0; i <= 97; i++)
+			{
+				Time t = from + new Time((to - from).Ticks * i / 97);
+				if (!Equals(animatable.Evaluate(t), 10f)) { flat = false; GD.Print($"not flat at {t}: {animatable.Evaluate(t)}"); break; }
+			}
+			Check(flat, "equal keyframes hold exactly between them");
+
+			// leave, come back to the first keyframe the way the arrows do, and edit it
+			inspector.Playhead = clip.Start + Time.FromSeconds(3);
+			await Frames(1);
+			inspector.Playhead = rotation.Bindings[0].TimelineTime(animatable.Keyframes[0].Start);
+			await Frames(1);
+			rotation.Apply(25d);
+			await Frames(1);
+			Check(animatable.Keyframes.Count == 2 && Equals(animatable.Keyframes[0].Value, 25f), $"coming back to a keyframe edits it rather than adding one: {string.Join(", ", animatable.Keyframes.Select(k => $"{k.Start.Ticks}={k.Value}"))}");
+
+			// the same from a playhead set straight to the original odd time
+			inspector.Playhead = first;
+			await Frames(1);
+			rotation.Apply(35d);
+			await Frames(1);
+			Check(animatable.Keyframes.Count == 2 && Equals(animatable.Keyframes[0].Value, 35f), "and so does the playhead it was keyed at");
+
+			rotation.ResetToDefault();
+			await Frames(2);
+			Check(animatable.Keyframes.Count == 2 && Equals(animatable.Keyframes[0].Value, 0f), "reset keys the default on that keyframe");
+			Check(resetGlyph is { Visible: false }, "and the reset button goes away");
+
+			while (timeline.History.Position > undo) timeline.History.Undo();
+			await Frames(2);
+			Check(animatable.Keyframes.Count == 0 && clip.Speed == Rational.One, "undo puts it all back");
 		}
 
 		// ---- frame-relative values in pixels
@@ -349,7 +415,7 @@ public partial class SmokeTest : Node
 			{
 				EditSharp.Components.Nodes.Input.VideoInputNode original = InputOf(video[0].Clip);
 				var originalMedia = ((EditSharp.Components.Nodes.Input.VideoMediaNode)original).Media;
-				TimeSpan? inPoint = original.Start;
+				Time? inPoint = original.Start;
 
 				clipsView.SelectClip(video[0], SelectionMode.Exclusive);
 				await Frames(3);
@@ -696,9 +762,9 @@ public partial class SmokeTest : Node
 				EditSharp.Components.Media.IMedia first = tiles[0].Media;
 				int clipsBefore = clipsView.UIClips.Count;
 				int mark = timeline.History.Position;
-				timeline.PlaceMedia([first, first], TimeSpan.FromSeconds(30), video: true, channelIndex: 0);
+				timeline.PlaceMedia([first, first], Time.FromSeconds(30), video: true, channelIndex: 0);
 				await Frames(2);
-				List<UIClip> placed = [.. clipsView.UIClips.Where(u => u.Clip.Start >= TimeSpan.FromSeconds(30))];
+				List<UIClip> placed = [.. clipsView.UIClips.Where(u => u.Clip.Start >= Time.FromSeconds(30))];
 				Check(clipsView.UIClips.Count == clipsBefore + 4 && placed.Count == 4, $"two videos placed as four clips: {clipsView.UIClips.Count - clipsBefore}");
 				Check(placed.Where(p => p.Clip is EditSharp.Components.Clips.VideoClip).Select(p => p.Clip.Start).Distinct().Count() == 2, "end to end, not stacked");
 				Check(placed.All(p => p.Clip.LinkGroupId is not null), "each video is linked to its soundtrack");
@@ -709,9 +775,9 @@ public partial class SmokeTest : Node
 
 				// a gap at zero pushes everything along
 				mark = timeline.History.Position;
-				clipsView.InsertGap(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+				clipsView.InsertGap(Time.Zero, Time.FromSeconds(1));
 				await Frames(2);
-				Check(clipsView.UIClips.All(u => u.Clip.Start >= TimeSpan.FromSeconds(1)), "a gap at zero shifts every clip by a second");
+				Check(clipsView.UIClips.All(u => u.Clip.Start >= Time.FromSeconds(1)), "a gap at zero shifts every clip by a second");
 				Check(timeline.History.Position == mark + 1, "in one entry");
 				timeline.History.Undo();
 				await Frames(2);
@@ -748,7 +814,7 @@ public partial class SmokeTest : Node
 				// the frequency-domain chain: a gain node halves the envelope
 				{
 					var audioClip = (EditSharp.Components.Clips.AudioClip)audio0.Clip;
-					EditSharp.Audio.Analysis.SpectralEnvelope plain = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, TimeSpan.Zero, 200);
+					EditSharp.Audio.Analysis.SpectralEnvelope plain = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, Time.Zero, 200);
 					var gain = EditSharp.History.Transaction.Suppressed(() => new EditSharp.Components.Nodes.Effects.GainNode { Gain = 0.5f });
 					EditSharp.Components.Nodes.Node inputNode = audioClip.Graph.AllNodes.OfType<EditSharp.Components.Nodes.Input.AudioMediaNode>().First();
 					using (EditSharp.History.Transaction.Scope change = timeline.History.Begin("Gain"))
@@ -759,7 +825,7 @@ public partial class SmokeTest : Node
 						audioClip.Graph.Connect(gain.Id, "Audio", audioClip.Graph.OutputNode.Id, "Audio");
 						change.Commit();
 					}
-					EditSharp.Audio.Analysis.SpectralEnvelope halved = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, TimeSpan.Zero, 200);
+					EditSharp.Audio.Analysis.SpectralEnvelope halved = EditSharp.Audio.Analysis.ClipSpectrum.Evaluate(audioClip, Time.Zero, 200);
 					float ratio = plain is not null && halved is not null && plain.Peak.Max() > 0f ? halved.Peak.Max() / plain.Peak.Max() : -1f;
 					Check(Math.Abs(ratio - 0.5f) < 0.01f, $"a gain of 0.5 halves the peak in the frequency domain: {ratio}");
 

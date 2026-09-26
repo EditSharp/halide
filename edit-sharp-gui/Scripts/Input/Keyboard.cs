@@ -12,6 +12,11 @@ namespace EditSharpGUI.Scripts.Input;
 public static class Shortcuts
 {
     public const string PlaybackToggle = "playback.toggle";
+    public const string PlaybackForward = "playback.forward";
+    public const string PlaybackReverse = "playback.reverse";
+    public const string PlaybackStop = "playback.stop";
+    public const string StepForward = "playback.stepForward";
+    public const string StepBack = "playback.stepBack";
     public const string SelectAll = "selection.all";
     public const string Undo = "history.undo";
     public const string Redo = "history.redo";
@@ -97,6 +102,11 @@ public sealed class ShortcutMap
     static readonly Dictionary<string, KeyCombo[]> Defaults = new()
     {
         [Shortcuts.PlaybackToggle] = [new(Key.Space)],
+        [Shortcuts.PlaybackForward] = [new(Key.L)],
+        [Shortcuts.PlaybackReverse] = [new(Key.J)],
+        [Shortcuts.PlaybackStop] = [new(Key.K)],
+        [Shortcuts.StepForward] = [new(Key.Right)],
+        [Shortcuts.StepBack] = [new(Key.Left)],
         [Shortcuts.SelectAll] = [new(Key.A, Control: true)],
         [Shortcuts.Undo] = [new(Key.Z, Control: true)],
         [Shortcuts.Redo] = [new(Key.Y, Control: true), new(Key.Z, Control: true, Shift: true)],
@@ -243,6 +253,9 @@ public class Keyboard
 
     public bool HasCapture(Node node) => GodotObject.IsInstanceValid(Captor) && Captor == node;
 
+    // whether a key bound to the action is down right now, whatever the modifiers
+    public bool IsHeld(string action) => Shortcuts.Get(action).Any(c => Godot.Input.IsKeyPressed(c.Key));
+
     // offers a key nothing in the gui used to the handlers along the chain.
     // returns whether one of them took it, so the caller can keep it from
     // anything further down the line
@@ -250,6 +263,10 @@ public class Keyboard
     {
         // a held key repeats; a shortcut fires once per press
         if (!key.Pressed || key.Echo) return false;
+
+        // a focused button activates on the release of the accept key but lets
+        // the press through; answering the press as well would act on it twice
+        if (viewport.GuiGetFocusOwner() is BaseButton { Disabled: false } && key.IsAction("ui_accept", exactMatch: true)) return false;
 
         KeyCombo combo = KeyCombo.From(key);
         List<string> actions = [.. Shortcuts.ActionsFor(combo)];

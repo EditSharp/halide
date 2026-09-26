@@ -78,7 +78,7 @@ public partial class Inspector : Control
 	public MediaLibrary Media { get; set; }
 
 	// for time fields shown as frames
-	public int Framerate { get; set; } = 30;
+	public Rational Framerate { get; set; } = 30;
 
 	// time fields as frame counts rather than clocks. toggled from any
 	// time field, for all of them
@@ -101,7 +101,7 @@ public partial class Inspector : Control
 
 	// timeline time. animated rows show their value here, and a keyframe
 	// added from a row goes here
-	public TimeSpan Playhead
+	public Time Playhead
 	{
 		get;
 		set
@@ -113,7 +113,7 @@ public partial class Inspector : Control
 	}
 
 	// a keyframe arrow wants the playhead moved
-	public event EventHandler<TimeSpan> SeekRequested;
+	public event EventHandler<Time> SeekRequested;
 
 	// something was edited here - live, during a drag, as much as on a
 	// commit. the page may need to redraw what it shows of the same objects
@@ -601,5 +601,5 @@ public partial class Inspector : Control
 
 	internal void NotifyCommitted(InspectorEditArgs e) => ValueCommitted?.Invoke(this, e);
 
-	internal void RequestSeek(TimeSpan time) => SeekRequested?.Invoke(this, time);
+	internal void RequestSeek(Time time) => SeekRequested?.Invoke(this, time);
 }

@@ -30,10 +30,6 @@ public partial class InspectorRow : HBoxContainer
 	Inspector inspector;
 	ValueEditor editor;
 
-	// half a millisecond: a keyframe set at this playhead is found again
-	// at this playhead, whatever the floating point did on the way
-	static readonly TimeSpan Tolerance = TimeSpan.FromTicks(5000);
-
 	public void Configure(Inspector inspector, string label, EditorSpec spec, IReadOnlyList<Binding> bindings)
 	{
 		this.inspector = inspector;
@@ -209,17 +205,15 @@ public partial class InspectorRow : HBoxContainer
 			if (a is null || a.Keyframes.Count == 0) { allHere = false; continue; }
 
 			anyKeys = true;
-			TimeSpan t = b.ContentTime(inspector.Playhead);
+			Time t = b.ContentTime(inspector.Playhead);
 
-			if (!a.Keyframes.Any(k => Near(k.Start, t))) allHere = false;
-			if (a.Keyframes.Any(k => k.Start < t - Tolerance)) anyPrev = true;
-			if (a.Keyframes.Any(k => k.Start > t + Tolerance)) anyNext = true;
+			if (!a.Keyframes.Any(k => k.Start == t)) allHere = false;
+			if (a.Keyframes.Any(k => k.Start < t)) anyPrev = true;
+			if (a.Keyframes.Any(k => k.Start > t)) anyNext = true;
 		}
 
 		keys.Set(!anyKeys ? KeyState.Static : allHere ? KeyState.Keyed : KeyState.Animated, anyPrev, anyNext);
 	}
-
-	static bool Near(TimeSpan a, TimeSpan b) => (a - b).Duration() <= Tolerance;
 
 	// ---- writing ----
 
@@ -312,7 +306,7 @@ public partial class InspectorRow : HBoxContainer
 		{
 			IAnimatable a = b.Animatable;
 			if (a is null) continue;
-			if (!a.Keyframes.Any(k => Near(k.Start, b.ContentTime(inspector.Playhead)))) { remove = false; break; }
+			if (!a.Keyframes.Any(k => k.Start == b.ContentTime(inspector.Playhead))) { remove = false; break; }
 		}
 
 		using (Transaction.Scope change = inspector.BeginChange(remove ? $"Remove {Label} keyframe" : $"Add {Label} keyframe"))
@@ -322,11 +316,11 @@ public partial class InspectorRow : HBoxContainer
 				IAnimatable a = b.Animatable;
 				if (a is null) continue;
 
-				TimeSpan t = b.ContentTime(inspector.Playhead);
+				Time t = b.ContentTime(inspector.Playhead);
 
 				if (remove)
 				{
-					IKeyframe here = a.Keyframes.FirstOrDefault(k => Near(k.Start, t));
+					IKeyframe here = a.Keyframes.FirstOrDefault(k => k.Start == t);
 					if (here is not null) a.RemoveKeyframeAt(here.Start);
 				}
 				else a.SetKeyframe(t, Display(b));
@@ -368,8 +362,8 @@ public partial class InspectorRow : HBoxContainer
 	// playhead, in timeline time
 	void Seek(bool previous)
 	{
-		TimeSpan playhead = inspector.Playhead;
-		TimeSpan? best = null;
+		Time playhead = inspector.Playhead;
+		Time? best = null;
 
 		foreach (Binding b in Bindings)
 		{
@@ -378,13 +372,13 @@ public partial class InspectorRow : HBoxContainer
 
 			foreach (IKeyframe k in a.Keyframes)
 			{
-				TimeSpan t = b.TimelineTime(k.Start);
+				Time t = b.TimelineTime(k.Start);
 
-				if (previous ? t >= playhead - Tolerance : t <= playhead + Tolerance) continue;
+				if (previous ? t >= playhead : t <= playhead) continue;
 				if (best is null || (previous ? t > best : t < best)) best = t;
 			}
 		}
 
-		if (best is TimeSpan target) inspector.RequestSeek(target);
+		if (best is Time target) inspector.RequestSeek(target);
 	}
 }

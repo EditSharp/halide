@@ -25,8 +25,8 @@ public partial class MenuProbe : Node
 
 		// the frame rate this machine manages with nothing open, to judge the one with a menu open by
 		int baselineFrom = frames;
-		double baselineStart = Time.GetTicksMsec();
-		while (Time.GetTicksMsec() - baselineStart < 1000) await Frames(1);
+		double baselineStart = Godot.Time.GetTicksMsec();
+		while (Godot.Time.GetTicksMsec() - baselineStart < 1000) await Frames(1);
 		int baseline = frames - baselineFrom;
 
 		MediaViewer viewer = Find<MediaViewer>(editor).First();
@@ -69,8 +69,8 @@ public partial class MenuProbe : Node
 				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				await Frames(2);
 				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-				double t = Time.GetTicksMsec();
-				while (Time.GetTicksMsec() - t < 700) await Frames(1);
+				double t = Godot.Time.GetTicksMsec();
+				while (Godot.Time.GetTicksMsec() - t < 700) await Frames(1);
 				Rect2I? r = ContextMenus.Handler.OpenMenuRect();
 				GD.Print($"MENU {what}: open={r is not null} rect={r}");
 				return r is not null;
@@ -117,8 +117,8 @@ public partial class MenuProbe : Node
 			await Frames(2);
 			mouse_event(top ? MOUSEEVENTF_LEFTUP : MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0);
 
-			double t0 = Time.GetTicksMsec();
-			while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - t0 < 5000) await Frames(1);
+			double t0 = Godot.Time.GetTicksMsec();
+			while (ContextMenus.Handler.OpenMenuRect() is null && Godot.Time.GetTicksMsec() - t0 < 5000) await Frames(1);
 			Rect2I? main = ContextMenus.Handler.OpenMenuRect();
 			GD.Print($"MENU viewer menu {main}");
 			if (main is not Rect2I m) { GD.Print("MENU FAIL"); GetTree().Quit(1); return; }
@@ -129,9 +129,9 @@ public partial class MenuProbe : Node
 			else
 			{
 				SetCursorPos(m.Position.X + 40, m.End.Y - 16);
-				double t1 = Time.GetTicksMsec();
+				double t1 = Godot.Time.GetTicksMsec();
 				List<Rect2I> popups = [];
-				while (Time.GetTicksMsec() - t1 < 3000)
+				while (Godot.Time.GetTicksMsec() - t1 < 3000)
 				{
 					await Frames(1);
 					popups = VisiblePopups();
@@ -153,13 +153,13 @@ public partial class MenuProbe : Node
 				string lastPopups = "";
 				uint lastPixel = 0xFFFFFFFF;
 				nint dc = GetDC(0);
-				double start = Time.GetTicksMsec();
+				double start = Godot.Time.GetTicksMsec();
 				while (sampling)
 				{
 					string now = string.Join(" ", VisiblePopups());
-					if (now != lastPopups) { lock (events) events.Add($"{Time.GetTicksMsec() - start:0}ms popups {now}"); lastPopups = now; }
+					if (now != lastPopups) { lock (events) events.Add($"{Godot.Time.GetTicksMsec() - start:0}ms popups {now}"); lastPopups = now; }
 					uint pixel = GetPixel(dc, item.X - 40, item.Y);
-					if (pixel != lastPixel) { lock (events) events.Add($"{Time.GetTicksMsec() - start:0}ms pixel {pixel:X6}"); lastPixel = pixel; }
+					if (pixel != lastPixel) { lock (events) events.Add($"{Godot.Time.GetTicksMsec() - start:0}ms pixel {pixel:X6}"); lastPixel = pixel; }
 					System.Threading.Thread.Sleep(1);
 				}
 				ReleaseDC(0, dc);
@@ -171,8 +171,8 @@ public partial class MenuProbe : Node
 				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 				await Frames(2);
 				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-				double tc = Time.GetTicksMsec();
-				while (Time.GetTicksMsec() - tc < 400) await Frames(1);
+				double tc = Godot.Time.GetTicksMsec();
+				while (Godot.Time.GetTicksMsec() - tc < 400) await Frames(1);
 			}
 
 			sampling = false;
@@ -204,11 +204,11 @@ public partial class MenuProbe : Node
 
 		// the menu opens on a deferred call, and within a few seconds on the slowest machine;
 		// then a second of frames while it is up, against a second of frames before it
-		double waitFrom = Time.GetTicksMsec();
-		while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - waitFrom < 10000) await Frames(1);
+		double waitFrom = Godot.Time.GetTicksMsec();
+		while (ContextMenus.Handler.OpenMenuRect() is null && Godot.Time.GetTicksMsec() - waitFrom < 10000) await Frames(1);
 		int at = frames;
-		double started = Time.GetTicksMsec();
-		while (Time.GetTicksMsec() - started < 1000) await Frames(1);
+		double started = Godot.Time.GetTicksMsec();
+		while (Godot.Time.GetTicksMsec() - started < 1000) await Frames(1);
 		int during = frames - at;
 		Rect2I? rect = ContextMenus.Handler.OpenMenuRect();
 		GD.Print($"MENU framesBefore={baseline} framesWhileOpen={during}");
@@ -231,15 +231,15 @@ public partial class MenuProbe : Node
 			ContextMenus.Handler.ActivateHighlighted();
 		}
 		// the pick goes through the menu's own thread or process first; a slow machine gets a while
-		double pickFrom = Time.GetTicksMsec();
+		double pickFrom = Godot.Time.GetTicksMsec();
 		await Frames(5);
-		while (Find<UIMediaItem>(viewer).Count(t => t.GetParent() is not null) >= tilesBefore && Time.GetTicksMsec() - pickFrom < 10000) await Frames(1);
+		while (Find<UIMediaItem>(viewer).Count(t => t.GetParent() is not null) >= tilesBefore && Godot.Time.GetTicksMsec() - pickFrom < 10000) await Frames(1);
 		await Frames(5);
-		GD.Print($"MENU pick took {Time.GetTicksMsec() - pickFrom:0}ms");
+		GD.Print($"MENU pick took {Godot.Time.GetTicksMsec() - pickFrom:0}ms");
 
 		// a menu that stays open by showing again (macOS) takes a moment to be back
-		double reopenFrom = Time.GetTicksMsec();
-		while (ContextMenus.Handler.OpenMenuRect() is null && Time.GetTicksMsec() - reopenFrom < 5000) await Frames(1);
+		double reopenFrom = Godot.Time.GetTicksMsec();
+		while (ContextMenus.Handler.OpenMenuRect() is null && Godot.Time.GetTicksMsec() - reopenFrom < 5000) await Frames(1);
 		Rect2I? afterPick = ContextMenus.Handler.OpenMenuRect();
 		GD.Print($"MENU after pick: open={afterPick is not null} sameRect={afterPick == rect}");
 
