@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://byuamsawv1kcd"]
 
+[ext_resource type="Script" uid="uid://bo0yqt1giq2jb" path="res://Scripts/UI/Views/MediaViewer.cs" id="1_8jcd3"]
+[ext_resource type="Texture2D" uid="uid://cq446xk6os5i2" path="res://Images/Icons/Add.png" id="1_rsgum"]
 [ext_resource type="PackedScene" uid="uid://dejc4onqqkvog" path="res://Scenes/Components/MediaItem.tscn" id="1_vc5xv"]
 
 [node name="Media" type="Control" unique_id=861251413]
@@ -11,6 +13,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+script = ExtResource("1_8jcd3")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=859593589]
 layout_mode = 1
@@ -43,15 +46,31 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1340147264]
+[node name="TabBar" type="TabBar" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=835062150]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Add Source"
+current_tab = 0
+clip_tabs = false
+close_with_middle_mouse = false
+tab_count = 4
+tab_0/title = "Video"
+tab_0/tooltip = "Show only video media"
+tab_1/title = "Audio"
+tab_1/tooltip = "Show only audio media"
+tab_2/title = "Timelines"
+tab_2/tooltip = "Show this project's timelines"
+tab_3/title = "All"
+tab_3/tooltip = "Show all imported media"
 
-[node name="Button2" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1389012709]
+[node name="Sort" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1340147264]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Add Source"
+tooltip_text = "Opens a right-click menu of sort options by metadata"
+text = "Sort"
+
+[node name="Filter" type="Button" parent="VBoxContainer/Media Options/HBoxContainer" unique_id=1389012709]
+layout_mode = 2
+tooltip_text = "Opens a right-click menu of filter options"
+text = "Filter"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=866422693]
 layout_mode = 2
@@ -64,8 +83,30 @@ size_flags_vertical = 3
 alignment = 1
 last_wrap_alignment = 1
 
-[node name="Media" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1189208708 instance=ExtResource("1_vc5xv")]
+[node name="Add" type="Control" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1189208708]
+custom_minimum_size = Vector2(120, 70)
 layout_mode = 2
+
+[node name="Content" type="Panel" parent="VBoxContainer/ScrollContainer/Media Flow/Add" unique_id=618798168]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"MediaContent"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/ScrollContainer/Media Flow/Add/Content" unique_id=243429872]
+texture_filter = 4
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_rsgum")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Media2" parent="VBoxContainer/ScrollContainer/Media Flow" unique_id=1001363172 instance=ExtResource("1_vc5xv")]
 layout_mode = 2

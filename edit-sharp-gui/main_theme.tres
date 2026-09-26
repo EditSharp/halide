@@ -2344,10 +2344,15 @@ State = 3
 script = ExtResource("style")
 Palette = ExtResource("palette")
 Background = 9
-CornerRadiusTopLeft = 5
-CornerRadiusTopRight = 5
-CornerRadiusBottomRight = 5
-CornerRadiusBottomLeft = 5
+Border = 4
+BorderWidthLeft = 2
+BorderWidthTop = 2
+BorderWidthRight = 2
+BorderWidthBottom = 2
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
 
 [sub_resource type="StyleBox" id="StyleBox_s4yqv"]
 resource_local_to_scene = false
