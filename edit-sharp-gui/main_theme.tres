@@ -2771,6 +2771,25 @@ script = ExtResource("themed")
 Style = SubResource("Resource_ym3u2")
 metadata/_custom_type_script = "uid://dv1xorpp4he7j"
 
+[sub_resource type="Resource" id="Resource_38asi"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+CornerRadiusTopLeft = 4
+CornerRadiusTopRight = 4
+CornerRadiusBottomRight = 4
+CornerRadiusBottomLeft = 4
+
+[sub_resource type="StyleBox" id="StyleBox_kwmeo"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_38asi")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
 [sub_resource type="Resource" id="ThemeStyle_MenuButton_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -3860,7 +3879,7 @@ Clip/colors/brown = Color(0.55, 0.38, 0.26, 1)
 Clip/colors/cyan = Color(0.23, 0.7, 0.9, 1)
 Clip/colors/generator_audio = Color(0.2, 0.65, 0.63, 1)
 Clip/colors/generator_video = Color(0.88, 0.48, 0.18, 1)
-Clip/colors/gray = Color(0.54, 0.56, 0.59, 1)
+Clip/colors/gray = Color(0.27450982, 0.27450982, 0.27450982, 1)
 Clip/colors/green = Color(0.3, 0.6, 0.37, 1)
 Clip/colors/lavender = Color(0.66, 0.61, 0.78, 1)
 Clip/colors/lime = Color(0.56, 0.82, 0.31, 1)
@@ -4120,6 +4139,8 @@ MediaOptions/styles/normal = SubResource("StyleBox_wutdb")
 MediaOptions/styles/normal_mirrored = SubResource("StyleBox_faoxm")
 MediaOptions/styles/pressed = SubResource("StyleBox_ha7xl")
 MediaOptions/styles/pressed_mirrored = SubResource("StyleBox_tkv0b")
+MediaThumbnail/base_type = &"Panel"
+MediaThumbnail/styles/panel = SubResource("StyleBox_kwmeo")
 MenuButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 MenuButton/colors/font_disabled_color = Color(0.92, 0.92, 0.92, 0.5)
 MenuButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
@@ -4143,7 +4164,7 @@ Node/colors/brown = Color(0.55, 0.38, 0.26, 1)
 Node/colors/composite = Color(0.88, 0.44, 0.6, 1)
 Node/colors/cyan = Color(0.23, 0.7, 0.9, 1)
 Node/colors/effect = Color(0.102, 0.373, 0.706, 1)
-Node/colors/gray = Color(0.54, 0.56, 0.59, 1)
+Node/colors/gray = Color(0.27265528, 0.2726553, 0.2726553, 1)
 Node/colors/green = Color(0.3, 0.6, 0.37, 1)
 Node/colors/input = Color(0.94, 0.63, 0.19, 1)
 Node/colors/keying = Color(0.23, 0.7, 0.9, 1)

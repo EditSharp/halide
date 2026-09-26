@@ -42,7 +42,7 @@ alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 texture = SubResource("ImageTexture_vyrgd")
-expand_mode = 2
+expand_mode = 1
 stretch_mode = 5
 
 [node name="HSlider" type="HSlider" parent="VBoxContainer" unique_id=764393095]
