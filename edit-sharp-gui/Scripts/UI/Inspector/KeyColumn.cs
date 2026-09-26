@@ -53,13 +53,22 @@ public partial class KeyColumn : HBoxContainer
 		resetTrack.Visible = shown;
 
 		key.State = state;
-		prev.Disabled = !hasPrev;
-		next.Disabled = !hasNext;
-		resetTrack.Disabled = !keyed;
+		ShowGlyph(prev, hasPrev);
+		ShowGlyph(next, hasNext);
+		ShowGlyph(resetTrack, keyed);
 
 		prev.QueueRedraw();
 		key.QueueRedraw();
 		next.QueueRedraw();
 		resetTrack.QueueRedraw();
+	}
+
+	// a glyph with nothing to do vanishes but keeps its slot, so the diamond
+	// stays put
+	static void ShowGlyph(InspectorGlyph glyph, bool shown)
+	{
+		glyph.Disabled = !shown;
+		glyph.Modulate = shown ? Colors.White : Colors.Transparent;
+		glyph.MouseFilter = shown ? MouseFilterEnum.Stop : MouseFilterEnum.Ignore;
 	}
 }
