@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using EditSharpGUI.Scripts.UI.ContextMenu;
@@ -10,7 +11,8 @@ using Godot;
 //   godot --path . res://Tools/Scenes/Tools/ContextMenuPreview.tscn -- [--menu=res://Some.tres] [--hold=2000] [--out=rect.txt]
 //                                                                       [--hover=N] [--palette=res://Themes/Light.tres]
 //
-// --out receives "x y w h" in screen pixels once the popup is up, or "unknown" when the platform cannot tell.
+// --out receives "x y w h" in screen pixels once the popup is up, or "anchor x y" (where its top-left was
+// asked to be) when the platform cannot tell its rect.
 // without --menu a showcase of every item kind is shown
 public partial class ContextMenuPreview : Control
 {
@@ -44,7 +46,13 @@ public partial class ContextMenuPreview : Control
 			GD.Print("PREVIEW closed");
 			GetTree().Quit();
 		};
-		ContextMenus.ShowContextMenu(menu, new Vector2(40, 40));
+		Vector2 at = new(40, 40);
+		ContextMenus.ShowContextMenu(menu, at);
+
+		// where the menu's top-left was asked to be, in the screen units the platform's capture tool uses:
+		// pixels, or points on macos
+		Vector2I anchor = DisplayServer.WindowGetPosition(GetWindow().GetWindowId()) + (Vector2I)(GetViewport().GetScreenTransform() * at).Round();
+		if (OS.GetName() == "macOS") anchor = (Vector2I)((Vector2)anchor / (float)Math.Max(1.0, DisplayServer.ScreenGetMaxScale())).Round();
 
 		// the native menu blocks the main thread, so the timing runs on another
 		new Thread(() =>
@@ -63,7 +71,7 @@ public partial class ContextMenuPreview : Control
 				Thread.Sleep(30);
 			}
 
-			string report = rect is Rect2I r ? $"{r.Position.X} {r.Position.Y} {r.Size.X} {r.Size.Y}" : "unknown";
+			string report = rect is Rect2I r ? $"{r.Position.X} {r.Position.Y} {r.Size.X} {r.Size.Y}" : $"anchor {anchor.X} {anchor.Y}";
 			GD.Print($"PREVIEW rect {report}");
 			Report(outPath, report);
 

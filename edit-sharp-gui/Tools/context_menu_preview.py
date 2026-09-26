@@ -22,6 +22,8 @@ Usage:
   --margin  pixels captured around the popup for its shadow (default 12)
   --hover   highlight the Nth selectable item, to see the hot look
   --palette a ThemePalette to swap in first, e.g. res://Themes/Light.tres
+  --handler force a handler: "godot" shows the godot-drawn (linux) menu on any platform
+  --extra   extra godot arguments, e.g. "--rendering-method gl_compatibility" under Xvfb
 """
 import argparse
 import os
@@ -35,6 +37,7 @@ import time
 PROJECT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 SCENE = "res://Tools/Scenes/Tools/ContextMenuPreview.tscn"
 OS_NAME = {"Windows": "windows", "Darwin": "macos", "Linux": "linux"}.get(platform.system(), platform.system().lower())
+ANCHOR_CROP = (480, 640)   # the area kept below and right of the anchor when the popup's own rect is unknown
 
 
 def find_godot(explicit):
@@ -125,6 +128,8 @@ def main():
     parser.add_argument("--margin", type=int, default=12)
     parser.add_argument("--hover", type=int, default=0)
     parser.add_argument("--palette")
+    parser.add_argument("--handler", help="force a handler: godot (the godot-drawn menu) on any platform")
+    parser.add_argument("--extra", default="", help="extra godot arguments, e.g. \"--rendering-method gl_compatibility\"")
     args = parser.parse_args()
 
     out = args.out
@@ -142,14 +147,17 @@ def main():
     os.remove(rect_file)
 
     godot = find_godot(args.godot)
-    command = [godot, "--path", PROJECT, SCENE, "--", f"--hold={args.hold}", f"--out={rect_file}"]
+    command = [godot, "--path", PROJECT, *args.extra.split(), SCENE, "--", f"--hold={args.hold}", f"--out={rect_file}"]
     if args.menu:
         command.append(f"--menu={args.menu}")
     if args.hover:
         command.append(f"--hover={args.hover}")
     if args.palette:
         command.append(f"--palette={args.palette}")
-    process = subprocess.Popen(command)
+    env = dict(os.environ)
+    if args.handler:
+        env["EDITSHARP_MENU_HANDLER"] = args.handler
+    process = subprocess.Popen(command, env=env)
 
     try:
         report = wait_for_rect(rect_file, timeout=60)
@@ -159,7 +167,13 @@ def main():
             sys.exit("the preview scene failed; see godot's output above")
 
         rect = None
-        if report != "unknown":
+        if report.startswith("anchor"):
+            _, x, y = report.split()
+            x, y = int(x), int(y)
+            m = args.margin
+            rect = (x - m, y - m, ANCHOR_CROP[0] + 2 * m, ANCHOR_CROP[1] + 2 * m)
+            print(f"menu rect unknown on this platform; capturing {ANCHOR_CROP[0]}x{ANCHOR_CROP[1]} from its anchor {x},{y}")
+        elif report != "unknown":
             x, y, w, h = (int(v) for v in report.split())
             m = args.margin
             rect = (x - m, y - m, w + 2 * m, h + 2 * m)

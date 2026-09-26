@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
 using static EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows.Win32;
 
-namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform;
+namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 
 // a win32 popup menu with owner-drawn items, so bold, icons, checks and the app theme all follow the model
 public class WindowsHandler : PlatformHandler
@@ -27,8 +26,8 @@ public class WindowsHandler : PlatformHandler
             using Built built = new(menu, painter);
             SetForegroundWindow(hwnd);
             uint id = TrackPopupMenuEx(built.Menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, at.X, at.Y, hwnd, 0);
-            if (id == 0 || !built.Entries.TryGetValue(id, out Entry entry)) break;
-            if (Activate(entry) ? menu.HideOnCheckableItemSelect : menu.HideOnItemSelect) break;
+            if (id == 0 || !built.Entries.TryGetValue(id, out MenuEntry entry)) break;
+            if (MenuModel.Activate(entry) ? menu.HideOnCheckableItemSelect : menu.HideOnItemSelect) break;
         }
 
         menu.EmitSignal(ContextMenu.SignalName.Closed);
@@ -78,36 +77,6 @@ public class WindowsHandler : PlatformHandler
             return false;
         }
     }
-
-    // applies the pick to the model and emits its signal; true when the item was checkable
-    static bool Activate(Entry entry)
-    {
-        ContextButton button = entry.Button;
-        switch (entry.Owner)
-        {
-            case ContextCheckList list:
-                bool on = !list.CheckedButtons.Remove(entry.Index);
-                if (on) list.CheckedButtons.Add(entry.Index);
-                button.Checked = on;
-                list.EmitSignal(ContextCheckList.SignalName.Toggled, button, on);
-                return true;
-
-            case ContextRadioList list:
-                list.SelectedButton = entry.Index;
-                foreach (ContextButton b in list.Buttons) b.Checked = b == button;
-                list.EmitSignal(ContextRadioList.SignalName.Selected, button);
-                return true;
-
-            default:
-                if (button.Type == ContextButton.CheckType.Check) button.Checked = !button.Checked;
-                else if (button.Type == ContextButton.CheckType.Radio) button.Checked = true;
-                button.EmitSignal(ContextButton.SignalName.Pressed);
-                return button.Type != ContextButton.CheckType.None;
-        }
-    }
-
-    // a pickable item: the button, the list it belongs to (if any) and its index there
-    record Entry(ContextButton Button, ContextElement Owner, int Index);
 
     // routes the owner-draw messages the popup sends its owner window to the painter
     sealed class Subclass : IDisposable
@@ -193,7 +162,7 @@ public class WindowsHandler : PlatformHandler
     sealed class Built : IDisposable
     {
         public readonly nint Menu;
-        public readonly Dictionary<uint, Entry> Entries = [];
+        public readonly Dictionary<uint, MenuEntry> Entries = [];
 
         readonly MenuPainter painter;
         readonly List<nint> bitmaps = [];
@@ -203,7 +172,7 @@ public class WindowsHandler : PlatformHandler
         {
             this.painter = painter;
             painter.Clear();
-            Menu = Fill(menu.Elements);
+            Menu = Fill(MenuModel.Flatten(menu.Elements));
 
             if (painter.BackgroundBrush != 0)
             {
@@ -218,111 +187,52 @@ public class WindowsHandler : PlatformHandler
             foreach (nint bitmap in bitmaps) DeleteObject(bitmap);
         }
 
-        nint Fill(Godot.Collections.Array<ContextElement> elements)
+        nint Fill(List<MenuItem> items)
         {
             nint menu = CreatePopupMenu();
-            bool hasIcons = AnyIcons(elements);
+            bool hasIcons = MenuModel.AnyIcons(items);
             uint at = 0;
 
-            foreach (ContextElement element in elements)
+            foreach (MenuItem item in items)
             {
-                if (element is null || !element.Visible) continue;
+                nint icon = IconBitmap(item.Icon, painter.IconSize);
+                if (icon != 0) bitmaps.Add(icon);
 
-                switch (element)
+                MenuPainter.Item row = new()
                 {
-                    case ContextDivider:
-                        Insert(menu, at++, new MenuPainter.Item { Kind = MenuPainter.Kind.Separator });
-                        break;
+                    Kind = item.Kind,
+                    Text = item.Text,
+                    Hint = item.Hint,
+                    Bold = item.Bold,
+                    Enabled = item.Enabled,
+                    Checked = item.Checked,
+                    Radio = item.Radio,
+                    Icon = icon,
+                    ColumnHasIcons = hasIcons,
+                };
 
-                    case ContextText text:
-                        Insert(menu, at++, new MenuPainter.Item { Kind = MenuPainter.Kind.Label, Text = text.Text, Bold = Bold(text), ColumnHasIcons = hasIcons });
-                        break;
-
-                    case ContextSubmenu submenu:
-                        MenuPainter.Item item = Labelled(submenu, MenuPainter.Kind.Submenu, hasIcons);
-                        Insert(menu, at++, item, submenu: Fill(submenu.Elements));
-                        break;
-
-                    case ContextButton button:
-                        InsertButton(menu, at++, button, null, 0, button.Checked, button.Type, hasIcons);
-                        break;
-
-                    case ContextCheckList list:
-                        for (int i = 0; i < list.Buttons.Count; i++)
-                        {
-                            ContextButton button = list.Buttons[i];
-                            if (button is null || !button.Visible) continue;
-                            button.Checked = list.CheckedButtons.Contains(i);
-                            InsertButton(menu, at++, button, list, i, button.Checked, ContextButton.CheckType.Check, hasIcons);
-                        }
-                        break;
-
-                    case ContextRadioList list:
-                        for (int i = 0; i < list.Buttons.Count; i++)
-                        {
-                            ContextButton button = list.Buttons[i];
-                            if (button is null || !button.Visible) continue;
-                            button.Checked = i == list.SelectedButton;
-                            InsertButton(menu, at++, button, list, i, button.Checked, ContextButton.CheckType.Radio, hasIcons);
-                        }
-                        break;
+                uint id = 0;
+                if (item.Entry is not null)
+                {
+                    id = nextId++;
+                    Entries[id] = item.Entry;
                 }
+
+                nint submenu = item.Kind == MenuItemKind.Submenu ? Fill(item.Submenu) : 0;
+                Insert(menu, at++, row, id, submenu);
             }
 
             return menu;
         }
 
-        static bool AnyIcons(Godot.Collections.Array<ContextElement> elements)
-        {
-            foreach (ContextElement element in elements)
-            {
-                if (element is null || !element.Visible) continue;
-                switch (element)
-                {
-                    case ContextBaseButton button when button.Icon is not null: return true;
-                    case ContextCheckList list: foreach (ContextButton b in list.Buttons) if (b is { Visible: true, Icon: not null }) return true; break;
-                    case ContextRadioList list: foreach (ContextButton b in list.Buttons) if (b is { Visible: true, Icon: not null }) return true; break;
-                }
-            }
-            return false;
-        }
-
-        void InsertButton(nint menu, uint at, ContextButton button, ContextElement owner, int index, bool isChecked, ContextButton.CheckType type, bool hasIcons)
-        {
-            MenuPainter.Item item = Labelled(button, MenuPainter.Kind.Button, hasIcons);
-            item.Checked = isChecked;
-            item.Radio = type == ContextButton.CheckType.Radio;
-            uint id = nextId++;
-            Entries[id] = new Entry(button, owner, index);
-            Insert(menu, at, item, id);
-        }
-
-        MenuPainter.Item Labelled(ContextBaseButton button, MenuPainter.Kind kind, bool hasIcons)
-        {
-            nint icon = IconBitmap(button.Icon, painter.IconSize);
-            if (icon != 0) bitmaps.Add(icon);
-            return new MenuPainter.Item
-            {
-                Kind = kind,
-                Text = button.Text?.Text ?? "",
-                Hint = button.ShortcutHint?.Text,
-                Bold = Bold(button.Text),
-                Enabled = button.Enabled,
-                Icon = icon,
-                ColumnHasIcons = hasIcons,
-            };
-        }
-
-        static bool Bold(ContextText text) => text?.TextWeight == ContextText.Weight.Bold;
-
-        void Insert(nint menu, uint at, MenuPainter.Item item, uint id = 0, nint submenu = 0)
+        void Insert(nint menu, uint at, MenuPainter.Item item, uint id, nint submenu)
         {
             MENUITEMINFO info = new()
             {
                 cbSize = (uint)Marshal.SizeOf<MENUITEMINFO>(),
                 fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA,
-                fType = MFT_OWNERDRAW | (item.Kind == MenuPainter.Kind.Separator ? MFT_SEPARATOR : 0) | (item.Radio ? MFT_RADIOCHECK : 0),
-                fState = (item.Enabled && item.Kind != MenuPainter.Kind.Label ? 0 : MFS_DISABLED) | (item.Checked ? MFS_CHECKED : 0),
+                fType = MFT_OWNERDRAW | (item.Kind == MenuItemKind.Separator ? MFT_SEPARATOR : 0) | (item.Radio ? MFT_RADIOCHECK : 0),
+                fState = (item.Enabled ? 0 : MFS_DISABLED) | (item.Checked ? MFS_CHECKED : 0),
                 wID = id,
                 dwItemData = painter.Register(item),
             };

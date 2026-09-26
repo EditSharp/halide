@@ -10,7 +10,7 @@ namespace EditSharpGUI.Scripts.UI.Theming;
 // made once per size and shared
 public static class IconRaster
 {
-	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot }
+	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot, Check, Bullet, Chevron }
 
 	static readonly Dictionary<(Shape, int), ImageTexture> cache = [];
 
@@ -113,9 +113,28 @@ public static class IconRaster
 			case Shape.Dot:
 				return x * x + y * y <= 0.02f;
 
+			// menu marks: a check, a radio bullet and a submenu chevron
+			case Shape.Check:
+				return Segment(x, y, -0.55f, 0.05f, -0.17f, 0.43f, 0.11f) || Segment(x, y, -0.17f, 0.43f, 0.58f, -0.42f, 0.11f);
+
+			case Shape.Bullet:
+				return x * x + y * y <= 0.09f;
+
+			case Shape.Chevron:
+				return Segment(x, y, -0.18f, -0.48f, 0.26f, 0f, 0.085f) || Segment(x, y, 0.26f, 0f, -0.18f, 0.48f, 0.085f);
+
 			default:
 				return false;
 		}
+	}
+
+	// within thickness of the segment from a to b, with round ends
+	static bool Segment(float x, float y, float ax, float ay, float bx, float by, float thickness)
+	{
+		float dx = bx - ax, dy = by - ay;
+		float t = Math.Clamp(((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy), 0f, 1f);
+		float px = ax + t * dx - x, py = ay + t * dy - y;
+		return px * px + py * py <= thickness * thickness;
 	}
 
 	static bool Ring(float x, float y, float radius, float thickness)

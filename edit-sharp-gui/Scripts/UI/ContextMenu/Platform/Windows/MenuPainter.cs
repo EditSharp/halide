@@ -11,11 +11,9 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 // the popup frame, background and shadow stay the system's
 sealed class MenuPainter : IDisposable
 {
-    public enum Kind { Separator, Label, Button, Submenu }
-
     public sealed class Item
     {
-        public Kind Kind;
+        public MenuItemKind Kind;
         public string Text = "", Hint;
         public bool Bold, Enabled = true, Checked, Radio;
         public nint Icon;
@@ -121,7 +119,7 @@ sealed class MenuPainter : IDisposable
 
     public void Measure(Item item, out uint width, out uint height)
     {
-        if (item.Kind == Kind.Separator)
+        if (item.Kind == MenuItemKind.Separator)
         {
             width = (uint)Px(40);
             height = (uint)SeparatorHeight;
@@ -141,20 +139,20 @@ sealed class MenuPainter : IDisposable
         nint dc = d.hDC;
         RECT rc = d.rcItem;
         bool hot = (d.itemState & ODS_SELECTED) != 0;
-        bool disabled = !item.Enabled || item.Kind == Kind.Label;
+        bool disabled = !item.Enabled || item.Kind == MenuItemKind.Label;
         int state = disabled ? (hot ? MPI_DISABLEDHOT : MPI_DISABLED) : (hot ? MPI_HOT : MPI_NORMAL);
 
         // the system paints the popup background once; every redraw of an item has to restore it
         if ((d.itemAction & ODA_DRAWENTIRE) != 0 && !hot && background is null) background = GetPixel(dc, rc.left, rc.top);
         Fill(dc, rc, background ?? GetSysColor(COLOR_MENU));
 
-        if (item.Kind == Kind.Separator)
+        if (item.Kind == MenuItemKind.Separator)
         {
             DrawSeparator(dc, rc);
             return;
         }
 
-        if (hot && item.Kind != Kind.Label) DrawPart(dc, MENU_POPUPITEM, state, rc, () => Fill(dc, rc, dark ? DarkHot : GetSysColor(COLOR_HIGHLIGHT)));
+        if (hot && item.Kind != MenuItemKind.Label) DrawPart(dc, MENU_POPUPITEM, state, rc, () => Fill(dc, rc, dark ? DarkHot : GetSysColor(COLOR_HIGHLIGHT)));
 
         uint color = TextColor(state);
         nint old = SelectObject(dc, font);
@@ -186,7 +184,7 @@ sealed class MenuPainter : IDisposable
             DrawTextW(dc, item.Hint, -1, ref text, DT_SINGLELINE | DT_VCENTER | DT_RIGHT | DT_NOPREFIX);
         }
 
-        if (item.Kind == Kind.Submenu)
+        if (item.Kind == MenuItemKind.Submenu)
         {
             RECT end = new(rc.right - RightPad, rc.top, rc.right, rc.bottom);
             SelectObject(dc, font);

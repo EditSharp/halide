@@ -1,0 +1,111 @@
+# Renders the context menu showcase through each OS's real handler and uploads the screenshots,
+# so the macOS and Linux menus can be approved without a machine running them.
+# Driven by edit-sharp-gui/Tools/context_menu_preview.py; see its header for the options.
+name: Context menu previews
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [context-menus]
+    paths:
+      - "edit-sharp-gui/**"
+      - ".github/workflows/context-menu-previews.yml"
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  preview:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+            zip: Godot_v4.7.2-stable_mono_macos.universal.zip
+            bin: godot/Godot_mono.app/Contents/MacOS/Godot
+          - name: linux
+            os: ubuntu-latest
+            zip: Godot_v4.7.2-stable_mono_linux_x86_64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_linux_x86_64/Godot_v4.7.2-stable_mono_linux.x86_64
+          # server 2022 has the windows 10 shell (build 20348): classic menus, no dwm rounding
+          - name: windows10
+            os: windows-2022
+            zip: Godot_v4.7.2-stable_mono_win64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # the gui builds against the EditSharp sources, as it does locally with a clone beside the repo
+      - uses: actions/checkout@v4
+        with:
+          repository: EditSharp/EditSharp
+          path: EditSharp
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Fetch Godot
+        shell: bash
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${{ matrix.zip }}"
+          mkdir godot && unzip -q godot.zip -d godot
+          chmod +x "${{ matrix.bin }}"
+          "${{ matrix.bin }}" --version
+
+      - name: Linux display and capture tools
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb imagemagick libgl1-mesa-dri mesa-utils
+
+      - name: Build
+        shell: bash
+        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+
+      # the first import pass can log resources it has not reached yet; the second is clean
+      - name: Import project
+        shell: bash
+        run: |
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+
+      - name: Render previews (linux)
+        if: matrix.name == 'linux'
+        run: |
+          cd edit-sharp-gui
+          GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
+          EXTRA="--rendering-method gl_compatibility --rendering-driver opengl3"
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-linux-dark.png
+          xvfb-run -a -s "-screen 0 1600x1000x24" python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --palette res://Themes/Light.tres --out Tools/Previews/context-menu-linux-light.png
+
+      - name: Render previews (macos)
+        if: matrix.name == 'macos'
+        run: |
+          cd edit-sharp-gui
+          GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
+          EXTRA="--rendering-method gl_compatibility"
+          python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-macos-dark.png
+          python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --palette res://Themes/Light.tres --out Tools/Previews/context-menu-macos-light.png
+
+      # no gpu on the runner: angle over the software d3d11 rasteriser
+      - name: Render previews (windows10)
+        if: matrix.name == 'windows10'
+        shell: bash
+        run: |
+          cd edit-sharp-gui
+          GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
+          EXTRA="--rendering-method gl_compatibility --rendering-driver opengl3_angle"
+          python Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-windows10-dark.png
+          python Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --palette res://Themes/Light.tres --out Tools/Previews/context-menu-windows10-light.png
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-menu-previews-${{ matrix.name }}
+          path: edit-sharp-gui/Tools/Previews/context-menu-${{ matrix.name }}-*.png
+          if-no-files-found: warn

@@ -1,24 +1,33 @@
 using System;
 using EditSharpGUI.Scripts.UI.ContextMenu.Platform;
+using EditSharpGUI.Scripts.UI.ContextMenu.Platform.GodotDrawn;
+using EditSharpGUI.Scripts.UI.ContextMenu.Platform.MacOS;
+using EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 using Godot;
 
 namespace EditSharpGUI.Scripts.UI.ContextMenu;
 
 public static class ContextMenus
 {
-    // the native handler for this OS; null where none exists yet
-    public static PlatformHandler Handler { get; } = OS.GetName() switch
+    // the handler for this OS. EDITSHARP_MENU_HANDLER=godot forces the godot-drawn menu anywhere, to try it
+    public static PlatformHandler Handler { get; } = Create();
+
+    static PlatformHandler Create()
     {
-        "Windows" => new WindowsHandler(),
-        _ => null,
-    };
+        if (OS.GetEnvironment("EDITSHARP_MENU_HANDLER") == "godot") return new GodotHandler();
+        return OS.GetName() switch
+        {
+            "Windows" => new WindowsHandler(),
+            "macOS" => new MacOSHandler(),
+            _ => new GodotHandler(),
+        };
+    }
 
     // position is in main window (viewport) pixels; null opens at the cursor.
     // the menu opens once the event that asked for it has finished dispatching
     public static void ShowContextMenu(ContextMenu menu, Vector2? position = null)
     {
         ArgumentNullException.ThrowIfNull(menu);
-        if (Handler is null) return;
         Callable.From(() => Handler.HandleMenu(menu, position)).CallDeferred();
     }
 
