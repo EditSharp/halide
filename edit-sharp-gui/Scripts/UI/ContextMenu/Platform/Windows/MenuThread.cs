@@ -30,6 +30,8 @@ static class MenuThread
 
     public static nint Helper => helper;
 
+    static readonly bool Debug = OS.HasEnvironment("EDITSHARP_MENU_DEBUG");
+
     public static void Show(Showing showing)
     {
         if (thread is null)
@@ -96,14 +98,27 @@ static class MenuThread
                     // the tracking thread's window has to be in front for the menu to
                     // close on a click elsewhere; sharing input with godot's thread is
                     // what lets a background thread take the foreground
+                    // nothing left over from before may reach the menu loop, or it closes at once
+                    Drain(showing.MainWindow, forwardReleases: false, out _);
+
+                    // a low-level mouse hook, alive for the menu's lifetime, remembers the
+                    // press that dismisses it, since the menu loop swallows that press
+                    pressSeen = 0;
+                    mouseHook ??= Hook;
+                    nint hook = SetWindowsHookExW(WH_MOUSE_LL, mouseHook, GetModuleHandleW(null), 0);
+
                     AttachThreadInput(threadId, mainThread, true);
                     SetForegroundWindow(helper);
+                    long opened = System.Environment.TickCount64;
                     uint id = TrackPopupMenuEx(built.Menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, showing.At.X, showing.At.Y, helper, 0);
+                    if (Debug) GD.Print($"MENU track returned id={id} after {System.Environment.TickCount64 - opened}ms error={Marshal.GetLastWin32Error()} at={showing.At} pressSeen={pressSeen}");
                     SetForegroundWindow(showing.MainWindow);
                     AttachThreadInput(threadId, mainThread, false);
+                    if (hook != 0) UnhookWindowsHookEx(hook);
 
                     if (id == 0 || !built.Entries.TryGetValue(id, out entry))
                     {
+                        ReplayDismissingClick(showing.MainWindow);
                         Closed(showing.Menu);
                         return;
                     }
@@ -147,6 +162,79 @@ static class MenuThread
     }
 
     static void Closed(ContextMenu menu) => Callable.From(() => menu.EmitSignal(ContextMenu.SignalName.Closed)).CallDeferred();
+
+    // the click that dismisses a menu is swallowed by the menu loop, so a
+    // click on another button while a menu is up would only close the menu.
+    // when the menu closed under a mouse button that is still down over the
+    // window, the press is handed to the window, and the release that
+    // follows makes it a click
+    // the press the hook saw while the menu was up, if any, and where
+    static uint pressSeen;
+    static POINT pressPoint;
+    static LowLevelMouseProc mouseHook;
+
+    static nint Hook(int code, nint wParam, nint lParam)
+    {
+        if (code >= 0 && (uint)wParam is WM_LBUTTONDOWN or WM_RBUTTONDOWN)
+        {
+            pressSeen = (uint)wParam;
+            pressPoint = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt;
+        }
+
+        return CallNextHookEx(0, code, wParam, lParam);
+    }
+
+    static void ReplayDismissingClick(nint window)
+    {
+        // a release that reached this thread's queue instead of the window is dropped here;
+        // the window gets a whole click below
+        Drain(window, forwardReleases: false, out _);
+
+        if (pressSeen == 0) return;
+        if (WindowFromPoint(pressPoint) != window) return;
+
+        bool left = pressSeen == WM_LBUTTONDOWN;
+        bool stillDown = (GetAsyncKeyState(left ? VK_LBUTTON : VK_RBUTTON) & 0x8000) != 0;
+
+        POINT client = pressPoint;
+        ScreenToClient(window, ref client);
+        nint at = (nint)((client.y << 16) | (client.x & 0xFFFF));
+
+        if (Debug) GD.Print($"MENU replaying {(left ? "left" : "right")} click at {client.x},{client.y} stillDown={stillDown}");
+
+        PostMessageW(window, left ? WM_LBUTTONDOWN : WM_RBUTTONDOWN, left ? MK_LBUTTON : MK_RBUTTON, at);
+        if (!stillDown) PostMessageW(window, left ? WM_LBUTTONUP : WM_RBUTTONUP, 0, at);
+    }
+
+    // empties this thread's message queue: stale mouse, key and cancel
+    // messages are dropped (a button release is reported, or forwarded to
+    // the window when asked), everything else is dispatched as usual
+    static void Drain(nint window, bool forwardReleases, out uint release)
+    {
+        release = 0;
+
+        while (PeekMessageW(out MSG m, 0, 0, 0, PM_REMOVE))
+        {
+            if (m.message is WM_LBUTTONUP or WM_RBUTTONUP)
+            {
+                release = m.message;
+                if (forwardReleases)
+                {
+                    POINT client = m.pt;
+                    ScreenToClient(window, ref client);
+                    PostMessageW(window, m.message, 0, (nint)((client.y << 16) | (client.x & 0xFFFF)));
+                }
+                continue;
+            }
+
+            if (m.message is >= WM_MOUSEFIRST and <= WM_MOUSELAST) continue;
+            if (m.message is >= WM_KEYFIRST and <= WM_KEYLAST) continue;
+            if (m.message == WM_CANCELMODE) continue;
+
+            TranslateMessage(ref m);
+            DispatchMessageW(ref m);
+        }
+    }
 
     // ---- the helper window: the owner the popup sends its drawing messages to ----
 
@@ -236,6 +324,55 @@ static class MenuThread
         public nint hIconSm;
     }
 
+    const int VK_LBUTTON = 0x01, VK_RBUTTON = 0x02;
+    const uint WM_LBUTTONDOWN = 0x201, WM_LBUTTONUP = 0x202, WM_RBUTTONDOWN = 0x204, WM_RBUTTONUP = 0x205;
+    const uint WM_MOUSEFIRST = 0x200, WM_MOUSELAST = 0x20D, WM_KEYFIRST = 0x100, WM_KEYLAST = 0x109;
+    const uint PM_REMOVE = 0x1;
+    const nint MK_LBUTTON = 0x1, MK_RBUTTON = 0x2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct MSG
+    {
+        public nint hwnd;
+        public uint message;
+        public nint wParam;
+        public nint lParam;
+        public uint time;
+        public POINT pt;
+    }
+
+    const int WH_MOUSE_LL = 14;
+
+    delegate nint LowLevelMouseProc(int code, nint wParam, nint lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct MSLLHOOKSTRUCT
+    {
+        public POINT pt;
+        public uint mouseData;
+        public uint flags;
+        public uint time;
+        public nuint dwExtraInfo;
+    }
+
+    [DllImport("user32.dll")] static extern nint SetWindowsHookExW(int id, LowLevelMouseProc proc, nint module, uint thread);
+    [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(nint hook);
+    [DllImport("user32.dll")] static extern nint CallNextHookEx(nint hook, int code, nint wParam, nint lParam);
+    [DllImport("user32.dll")] static extern bool PeekMessageW(out MSG msg, nint hwnd, uint min, uint max, uint remove);
+    [DllImport("user32.dll")] static extern bool TranslateMessage(ref MSG msg);
+    [DllImport("user32.dll")] static extern nint DispatchMessageW(ref MSG msg);
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct POINT
+    {
+        public int x;
+        public int y;
+    }
+
+    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int key);
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+    [DllImport("user32.dll")] static extern nint WindowFromPoint(POINT point);
+    [DllImport("user32.dll")] static extern bool ScreenToClient(nint window, ref POINT point);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern ushort RegisterClassExW(ref WNDCLASSEXW cls);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern nint CreateWindowExW(uint exStyle, string className, string windowName, uint style, int x, int y, int width, int height, nint parent, nint menu, nint instance, nint param);
     [DllImport("user32.dll")] static extern nint DefWindowProcW(nint hwnd, uint msg, nint wParam, nint lParam);

@@ -24,9 +24,90 @@ public partial class MenuProbe : Node
 
 		MediaViewer viewer = Find<MediaViewer>(editor).First();
 		Button filter = Find<Button>(viewer).First(b => b.Name == "Filter");
+
+		// --clip: the first clip's options button instead; --tile: the media tile's
+		string[] args = OS.GetCmdlineUserArgs();
+		if (args.Contains("--clip"))
+		{
+			UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+			UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
+			// the topmost clip whose button is in view: the rows at the bottom sit under the scrollbar
+			filter = clipsView.UIClips.Select(c => Find<Button>(c).First(b => b.Name == "Options"))
+				.Where(b => b.IsVisibleInTree() && timeline.ViewContains(b.GetGlobalRect().GetCenter()))
+				.OrderBy(b => b.GlobalPosition.Y).First();
+		}
+		else if (args.Contains("--tile"))
+		{
+			filter = Find<Button>(Find<UIMediaItem>(viewer).First()).First(b => b.Name == "Options");
+		}
 		int tilesBefore = Find<UIMediaItem>(viewer).Count(t => t.Visible && t.GetParent() is not null);
 
-		filter.EmitSignal(BaseButton.SignalName.Pressed);
+		// --cascade: open the filter menu, click a clip's options button while it is up (which dismisses
+		// the menu; the click should open the clip's), dismiss that, then open the filter menu again
+		if (args.Contains("--cascade"))
+		{
+			UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+			UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
+			Button clipOptions = clipsView.UIClips.Select(c => Find<Button>(c).First(b => b.Name == "Options"))
+				.Where(b => b.IsVisibleInTree() && timeline.ViewContains(b.GetGlobalRect().GetCenter()))
+				.OrderBy(b => b.GlobalPosition.Y).First();
+
+			bool allOk = true;
+
+			async Task<bool> ClickAndCheck(Control button, string what)
+			{
+				Vector2I screen = DisplayServer.WindowGetPosition(GetWindow().GetWindowId()) + (Vector2I)(GetViewport().GetScreenTransform() * button.GetGlobalRect().GetCenter()).Round();
+				SetCursorPos(screen.X, screen.Y);
+				await Frames(3);
+				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+				await Frames(2);
+				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+				double t = Time.GetTicksMsec();
+				while (Time.GetTicksMsec() - t < 700) await Frames(1);
+				Rect2I? r = ContextMenus.Handler.OpenMenuRect();
+				GD.Print($"MENU {what}: open={r is not null} rect={r}");
+				return r is not null;
+			}
+
+			allOk &= await ClickAndCheck(filter, "filter first");
+			Rect2I? firstRect = ContextMenus.Handler.OpenMenuRect();
+			allOk &= await ClickAndCheck(clipOptions, "clip options while filter menu open");
+			Rect2I? secondRect = ContextMenus.Handler.OpenMenuRect();
+			bool different = firstRect != secondRect;
+			GD.Print($"MENU the clip menu replaced the filter menu: {different}");
+			allOk &= different;
+
+			ContextMenus.Handler.Dismiss();
+			await Frames(20);
+			GD.Print($"MENU after dismiss open={ContextMenus.Handler.OpenMenuRect() is not null}");
+			allOk &= ContextMenus.Handler.OpenMenuRect() is null;
+
+			allOk &= await ClickAndCheck(filter, "filter again");
+			ContextMenus.Handler.Dismiss();
+			await Frames(10);
+			allOk &= await ClickAndCheck(clipOptions, "clip options again");
+			ContextMenus.Handler.Dismiss();
+			await Frames(10);
+
+			GD.Print(allOk ? "MENU OK" : "MENU FAIL");
+			GetTree().Quit(allOk ? 0 : 1);
+			return;
+		}
+
+		// --click: a real mouse click on the button through the OS, as a hand would do it
+		if (OS.GetCmdlineUserArgs().Contains("--click"))
+		{
+			Vector2 centre = filter.GetGlobalRect().GetCenter();
+			Vector2I screen = DisplayServer.WindowGetPosition(GetWindow().GetWindowId()) + (Vector2I)(GetViewport().GetScreenTransform() * centre).Round();
+			SetCursorPos(screen.X, screen.Y);
+			await Frames(5);
+			GD.Print($"MENU clicking {filter.GetPath()} at {screen}, hovered={GetViewport().GuiGetHoveredControl()?.GetPath()}");
+			filter.Pressed += () => GD.Print("MENU button pressed");
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+			if (!args.Contains("--fast")) await Frames(3);
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+		}
+		else filter.EmitSignal(BaseButton.SignalName.Pressed);
 
 		// the menu opens on a deferred call; then a second of frames while it is up
 		await Frames(3);
@@ -50,10 +131,15 @@ public partial class MenuProbe : Node
 		ContextMenus.Handler.Dismiss();
 		await Frames(10);
 
-		bool ok = rect is not null && during >= 20 && tilesAfter < tilesBefore && stillOpen;
+		bool filterMenu = !args.Contains("--clip") && !args.Contains("--tile");
+		bool ok = rect is not null && during >= 20 && (!filterMenu || (tilesAfter < tilesBefore && stillOpen));
 		GD.Print(ok ? "MENU OK" : "MENU FAIL");
 		GetTree().Quit(ok ? 0 : 1);
 	}
+
+	const uint MOUSEEVENTF_LEFTDOWN = 0x2, MOUSEEVENTF_LEFTUP = 0x4;
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, nuint extra);
 
 	async Task Frames(int count)
 	{

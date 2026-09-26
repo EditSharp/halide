@@ -3,8 +3,10 @@
 [ext_resource type="Script" uid="uid://4olbjd2lld4e" path="res://Scripts/UI/Views/UIPlayback.cs" id="1_rvpaf"]
 
 [sub_resource type="ImageTexture" id="ImageTexture_vyrgd"]
+resource_local_to_scene = true
 
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_vyrgd"]
+resource_local_to_scene = true
 
 [node name="Playback" type="Control" unique_id=1515650523 node_paths=PackedStringArray("videoStreamPlayer", "audioStreamPlayer", "playButton", "timestamp", "slider")]
 layout_mode = 3
