@@ -1,0 +1,123 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/App/Chrome/ResizeGrips.cs" id="1_grips"]
+[ext_resource type="Script" path="res://Scripts/App/Chrome/ResizeGrip.cs" id="2_grip"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_outline"]
+resource_local_to_scene = true
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+
+[node name="ResizeGrips" type="Control" node_paths=PackedStringArray("outline")]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+script = ExtResource("1_grips")
+outline = NodePath("Outline")
+
+[node name="Outline" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_outline")
+
+[node name="Top" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 6.0
+grow_horizontal = 2
+mouse_default_cursor_shape = 9
+script = ExtResource("2_grip")
+Edge = 1
+
+[node name="Bottom" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_default_cursor_shape = 9
+script = ExtResource("2_grip")
+Edge = 6
+
+[node name="Left" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 6.0
+grow_vertical = 2
+mouse_default_cursor_shape = 10
+script = ExtResource("2_grip")
+Edge = 3
+
+[node name="Right" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -6.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_default_cursor_shape = 10
+script = ExtResource("2_grip")
+Edge = 4
+
+[node name="TopLeft" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 15.0
+offset_bottom = 15.0
+mouse_default_cursor_shape = 12
+script = ExtResource("2_grip")
+Edge = 0
+
+[node name="TopRight" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -15.0
+offset_bottom = 15.0
+grow_horizontal = 0
+mouse_default_cursor_shape = 11
+script = ExtResource("2_grip")
+Edge = 2
+
+[node name="BottomLeft" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -15.0
+offset_right = 15.0
+grow_vertical = 0
+mouse_default_cursor_shape = 11
+script = ExtResource("2_grip")
+Edge = 5
+
+[node name="BottomRight" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -15.0
+offset_top = -15.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_default_cursor_shape = 12
+script = ExtResource("2_grip")
+Edge = 7

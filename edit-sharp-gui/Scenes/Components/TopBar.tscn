@@ -1,0 +1,136 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Components/UITopBar.cs" id="1_bar"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_logo"]
+[ext_resource type="PackedScene" path="res://Scenes/Components/TopBarMenu.tscn" id="3_menu"]
+[ext_resource type="Script" path="res://Scripts/UI/Components/CaptionButton.cs" id="4_caption"]
+
+[node name="TopBar" type="PanelContainer" node_paths=PackedStringArray("leading", "logo", "menus", "layouts", "title", "captionButtons", "minimize", "maximize", "close")]
+custom_minimum_size = Vector2(0, 36)
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 36.0
+grow_horizontal = 2
+theme_type_variation = &"TopBar"
+script = ExtResource("1_bar")
+leading = NodePath("Row/Leading")
+logo = NodePath("Row/Logo")
+menus = NodePath("Row/Menus")
+layouts = NodePath("Row/Layouts")
+title = NodePath("TitleCenter/Title")
+captionButtons = NodePath("Row/CaptionButtons")
+minimize = NodePath("Row/CaptionButtons/Minimize")
+maximize = NodePath("Row/CaptionButtons/Maximize")
+close = NodePath("Row/CaptionButtons/Close")
+menuButton = ExtResource("3_menu")
+
+[node name="TitleCenter" type="CenterContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="TitleCenter"]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Leading" type="Control" parent="Row"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Logo" type="Button" parent="Row"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Home"
+theme_type_variation = &"TopBarLogo"
+icon = ExtResource("2_logo")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Menus" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Layouts" type="Button" parent="Row"]
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+tooltip_text = "Layout"
+theme_type_variation = &"TopBarButton"
+
+[node name="Spacer" type="Control" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="CaptionButtons" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Minimize" type="Button" parent="Row/CaptionButtons" node_paths=PackedStringArray("fill")]
+custom_minimum_size = Vector2(48, 36)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Minimize"
+theme_type_variation = &"CaptionButton"
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("4_caption")
+fill = NodePath("Fill")
+
+[node name="Fill" type="Panel" parent="Row/CaptionButtons/Minimize"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionFill"
+
+[node name="Maximize" type="Button" parent="Row/CaptionButtons" node_paths=PackedStringArray("fill")]
+custom_minimum_size = Vector2(48, 36)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"CaptionButton"
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("4_caption")
+fill = NodePath("Fill")
+
+[node name="Fill" type="Panel" parent="Row/CaptionButtons/Maximize"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionFill"
+
+[node name="Close" type="Button" parent="Row/CaptionButtons" node_paths=PackedStringArray("fill")]
+custom_minimum_size = Vector2(48, 36)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Close"
+theme_type_variation = &"CaptionClose"
+icon_alignment = 1
+expand_icon = true
+
+script = ExtResource("4_caption")
+fill = NodePath("Fill")
+
+[node name="Fill" type="Panel" parent="Row/CaptionButtons/Close"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionCloseFill"

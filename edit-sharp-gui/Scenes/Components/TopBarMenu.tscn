@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="TopBarMenu" type="Button"]
+custom_minimum_size = Vector2(0, 27)
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"TopBarButton"

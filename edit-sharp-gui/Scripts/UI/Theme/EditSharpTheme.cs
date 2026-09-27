@@ -255,9 +255,13 @@ public partial class EditSharpTheme : Theme
 		SaveUserSettings();
 	}
 
+	// the OS switched between dark and light
+	public static event System.Action SystemModeChanged;
+
 	// the OS switched between dark and light; a system choice follows it
 	public void SystemThemeChanged()
 	{
+		SystemModeChanged?.Invoke();
 		if (PaletteChoice == SystemPalette) ApplyPaletteChoice();
 	}
 

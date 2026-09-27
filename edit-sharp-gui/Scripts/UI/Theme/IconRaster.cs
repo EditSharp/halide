@@ -10,7 +10,7 @@ namespace EditSharpGUI.Scripts.UI.Theming;
 // made once per size and shared
 public static class IconRaster
 {
-	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot, Check, Bullet, Chevron, Film, Picture, Speaker, Timeline, Plus }
+	public enum Shape { Diamond, DiamondOutline, ArrowLeft, ArrowRight, ArrowDown, Reset, ResetTrack, LinkOff, LinkOn, Ring, Pointer, Dot, Check, Bullet, Chevron, Film, Picture, Speaker, Timeline, Plus, WindowMinimize, WindowMaximize, WindowRestore, WindowClose }
 
 	static readonly Dictionary<(Shape, int), ImageTexture> cache = [];
 
@@ -161,9 +161,31 @@ public static class IconRaster
 			case Shape.Plus:
 				return (Math.Abs(x) <= 0.12f && Math.Abs(y) <= 0.6f) || (Math.Abs(y) <= 0.12f && Math.Abs(x) <= 0.6f);
 
+			// the caption buttons: thin strokes, like the OS's own
+			case Shape.WindowMinimize:
+				return Math.Abs(y) <= 0.06f && Math.Abs(x) <= 0.55f;
+
+			case Shape.WindowMaximize:
+				return Outline(x, y, -0.55f, -0.55f, 0.55f, 0.55f, 0.11f);
+
+			case Shape.WindowRestore:
+				return Outline(x, y, -0.55f, -0.33f, 0.33f, 0.55f, 0.11f)
+					|| (Outline(x, y, -0.33f, -0.55f, 0.55f, 0.33f, 0.11f) && !(x < 0.33f && y > -0.33f));
+
+			case Shape.WindowClose:
+				return Segment(x, y, -0.55f, -0.55f, 0.55f, 0.55f, 0.07f) || Segment(x, y, -0.55f, 0.55f, 0.55f, -0.55f, 0.07f);
+
 			default:
 				return false;
 		}
+	}
+
+	// on the border of the box from (l, t) to (r, b), `thickness` wide inward
+	static bool Outline(float x, float y, float l, float t, float r, float b, float thickness)
+	{
+		bool within = x >= l && x <= r && y >= t && y <= b;
+		bool inner = x >= l + thickness && x <= r - thickness && y >= t + thickness && y <= b - thickness;
+		return within && !inner;
 	}
 
 	// within thickness of the segment from a to b, with round ends

@@ -3972,6 +3972,667 @@ script = ExtResource("font")
 ThemeType = "SettingsSection"
 Family = 1
 
+[sub_resource type="Resource" id="ThemeStyle_TopBar_panel"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 3
+BackgroundAlpha = 1.0
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBar_panel"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBar_panel")
+State = 0
+
+[sub_resource type="Resource" id="ThemeStyle_TopBarButton_normal"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 9.0
+ContentMarginTop = 6.0
+ContentMarginRight = 9.0
+ContentMarginBottom = 6.0
+
+[sub_resource type="Resource" id="ThemeStyle_TopBarButton_hover"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.08
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 9.0
+ContentMarginTop = 6.0
+ContentMarginRight = 9.0
+ContentMarginBottom = 6.0
+
+[sub_resource type="Resource" id="ThemeStyle_TopBarButton_pressed"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.14
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 9.0
+ContentMarginTop = 6.0
+ContentMarginRight = 9.0
+ContentMarginBottom = 6.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_normal"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_normal")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_hover"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_hover")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_pressed"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_hover_pressed"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_disabled"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_normal")
+State = 3
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_TopBarButton_focus"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_TopBarButton_normal")
+State = 4
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionButton_normal"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionButton_hover"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionButton_pressed"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_normal"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_normal")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_hover"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_hover")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_hover_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_disabled"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_normal")
+State = 3
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionButton_focus"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionButton_normal")
+State = 4
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionHot_normal"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.06
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionHot_hover"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.06
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionHot_pressed"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.04
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_normal"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_normal")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_hover"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_hover")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_hover_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_disabled"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_normal")
+State = 3
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionHot_focus"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionHot_normal")
+State = 4
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionClose_normal"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionClose_hover"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 16
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionClose_pressed"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 16
+BackgroundAlpha = 0.0
+DrawCenter = false
+CornerRadiusTopLeft = 0
+CornerRadiusTopRight = 0
+CornerRadiusBottomRight = 0
+CornerRadiusBottomLeft = 0
+ContentMarginLeft = 0.0
+ContentMarginTop = 0.0
+ContentMarginRight = 0.0
+ContentMarginBottom = 0.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_normal"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_normal")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_hover"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_hover")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_hover_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_pressed")
+State = 0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_disabled"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_normal")
+State = 3
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionClose_focus"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionClose_normal")
+State = 4
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font_color"]
+script = ExtResource("color")
+ThemeType = "TopBarButton"
+Item = "font_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font_hover_color"]
+script = ExtResource("color")
+ThemeType = "TopBarButton"
+Item = "font_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font_pressed_color"]
+script = ExtResource("color")
+ThemeType = "TopBarButton"
+Item = "font_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "TopBarButton"
+Item = "font_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font_focus_color"]
+script = ExtResource("color")
+ThemeType = "TopBarButton"
+Item = "font_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_font_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "font_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_font_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "font_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_font_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "font_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_font_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "font_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_font_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "font_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_icon_normal_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "icon_normal_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_icon_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "icon_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_icon_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "icon_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_icon_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "icon_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionbutton_icon_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionButton"
+Item = "icon_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_font_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "font_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_font_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "font_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_font_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "font_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_font_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "font_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_font_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "font_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_icon_normal_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "icon_normal_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_icon_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "icon_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_icon_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "icon_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_icon_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "icon_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionhot_icon_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionHot"
+Item = "icon_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_font_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "font_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_font_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "font_hover_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_font_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "font_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_font_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "font_hover_pressed_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_font_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "font_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_icon_normal_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "icon_normal_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_captionclose_icon_hover_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "icon_hover_color"
+Definition = 12
+
+[sub_resource type="Resource" id="Resource_captionclose_icon_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "icon_pressed_color"
+Definition = 12
+
+[sub_resource type="Resource" id="Resource_captionclose_icon_hover_pressed_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "icon_hover_pressed_color"
+Definition = 12
+
+[sub_resource type="Resource" id="Resource_captionclose_icon_focus_color"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "icon_focus_color"
+Definition = 6
+
+[sub_resource type="Resource" id="Resource_topbarbutton_font"]
+script = ExtResource("font")
+ThemeType = "TopBarButton"
+Family = 1
+
+[sub_resource type="SystemFont" id="SystemFont_caption_glyphs"]
+font_names = PackedStringArray("Segoe Fluent Icons", "Segoe MDL2 Assets")
+multichannel_signed_distance_field = true
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionFill_panel"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.06
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionFill_panel"]
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionFill_panel")
+State = 0
+
+[sub_resource type="Resource" id="ThemeStyle_CaptionCloseFill_panel"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 16
+BackgroundAlpha = 1.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_CaptionCloseFill_panel"]
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_CaptionCloseFill_panel")
+State = 0
+
+[sub_resource type="Resource" id="Resource_captionclose_glyph_hot"]
+script = ExtResource("color")
+ThemeType = "CaptionClose"
+Item = "glyph_hot"
+Definition = 12
+
 [resource]
 default_font = ExtResource("7_sxwih")
 default_font_size = 14
@@ -4419,6 +5080,58 @@ SettingsSection/styles/pressed = SubResource("ThemedStyleBox_SettingsSection_pre
 SettingsSection/styles/hover_pressed = SubResource("ThemedStyleBox_SettingsSection_hover_pressed")
 SettingsSection/styles/disabled = SubResource("ThemedStyleBox_SettingsSection_disabled")
 SettingsSection/styles/focus = SubResource("ThemedStyleBox_SettingsSection_focus")
+TopBar/base_type = &"PanelContainer"
+TopBar/styles/panel = SubResource("ThemedStyleBox_TopBar_panel")
+TopBarButton/base_type = &"Button"
+TopBarButton/styles/normal = SubResource("ThemedStyleBox_TopBarButton_normal")
+TopBarButton/styles/hover = SubResource("ThemedStyleBox_TopBarButton_hover")
+TopBarButton/styles/pressed = SubResource("ThemedStyleBox_TopBarButton_pressed")
+TopBarButton/styles/hover_pressed = SubResource("ThemedStyleBox_TopBarButton_hover_pressed")
+TopBarButton/styles/disabled = SubResource("ThemedStyleBox_TopBarButton_disabled")
+TopBarButton/styles/focus = SubResource("ThemedStyleBox_TopBarButton_focus")
+TopBarLogo/colors/icon_disabled_color = Color(1, 1, 1, 1)
+TopBarLogo/colors/icon_focus_color = Color(1, 1, 1, 1)
+TopBarLogo/colors/icon_hover_color = Color(1, 1, 1, 1)
+TopBarLogo/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
+TopBarLogo/colors/icon_normal_color = Color(1, 1, 1, 1)
+TopBarLogo/colors/icon_pressed_color = Color(1, 1, 1, 1)
+TopBarLogo/base_type = &"TopBarButton"
+CaptionFill/base_type = &"Panel"
+CaptionFill/styles/panel = SubResource("ThemedStyleBox_CaptionFill_panel")
+CaptionCloseFill/base_type = &"Panel"
+CaptionCloseFill/styles/panel = SubResource("ThemedStyleBox_CaptionCloseFill_panel")
+CaptionButton/base_type = &"Button"
+CaptionButton/constants/pressed_fill = 67
+CaptionButton/constants/icon_max_width = 15
+CaptionButton/font_sizes/font_size = 10
+CaptionButton/fonts/font = SubResource("SystemFont_caption_glyphs")
+CaptionButton/styles/normal = SubResource("ThemedStyleBox_CaptionButton_normal")
+CaptionButton/styles/hover = SubResource("ThemedStyleBox_CaptionButton_hover")
+CaptionButton/styles/pressed = SubResource("ThemedStyleBox_CaptionButton_pressed")
+CaptionButton/styles/hover_pressed = SubResource("ThemedStyleBox_CaptionButton_hover_pressed")
+CaptionButton/styles/disabled = SubResource("ThemedStyleBox_CaptionButton_disabled")
+CaptionButton/styles/focus = SubResource("ThemedStyleBox_CaptionButton_focus")
+CaptionHot/base_type = &"Button"
+CaptionHot/constants/icon_max_width = 15
+CaptionHot/font_sizes/font_size = 10
+CaptionHot/fonts/font = SubResource("SystemFont_caption_glyphs")
+CaptionHot/styles/normal = SubResource("ThemedStyleBox_CaptionHot_normal")
+CaptionHot/styles/hover = SubResource("ThemedStyleBox_CaptionHot_hover")
+CaptionHot/styles/pressed = SubResource("ThemedStyleBox_CaptionHot_pressed")
+CaptionHot/styles/hover_pressed = SubResource("ThemedStyleBox_CaptionHot_hover_pressed")
+CaptionHot/styles/disabled = SubResource("ThemedStyleBox_CaptionHot_disabled")
+CaptionHot/styles/focus = SubResource("ThemedStyleBox_CaptionHot_focus")
+CaptionClose/base_type = &"Button"
+CaptionClose/constants/pressed_fill = 90
+CaptionClose/constants/icon_max_width = 15
+CaptionClose/font_sizes/font_size = 10
+CaptionClose/fonts/font = SubResource("SystemFont_caption_glyphs")
+CaptionClose/styles/normal = SubResource("ThemedStyleBox_CaptionClose_normal")
+CaptionClose/styles/hover = SubResource("ThemedStyleBox_CaptionClose_hover")
+CaptionClose/styles/pressed = SubResource("ThemedStyleBox_CaptionClose_pressed")
+CaptionClose/styles/hover_pressed = SubResource("ThemedStyleBox_CaptionClose_hover_pressed")
+CaptionClose/styles/disabled = SubResource("ThemedStyleBox_CaptionClose_disabled")
+CaptionClose/styles/focus = SubResource("ThemedStyleBox_CaptionClose_focus")
 SubheaderLabel/base_type = &"Label"
 SubheaderLabel/font_sizes/font_size = 14
 SubheaderLabel/fonts/font = ExtResource("7_7hjjl")
@@ -4482,5 +5195,5 @@ ViewBackground/base_type = &"Panel"
 ViewBackground/styles/panel = SubResource("ThemedStyleBox_ViewBackground_panel")
 script = ExtResource("theme")
 Palette = ExtResource("palette")
-ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color"), SubResource("ColorBinding_Clip_poppy"), SubResource("ColorBinding_Clip_red"), SubResource("ColorBinding_Clip_orange"), SubResource("ColorBinding_Clip_mango"), SubResource("ColorBinding_Clip_yellow"), SubResource("ColorBinding_Clip_green"), SubResource("ColorBinding_Clip_turquoise"), SubResource("ColorBinding_Clip_lime"), SubResource("ColorBinding_Clip_cyan"), SubResource("ColorBinding_Clip_purple"), SubResource("ColorBinding_Clip_pink"), SubResource("ColorBinding_Clip_lavender"), SubResource("ColorBinding_Clip_magenta"), SubResource("ColorBinding_Clip_brown"), SubResource("ColorBinding_Clip_tan"), SubResource("ColorBinding_Clip_gray"), SubResource("ColorBinding_Clip_blue"), SubResource("ColorBinding_Clip_navy"), SubResource("ColorBinding_Node_poppy"), SubResource("ColorBinding_Node_red"), SubResource("ColorBinding_Node_orange"), SubResource("ColorBinding_Node_mango"), SubResource("ColorBinding_Node_yellow"), SubResource("ColorBinding_Node_green"), SubResource("ColorBinding_Node_turquoise"), SubResource("ColorBinding_Node_lime"), SubResource("ColorBinding_Node_cyan"), SubResource("ColorBinding_Node_purple"), SubResource("ColorBinding_Node_pink"), SubResource("ColorBinding_Node_lavender"), SubResource("ColorBinding_Node_magenta"), SubResource("ColorBinding_Node_brown"), SubResource("ColorBinding_Node_tan"), SubResource("ColorBinding_Node_gray"), SubResource("ColorBinding_Node_blue"), SubResource("ColorBinding_Node_navy"), SubResource("Resource_errorlabel_color"), SubResource("Resource_settingssection_font_color"), SubResource("Resource_settingssection_font_hover_color"), SubResource("Resource_settingssection_font_pressed_color"), SubResource("Resource_settingssection_font_hover_pressed_color"), SubResource("Resource_settingssection_font_focus_color")])
-FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx"), SubResource("Resource_0ye0x"), SubResource("Resource_errorlabel_font"), SubResource("Resource_settingssection_font")])
+ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color"), SubResource("ColorBinding_Clip_poppy"), SubResource("ColorBinding_Clip_red"), SubResource("ColorBinding_Clip_orange"), SubResource("ColorBinding_Clip_mango"), SubResource("ColorBinding_Clip_yellow"), SubResource("ColorBinding_Clip_green"), SubResource("ColorBinding_Clip_turquoise"), SubResource("ColorBinding_Clip_lime"), SubResource("ColorBinding_Clip_cyan"), SubResource("ColorBinding_Clip_purple"), SubResource("ColorBinding_Clip_pink"), SubResource("ColorBinding_Clip_lavender"), SubResource("ColorBinding_Clip_magenta"), SubResource("ColorBinding_Clip_brown"), SubResource("ColorBinding_Clip_tan"), SubResource("ColorBinding_Clip_gray"), SubResource("ColorBinding_Clip_blue"), SubResource("ColorBinding_Clip_navy"), SubResource("ColorBinding_Node_poppy"), SubResource("ColorBinding_Node_red"), SubResource("ColorBinding_Node_orange"), SubResource("ColorBinding_Node_mango"), SubResource("ColorBinding_Node_yellow"), SubResource("ColorBinding_Node_green"), SubResource("ColorBinding_Node_turquoise"), SubResource("ColorBinding_Node_lime"), SubResource("ColorBinding_Node_cyan"), SubResource("ColorBinding_Node_purple"), SubResource("ColorBinding_Node_pink"), SubResource("ColorBinding_Node_lavender"), SubResource("ColorBinding_Node_magenta"), SubResource("ColorBinding_Node_brown"), SubResource("ColorBinding_Node_tan"), SubResource("ColorBinding_Node_gray"), SubResource("ColorBinding_Node_blue"), SubResource("ColorBinding_Node_navy"), SubResource("Resource_errorlabel_color"), SubResource("Resource_settingssection_font_color"), SubResource("Resource_settingssection_font_hover_color"), SubResource("Resource_settingssection_font_pressed_color"), SubResource("Resource_settingssection_font_hover_pressed_color"), SubResource("Resource_settingssection_font_focus_color"), SubResource("Resource_topbarbutton_font_color"), SubResource("Resource_topbarbutton_font_hover_color"), SubResource("Resource_topbarbutton_font_pressed_color"), SubResource("Resource_topbarbutton_font_hover_pressed_color"), SubResource("Resource_topbarbutton_font_focus_color"), SubResource("Resource_captionbutton_font_color"), SubResource("Resource_captionbutton_font_hover_color"), SubResource("Resource_captionbutton_font_pressed_color"), SubResource("Resource_captionbutton_font_hover_pressed_color"), SubResource("Resource_captionbutton_font_focus_color"), SubResource("Resource_captionbutton_icon_normal_color"), SubResource("Resource_captionbutton_icon_hover_color"), SubResource("Resource_captionbutton_icon_pressed_color"), SubResource("Resource_captionbutton_icon_hover_pressed_color"), SubResource("Resource_captionbutton_icon_focus_color"), SubResource("Resource_captionhot_font_color"), SubResource("Resource_captionhot_font_hover_color"), SubResource("Resource_captionhot_font_pressed_color"), SubResource("Resource_captionhot_font_hover_pressed_color"), SubResource("Resource_captionhot_font_focus_color"), SubResource("Resource_captionhot_icon_normal_color"), SubResource("Resource_captionhot_icon_hover_color"), SubResource("Resource_captionhot_icon_pressed_color"), SubResource("Resource_captionhot_icon_hover_pressed_color"), SubResource("Resource_captionhot_icon_focus_color"), SubResource("Resource_captionclose_font_color"), SubResource("Resource_captionclose_font_hover_color"), SubResource("Resource_captionclose_font_pressed_color"), SubResource("Resource_captionclose_font_hover_pressed_color"), SubResource("Resource_captionclose_font_focus_color"), SubResource("Resource_captionclose_icon_normal_color"), SubResource("Resource_captionclose_icon_hover_color"), SubResource("Resource_captionclose_icon_pressed_color"), SubResource("Resource_captionclose_icon_hover_pressed_color"), SubResource("Resource_captionclose_icon_focus_color"), SubResource("Resource_captionclose_glyph_hot")])
+FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx"), SubResource("Resource_0ye0x"), SubResource("Resource_errorlabel_font"), SubResource("Resource_settingssection_font"), SubResource("Resource_topbarbutton_font")])

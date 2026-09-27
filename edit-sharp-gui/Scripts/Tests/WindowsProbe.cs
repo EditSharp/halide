@@ -29,6 +29,10 @@ public partial class WindowsProbe : Node
 		return rect;
 	}
 
+	[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] struct POINT { public int x, y; }
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern nint SendMessageW(nint hwnd, uint msg, nint wParam, nint lParam);
+
 	void Check(bool condition, string what)
 	{
 		ok &= condition;
@@ -98,7 +102,7 @@ public partial class WindowsProbe : Node
 		Guid pick = window.Session.Project.Timeline.Channels.SelectMany(c => c.Clips).Skip(1).First().Id;
 		Descendants(window).OfType<UIClipsView>().First().SelectClips(window.Session.Project.Timeline.Channels.SelectMany(c => c.Clips).Where(c => c.Id == pick));
 		media.RestoreState(new System.Text.Json.Nodes.JsonObject { ["tab"] = "Audio" });
-		window.GetNode<SplitContainer>("Editor/VSplitContainer").SplitOffset = 123;
+		Descendants(window).OfType<Editor>().First().GetNode<SplitContainer>("VSplitContainer").SplitOffset = 123;
 		await Frames(3);
 		manager.Save(window.Session);
 		await window.CloseAsync();
@@ -111,7 +115,46 @@ public partial class WindowsProbe : Node
 		Check(view.PixelsPerSecond == 173d && view.PlayheadTime == Time.FromSeconds(3), $"zoom and playhead come back: {view.PixelsPerSecond}, {view.PlayheadTime}");
 		Check(view.SelectedClips.Select(c => c.Id).SequenceEqual([pick]), "so does the selection");
 		Check(media.SaveState()["tab"]?.GetValue<string>() == "Audio", "and the media viewer's tab");
-		Check(window.GetNode<SplitContainer>("Editor/VSplitContainer").SplitOffset == 123, "and the split");
+		Check(Descendants(window).OfType<Editor>().First().GetNode<SplitContainer>("VSplitContainer").SplitOffset == 123, "and the split");
+
+		// the drawn top bar: the project's name, and the caption buttons where Windows draws them
+		UITopBar bar = Descendants(window).OfType<UITopBar>().First();
+		await Frames(5);
+		SaveShot(window, "project-topbar");
+		Check(bar.Title == "Probe", $"the top bar shows the project's name: {bar.Title}");
+		Check(bar.RegionAt(bar.GetGlobalRect().GetCenter() + new Vector2(-200, 0)) == UITopBar.Region.Caption, "its empty space drags the window");
+		if (OS.GetName() == "Windows")
+		{
+			// what windows itself is told is under the pointer, asked the way it asks
+			nint hwnd = (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId());
+			int HitAt(Vector2 viewport)
+			{
+				Vector2I screen = EditSharpGUI.Scripts.UI.ContextMenu.ContextMenus.ToScreen(window, viewport);
+				GetCursorPos(out POINT now);
+				Vector2I win32 = screen + new Vector2I(now.x, now.y) - DisplayServer.MouseGetPosition();
+				return (int)SendMessageW(hwnd, 0x84, 0, (nint)((win32.Y << 16) | (win32.X & 0xFFFF)));
+			}
+			Button maximizeButton = Descendants(bar).OfType<Button>().First(b => b.TooltipText is "Maximize" or "Restore");
+			Editor editorView = Descendants(window).OfType<Editor>().First();
+			Check(HitAt(bar.GetGlobalRect().GetCenter() + new Vector2(-200, 0)) == 2, "Windows sees the bar's empty space as the caption");
+			Check(HitAt(maximizeButton.GetGlobalRect().GetCenter()) == 9, "and the maximize button as its own, for Snap Layouts");
+			Check(HitAt(new Vector2(bar.GetGlobalRect().GetCenter().X - 200, 1)) == 12, "the top edge still resizes");
+			Check(HitAt(editorView.GetGlobalRect().GetCenter()) == 1, "and the editor is plain client area");
+
+			// the bar is the monitor's size, whatever the interface scale
+			float Physical() => bar.GetGlobalTransform().Scale.Y * bar.Size.Y * window.ContentScaleFactor;
+			float barBefore = Physical(), scaleBefore = window.ContentScaleFactor;
+			InterfaceScale scaleWas = AppSettings.Current.InterfaceScale;
+			AppSettings.Current.InterfaceScale = scaleBefore > 1.2f ? InterfaceScale.Percent100 : InterfaceScale.Percent200;
+			AppSettings.Current.Save();
+			await Frames(5);
+			float barAfter = Physical();
+			Check(!Mathf.IsEqualApprox(window.ContentScaleFactor, scaleBefore) && Mathf.Abs(barBefore - barAfter) < 1f,
+				$"the title bar keeps its height when the interface scale changes ({scaleBefore} to {window.ContentScaleFactor}): {barBefore:0.#} then {barAfter:0.#} px");
+			AppSettings.Current.InterfaceScale = scaleWas;
+			AppSettings.Current.Save();
+			await Frames(5);
+		}
 
 		// ---- a channel dragged by its handle ----
 		EditSharp.Components.Timeline timeline = window.Session.Project.Timeline;

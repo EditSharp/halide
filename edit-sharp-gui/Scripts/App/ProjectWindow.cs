@@ -1,3 +1,4 @@
+using EditSharpGUI.Scripts.App.Chrome;
 using Godot;
 using System.Threading.Tasks;
 
@@ -5,6 +6,9 @@ using System.Threading.Tasks;
 public partial class ProjectWindow : Window
 {
 	public ProjectSession Session { get; private set; }
+
+	// the drawn title bar over the editor
+	public WindowFrame Frame { get; private set; }
 
 	public static ProjectWindow Create(Project project, string filePath, PackedScene editorScene)
 	{
@@ -22,8 +26,8 @@ public partial class ProjectWindow : Window
 		window.Session = ProjectSession.Attach(window, project, filePath);
 
 		Control editor = editorScene.Instantiate<Control>();
-		editor.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		window.AddChild(editor);
+		window.Frame = WindowFrame.Wrap(editor);
+		window.AddChild(window.Frame);
 
 		return window;
 	}
@@ -37,10 +41,16 @@ public partial class ProjectWindow : Window
 		Session.Activate();
 
 		Session.Project.History.Changed += (_, _) => UpdateTitle();
+		Frame.Bar.HomePressed += ProjectManager.Singleton.ShowHome;
+		UpdateTitle();
 	}
 
 	// the name, with a dot while there are unsaved changes
-	public void UpdateTitle() => Title = (Session.Dirty ? "• " : "") + WindowTitle(Session.FilePath);
+	public void UpdateTitle()
+	{
+		Title = (Session.Dirty ? "• " : "") + WindowTitle(Session.FilePath);
+		Frame.Bar.Title = (Session.Dirty ? "• " : "") + (Session.FilePath is null ? "Untitled" : System.IO.Path.GetFileNameWithoutExtension(Session.FilePath));
+	}
 
 	// true once the window is gone; false when the user kept it open
 	public async Task<bool> CloseAsync()

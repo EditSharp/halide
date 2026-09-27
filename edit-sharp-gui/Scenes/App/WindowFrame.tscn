@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/App/Chrome/WindowFrame.cs" id="1_frame"]
+[ext_resource type="PackedScene" path="res://Scenes/Components/TopBar.tscn" id="2_bar"]
+
+[node name="WindowFrame" type="VBoxContainer" node_paths=PackedStringArray("Bar", "Content", "barHolder")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+script = ExtResource("1_frame")
+Bar = NodePath("BarHolder/TopBar")
+Content = NodePath("Content")
+barHolder = NodePath("BarHolder")
+
+[node name="BarHolder" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TopBar" parent="BarHolder" instance=ExtResource("2_bar")]
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+offset_right = 0.0
+
+[node name="Content" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3

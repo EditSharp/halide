@@ -1,0 +1,135 @@
+# Opens a project window with the drawn top bar on each OS and uploads screenshots of it,
+# so the title bar can be checked without those machines. Driven by edit-sharp-gui/Tools/window_chrome_preview.py.
+name: Window chrome
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [window-chrome-ci]
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  chrome:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-latest
+            zip: Godot_v4.7.2-stable_mono_macos.universal.zip
+            bin: godot/Godot_mono.app/Contents/MacOS/Godot
+            extra: --rendering-method gl_compatibility
+          - name: linux
+            os: ubuntu-latest
+            zip: Godot_v4.7.2-stable_mono_linux_x86_64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_linux_x86_64/Godot_v4.7.2-stable_mono_linux.x86_64
+            extra: --rendering-method gl_compatibility --rendering-driver opengl3
+          # server 2022 has the windows 10 shell (build 20348)
+          - name: windows10
+            os: windows-2022
+            zip: Godot_v4.7.2-stable_mono_win64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe
+            extra: --rendering-method gl_compatibility --rendering-driver opengl3_angle
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick the EditSharp branch
+        id: editsharp
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/EditSharp/EditSharp.git "${GITHUB_REF_NAME}" > /dev/null; then
+            echo "ref=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: EditSharp/EditSharp
+          ref: ${{ steps.editsharp.outputs.ref }}
+          path: EditSharp
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Fetch Godot
+        shell: bash
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${{ matrix.zip }}"
+          mkdir godot && unzip -q godot.zip -d godot
+          chmod +x "${{ matrix.bin }}"
+          "${{ matrix.bin }}" --version
+
+      - name: Linux display and capture tools
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb imagemagick libgl1-mesa-dri mesa-utils xdotool openbox
+
+      - name: Build the macOS natives
+        if: matrix.name == 'macos'
+        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+
+      - name: Build
+        shell: bash
+        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+
+      - name: Import project
+        shell: bash
+        run: |
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+
+      # nothing of the runner's own in front of the window
+      - name: Clear the desktop
+        if: matrix.name == 'windows10'
+        shell: pwsh
+        run: (New-Object -ComObject Shell.Application).MinimizeAll()
+
+      - name: Screenshots
+        shell: bash
+        run: |
+          cd edit-sharp-gui
+          GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
+          PY=python3
+          if [ "${{ matrix.name }}" = "windows10" ]; then PY=python; fi
+          if [ "${{ matrix.name }}" = "linux" ]; then
+            Xvfb :99 -screen 0 1920x1080x24 &
+            export DISPLAY=:99
+            sleep 2
+          fi
+          shots=("dark" "light --palette res://Themes/Light.tres")
+          # macOS keeps its own traffic lights, so there's no drawn close button to hover
+          if [ "${{ matrix.name }}" != "macos" ]; then shots+=("hover-close --hover close"); fi
+          for shot in "${shots[@]}"; do
+            set -- $shot
+            name=$1; shift
+            # the runner has no GPU, so its swap chain only shows through PrintWindow, which is slow to start
+            diagnose=""; if [ "${{ matrix.name }}" = "windows10" ]; then diagnose="--window --hold 15000"; fi
+            $PY Tools/window_chrome_preview.py --godot "$GODOT" --extra "${{ matrix.extra }}" --out "Tools/Previews/window-chrome-${{ matrix.name }}-$name.png" $diagnose "$@" || true
+          done
+
+      # the borderless window's grips, dragged under a window manager that does the resize
+      - name: Resize grips
+        if: matrix.name == 'linux'
+        run: |
+          cd edit-sharp-gui
+          Xvfb :98 -screen 0 1920x1080x24 &
+          export DISPLAY=:98
+          sleep 2
+          openbox &
+          sleep 2
+          python3 Tools/linux_resize_check.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --extra "${{ matrix.extra }}" --out Tools/Previews/window-chrome-linux-resized.png
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: window-chrome-${{ matrix.name }}
+          path: edit-sharp-gui/Tools/Previews/window-chrome-${{ matrix.name }}-*.png
+          if-no-files-found: warn

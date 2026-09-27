@@ -63,6 +63,7 @@ public partial class ThemePalette : Resource
 	// starts as the accent so nothing changes until it is tuned apart
 	Color _playbackColor = new(0.692f, 0.219f, 0.130f);
 	Color _errorColor = new(1f, 0.42f, 0.42f);
+	Color _destructiveColor = new(0.769f, 0.169f, 0.11f);
 
 	[ExportGroup("Colors")]
 	[Export] public Color BackgroundColor1 { get => _backgroundColor1; set => Define(ref _backgroundColor1, value); }
@@ -79,6 +80,7 @@ public partial class ThemePalette : Resource
 	[Export] public Color BlackColor { get => _blackColor; set => Define(ref _blackColor, value); }
 	[Export] public Color PlaybackColor { get => _playbackColor; set => Define(ref _playbackColor, value); }
 	[Export] public Color ErrorColor { get => _errorColor; set => Define(ref _errorColor, value); }
+	[Export] public Color DestructiveColor { get => _destructiveColor; set => Define(ref _destructiveColor, value); }
 
 	// ---- swatches: the colours clips and nodes wear ----
 
@@ -363,6 +365,7 @@ public partial class ThemePalette : Resource
 		ThemeDefinition.BlackColor => _blackColor,
 		ThemeDefinition.PlaybackColor => _playbackColor,
 		ThemeDefinition.ErrorColor => _errorColor,
+		ThemeDefinition.DestructiveColor => _destructiveColor,
 		_ => Colors.Magenta
 	};
 

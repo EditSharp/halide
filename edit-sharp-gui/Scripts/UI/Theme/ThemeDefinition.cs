@@ -25,7 +25,9 @@ public enum ThemeDefinition
 	// keyframes, the play button
 	PlaybackColor,
 	// problems: invalid values, conflicts, anything that stops an action
-	ErrorColor
+	ErrorColor,
+	// actions that remove or close: the close button's hover, destructive buttons
+	DestructiveColor
 }
 
 // the colours a clip can wear. each is a palette colour; a clip kind's
