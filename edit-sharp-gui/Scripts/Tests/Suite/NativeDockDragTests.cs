@@ -82,7 +82,7 @@ public sealed class NativeDockDragTests
 	public async Task DroppingOutsideEveryWindowFloats()
 	{
 		await Pick("media");
-		await RealInput.MoveTo(Main.Position + Main.Size + new Vector2I(60, 60));
+		await RealInput.MoveTo(RealInput.ScreenPositionOf(Main) + Main.Size + new Vector2I(60, 60));
 		await TestApp.Frames(3);
 		await Release();
 		Assert.True(project.Layout.IsFloating("media"));

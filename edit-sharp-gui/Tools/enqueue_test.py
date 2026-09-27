@@ -5,10 +5,15 @@ Usage: python Tools/enqueue_test.py [run_tests.py args...] [--wait/--no-wait] [-
 Example: python Tools/enqueue_test.py --filter NativeBarMenuTests --windowed
 """
 import argparse
+import io
 import json
 import os
+import sys
 import time
 import uuid
+
+# Windows consoles default to cp1252, which chokes on stray unicode in test/tool output
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 QUEUE = r"C:\tmp\es-queue"
 RESULTS = r"C:\tmp\es-results"

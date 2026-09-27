@@ -53,6 +53,13 @@ def run_fixture(godot, fixture, tests, windowed, out):
 
     started = time.time()
     try:
+        # belt-and-suspenders alongside the machine-wide ForegroundLockTimeout=0 the runner agent sets:
+        # a process launched automatically (not from a keystroke the user just made) doesn't get Windows'
+        # permission to steal foreground focus by default; native menu tracking needs that or it misbehaves
+        if windowed and sys.platform == "win32":
+            import ctypes
+            ctypes.windll.user32.AllowSetForegroundWindow(-1)  # ASFW_ANY
+
         proc = subprocess.run(godot_command(godot, not windowed, *args), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
         output, code = proc.stdout + proc.stderr, proc.returncode
     except subprocess.TimeoutExpired as e:

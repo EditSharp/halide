@@ -115,8 +115,11 @@ public partial class TestRunner : Node
 				? new TestResult(fixture.Name, test.Name, TestOutcome.Skipped, watch.Elapsed.TotalSeconds, cause.Message)
 				: new TestResult(fixture.Name, test.Name, TestOutcome.Failed, watch.Elapsed.TotalSeconds,
 					cause is AssertionException ? cause.Message : $"{cause.GetType().Name}: {cause.Message}\n{cause.StackTrace}");
-			if (result.Outcome == TestOutcome.Failed) Shoot($"{fixture.Name}.{test.Name}");
 		}
+
+		// a screenshot per window, whatever the outcome -- not just on failure, so a report shows what
+		// passing looked like too
+		Shoot($"{fixture.Name}.{test.Name}");
 
 		// a known bug still failing is reported, not counted against the run
 		if (result.Outcome == TestOutcome.Failed && Known(fixture, test) is string issue)

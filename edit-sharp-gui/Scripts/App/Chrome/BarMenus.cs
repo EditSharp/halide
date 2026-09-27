@@ -50,7 +50,10 @@ public partial class BarMenus : Node
 		if (!buttons.TryGetValue(name, out Button button) || !button.IsVisibleInTree()) return;
 		CommandContext context = CommandContext.Of(GetWindow());
 
-		// the handler moves between the menus itself, so all of them go to it now
+		// the handler moves between the menus itself, so all of them go to it now. a second Open() call
+		// while one is already showing only happens from code, not a real click (the native popup captures
+		// clicks on the other buttons itself, long before they'd reach a Button.Pressed signal), so it's
+		// fine to just ignore it here
 		if (ContextMenus.Handler.SwitchesBarMenus)
 		{
 			if (open is not null) return;

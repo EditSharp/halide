@@ -16,8 +16,9 @@ public class WindowsHandler : PlatformHandler
     {
         nint hwnd = owner is not null ? (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, owner.GetWindowId()) : MainHwnd;
         bool dark = ApplyTheme();
+        Vector2I offset = ToWin32Offset(hwnd, owner);
 
-        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), ToWin32(at ?? DisplayServer.MouseGetPosition()), dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect, menu.FadeAnimations));
+        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), (at ?? DisplayServer.MouseGetPosition()) + offset, dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect, menu.FadeAnimations));
     }
 
     public override bool SwitchesBarMenus => true;
@@ -27,8 +28,9 @@ public class WindowsHandler : PlatformHandler
     {
         nint hwnd = owner is not null ? (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, owner.GetWindowId()) : MainHwnd;
         bool dark = ApplyTheme();
+        Vector2I offset = ToWin32Offset(hwnd, owner);
 
-        List<MenuThread.BarItem> items = [.. menus.Select(m => new MenuThread.BarItem(m.Menu, Snapshot.Of(m.Menu), ToWin32(m.At), new Rect2I(ToWin32(m.Button.Position), m.Button.Size)))];
+        List<MenuThread.BarItem> items = [.. menus.Select(m => new MenuThread.BarItem(m.Menu, Snapshot.Of(m.Menu), m.At + offset, new Rect2I(m.Button.Position + offset, m.Button.Size)))];
         MenuThread.BarItem first = items[index];
         ContextMenu menu = first.Menu;
         MenuThread.Show(new MenuThread.Showing(menu, first.Snapshot, first.At, dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect, menu.FadeAnimations)
@@ -39,10 +41,18 @@ public class WindowsHandler : PlatformHandler
     }
 
     // godot's screen pixels start at the top-left of all screens together; win32's at the primary's
-    static Vector2I ToWin32(Vector2I screen)
+    // godot's screen pixels start at the top-left of all screens together; win32's at the primary's. `owner`'s
+    // real win32 position against godot's reported one gives a stable offset, unlike a delta from the current
+    // mouse position: the mouse isn't necessarily anywhere near a bar button, and godot's cached mouse position
+    // can be stale for a window it hasn't seen a real motion event over yet. the tray menu has no owner window,
+    // so it falls back to the mouse-position delta, the only reference available there
+    static Vector2I ToWin32Offset(nint hwnd, Window owner)
     {
+        if (owner is not null && hwnd != 0 && GetWindowRect(hwnd, out RECT rect))
+            return new Vector2I(rect.left, rect.top) - DisplayServer.WindowGetPosition(owner.GetWindowId());
+
         GetCursorPos(out MenuThread.POINT cursor);
-        return screen + new Vector2I(cursor.x, cursor.y) - DisplayServer.MouseGetPosition();
+        return new Vector2I(cursor.x, cursor.y) - DisplayServer.MouseGetPosition();
     }
 
     public override Rect2I? OpenMenuRect()

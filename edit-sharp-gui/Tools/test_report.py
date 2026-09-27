@@ -1,15 +1,15 @@
 """Builds a self-contained HTML report from a run_tests.py results folder (results.xml + screenshots/).
+Screenshots are embedded as base64 data URIs, so the single .html file is everything -- safe to copy
+or send anywhere on its own, no screenshots/ folder needed alongside it.
 
-Usage: python Tools/test_report.py <results-dir> [--out FILE.html] [--open]
-  --open  opens the report in the default browser once it's written (Windows/macOS/Linux)
+Usage: python Tools/test_report.py <results-dir> [--out FILE.html]
 """
 import argparse
+import base64
 import glob
 import html
 import os
-import re
 import sys
-import webbrowser
 import xml.etree.ElementTree as ET
 
 
@@ -35,6 +35,11 @@ def read_results(results_dir):
     return suites
 
 
+def data_uri(png_path):
+    with open(png_path, "rb") as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
+
+
 def find_screenshots(results_dir, fixture, test):
     shots_dir = os.path.join(results_dir, "screenshots")
     if not os.path.isdir(shots_dir):
@@ -52,9 +57,8 @@ def build(results_dir, out_path):
             total[case["outcome"]] += 1
             shots = find_screenshots(results_dir, suite["name"], case["name"])
             shot_tags = "".join(
-                f'<a href="screenshots/{html.escape(os.path.basename(s))}" target="_blank">'
-                f'<img class="shot" src="screenshots/{html.escape(os.path.basename(s))}"></a>'
-                for s in shots
+                f'<a href="{uri}" target="_blank"><img class="shot" src="{uri}"></a>'
+                for uri in (data_uri(s) for s in shots)
             )
             rows.append(f"""
             <tr class="{case['outcome']}">
@@ -109,15 +113,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("results_dir")
     parser.add_argument("--out")
-    parser.add_argument("--open", action="store_true")
     args = parser.parse_args()
 
     out_path = args.out or os.path.join(args.results_dir, "report.html")
     total = build(args.results_dir, out_path)
     print(f"wrote {out_path}: {total['pass']} passed, {total['fail']} failed, {total['skip']} skipped")
-
-    if args.open:
-        webbrowser.open("file://" + os.path.abspath(out_path))
 
 
 if __name__ == "__main__":
