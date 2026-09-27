@@ -13,9 +13,7 @@ public enum StartupAction { Home, ReopenLastSession, HomeAndLastProject }
 // how Home orders its projects
 public enum HomeSort { LastOpened, Name, Created }
 
-// the app's own settings, in user://settings.json. a setting the file
-// doesn't mention keeps its default, and a file that can't be read is
-// replaced by the defaults. Changed fires after every Save
+// the app's settings in user://settings.json; missing values keep their defaults
 public sealed class AppSettings
 {
 	public const string DefaultPath = "user://settings.json";

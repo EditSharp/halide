@@ -3,8 +3,7 @@ using EditSharpGUI.Scripts.UI.ContextMenu;
 using Godot;
 using System.Linq;
 
-// the main scene: the app's root window, never shown, with the tray icon in
-// it. Home and every project are windows of their own, opened from here
+// the main scene: the hidden root window and the tray icon
 public partial class Host : Node
 {
 	[Export] Texture2D trayIcon;

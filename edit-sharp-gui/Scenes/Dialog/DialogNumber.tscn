@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[node name="DialogNumber" type="HBoxContainer"]
+theme_override_constants/separation = 6
+
+[node name="Label" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(108, 24)
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+vertical_alignment = 1
+
+[node name="Number" type="SpinBox" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 24)
+layout_mode = 2

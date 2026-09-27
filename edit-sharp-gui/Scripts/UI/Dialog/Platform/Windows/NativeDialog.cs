@@ -11,9 +11,7 @@ using static EditSharpGUI.Scripts.UI.Dialogs.Platform.Windows.DialogWin32;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform.Windows;
 
-// one dialog box on the menu thread, built from a snapshot of the resource out of
-// win32's own controls, dark or light. what the user does comes back on godot's
-// thread through the events, by element index; it never touches the resources
+// one Win32 dialog box on the menu thread, reporting back by element index
 sealed class NativeDialog(nint owner, bool dark, nint iconWindow)
 {
 	// godot's thread, all of them

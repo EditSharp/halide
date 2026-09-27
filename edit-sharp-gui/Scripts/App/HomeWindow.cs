@@ -1,7 +1,6 @@
 using Godot;
 
-// the launchpad: an OS window holding Home. closing it only closes it; the
-// app goes on while any project is open
+// the OS window holding Home; closing it leaves open projects running
 public partial class HomeWindow : Window
 {
 	public static HomeWindow Create(PackedScene homeScene)

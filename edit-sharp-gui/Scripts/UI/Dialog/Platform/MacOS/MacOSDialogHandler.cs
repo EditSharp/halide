@@ -10,9 +10,7 @@ using System.Threading.Tasks;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform.MacOS;
 
-// macOS dialogs: sheets on the window that asked, shown by the dialog library
-// (Tools/MacOS/dialogs.m) loaded into this process. godot's main thread is appkit's,
-// so every call goes straight in; events come back through one callback
+// macOS dialogs as sheets, shown by libeditsharp-dialogs.dylib in this process
 public sealed class MacOSDialogHandler : DialogHandler
 {
 	// the library in the app bundle's Frameworks, beside the executable, or built in Tools/MacOS for a dev run

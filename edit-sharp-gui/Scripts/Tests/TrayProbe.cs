@@ -5,11 +5,7 @@ using Godot;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-// the tray menu as the tray opens it: the root hidden and another app in
-// front. the menu has to take clicks on its rows and close on a click
-// elsewhere; the clicks land on a window of the probe's own. prints TRAY OK
-//
-//   godot --path . res://Tools/Scenes/Tests/TrayProbe.tscn
+// the tray menu with the root hidden and another app in front; prints TRAY OK
 public partial class TrayProbe : Node
 {
 	bool ok = true;

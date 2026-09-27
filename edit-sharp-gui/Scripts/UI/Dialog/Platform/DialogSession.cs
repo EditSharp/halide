@@ -4,8 +4,7 @@ using System.Threading.Tasks;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform;
 
-// one dialog up in a native box, on godot's thread: code changing the resource
-// reaches the box, and what the box reports by element index reaches the resource
+// connects a shown native dialog to its resource, both ways
 public sealed class DialogSession
 {
 	readonly Dialog dialog;

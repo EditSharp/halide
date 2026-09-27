@@ -7,10 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-// the launchpad: every project the app knows about, as tiles, with a search
-// and a sort above them and a tile to add one. a click selects a tile, a
-// double-click opens its project, right-click or the options button gives
-// its menu. laid out in Home.tscn
+// the launchpad: project tiles with search, sort and an Add tile; laid out in Home.tscn
 public partial class Home : Control
 {
 	[ExportGroup("Controls")]
@@ -273,8 +270,7 @@ public partial class Home : Control
 
 	// ---- changes on disk ----
 
-	// the project file, and its folder when the folder has the project's name,
-	// take the new name; an open project can't be renamed
+	// renames the project file, and its folder when it has the project's name
 	public void Rename(UIProjectItem tile, string name)
 	{
 		RecentProject project = tile.Project;
@@ -313,9 +309,7 @@ public partial class Home : Control
 
 	bool IsOpen(RecentProject project) => ProjectManager.Singleton.OpenProjects.Any(w => w.Session.FilePath is { } p && string.Equals(Path.GetFullPath(p), project.Path, StringComparison.OrdinalIgnoreCase));
 
-	// the projects' folders to the trash, once the user has said so. a folder
-	// holding other things besides the project keeps them: only the project
-	// file, its Autosave and Thumbnails go
+	// moves the projects to the trash after asking; other files in their folders stay
 	async System.Threading.Tasks.Task DeleteAsync(List<RecentProject> targets)
 	{
 		string what = targets.Count == 1 ? targets[0].Name : $"{targets.Count} projects";

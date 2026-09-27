@@ -1,7 +1,6 @@
 using Godot;
 
 // where new windows open: the primary screen, or the one EDITSHARP_SCREEN names
-// (an index, or "other" for the first non-primary one) so tests stay off the main monitor
 public static class Screens
 {
 	// the screen to open on, or -1 for the primary

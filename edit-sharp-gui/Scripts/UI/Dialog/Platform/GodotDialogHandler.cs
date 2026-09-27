@@ -1,16 +1,16 @@
 using Godot;
-using System;
+using static Godot.GodotObject;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform;
 
-// the dialog as a themed window of our own: linux, where there's no one
-// native look to match, and anywhere EDITSHARP_DIALOG_HANDLER=godot. an OS
-// window over its owner, which waits; the controls are the inspector's
+// the dialog as a themed window of our own (Linux, or EDITSHARP_DIALOG_HANDLER=godot), built from Scenes/Dialog
 public sealed class GodotDialogHandler : DialogHandler
 {
+	const string ViewScene = "res://Scenes/Dialog/GodotDialog.tscn";
+
 	public override Task<string> ShowAsync(Dialog dialog, Window owner)
 	{
 		TaskCompletionSource<string> answer = new();
@@ -22,7 +22,7 @@ public sealed class GodotDialogHandler : DialogHandler
 	sealed class Showing(Dialog dialog, Window owner, TaskCompletionSource<string> answer)
 	{
 		Window window;
-		Label problem;
+		GodotDialogView view;
 		readonly Dictionary<DialogElement, Control> rows = [];
 		readonly Dictionary<DialogButton, Button> buttons = [];
 
@@ -44,41 +44,25 @@ public sealed class GodotDialogHandler : DialogHandler
 			window.CloseRequested += () => Close(dialog.Cancel?.Id);
 			window.WindowInput += OnKey;
 
-			Panel background = new() { ThemeTypeVariation = "ViewBackground", MouseFilter = Control.MouseFilterEnum.Ignore };
-			background.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-			window.AddChild(background);
+			view = GD.Load<PackedScene>(ViewScene).Instantiate<GodotDialogView>();
+			window.AddChild(view);
 
-			MarginContainer margin = new();
-			foreach (string side in new[] { "left", "top", "right", "bottom" }) margin.AddThemeConstantOverride($"margin_{side}", 18);
-			margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-			window.AddChild(margin);
-
-			VBoxContainer body = new();
-			body.AddThemeConstantOverride("separation", 9);
-			margin.AddChild(body);
-
+			bool labels = dialog.Elements.Any(e => e is DialogTextField or DialogPathField or DialogDropdown or DialogNumber && e.Label.Length > 0);
 			foreach (DialogElement element in dialog.Elements)
 			{
-				Control row = Build(element);
+				Control row = Build(element, labels);
 				rows[element] = row;
-				body.AddChild(row);
+				view.Elements.AddChild(row);
 				Apply(element);
 			}
 
-			problem = new Label { ThemeTypeVariation = "InspectorLabel", AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false, CustomMinimumSize = new Vector2(384, 0) };
-			body.AddChild(problem);
-
-			HBoxContainer bar = new() { Alignment = BoxContainer.AlignmentMode.End };
-			bar.AddThemeConstantOverride("separation", 6);
-			body.AddChild(new Control { CustomMinimumSize = new Vector2(0, 6) });
-			body.AddChild(bar);
-
 			foreach (DialogButton b in dialog.Buttons)
 			{
-				Button button = new() { Text = b.Text, ThemeTypeVariation = "InspectorButton", CustomMinimumSize = new Vector2(90, 27) };
+				Button button = view.Button.Instantiate<Button>();
+				button.Text = b.Text;
 				button.Pressed += () => Close(b.Id);
 				buttons[b] = button;
-				bar.AddChild(button);
+				view.Buttons.AddChild(button);
 			}
 
 			dialog.Changed += Apply;
@@ -89,110 +73,115 @@ public sealed class GodotDialogHandler : DialogHandler
 			window.Show();
 
 			// the first thing to type into, or the Enter button
-			Control first = rows.Values.SelectMany(Descendants).OfType<LineEdit>().FirstOrDefault();
-			if (first is not null) first.GrabFocus();
+			if (rows.Values.Select(r => r.GetNodeOrNull<LineEdit>("%Field")).FirstOrDefault(f => f is not null) is { } first) first.GrabFocus();
 			else if (dialog.Default is { } d && buttons.TryGetValue(d, out Button enter)) enter.GrabFocus();
 		}
 
 		// ---- building ----
 
-		Control Build(DialogElement element)
+		Control Build(DialogElement element, bool labels)
 		{
-			Control control = element switch
+			Control row = element switch
 			{
-				DialogText text => new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(384, 0), ThemeTypeVariation = text.Style == DialogText.TextStyle.Heading ? "HeaderLabel" : "InspectorLabel" },
-				DialogTextField field => Field(field),
-				DialogPathField path => PathField(path),
-				DialogDropdown dropdown => Dropdown(dropdown),
-				DialogNumber number => Number(number),
-				DialogCheckbox check => Checkbox(check),
-				DialogList list => new VBoxContainer(),
+				DialogText => view.Text.Instantiate<Control>(),
+				DialogTextField => view.Field.Instantiate<Control>(),
+				DialogPathField => view.Path.Instantiate<Control>(),
+				DialogDropdown => view.Dropdown.Instantiate<Control>(),
+				DialogNumber => view.Number.Instantiate<Control>(),
+				DialogCheckbox => view.Checkbox.Instantiate<Control>(),
+				DialogList => view.List.Instantiate<Control>(),
 				_ => new Control(),
 			};
 
-			if (element is DialogText or DialogList or DialogCheckbox || string.IsNullOrEmpty(element.Label)) return control;
+			switch (element)
+			{
+				case DialogTextField field:
+					LineEdit edit = row.GetNode<LineEdit>("%Field");
+					edit.TextChanged += text => dialog.UserEdited(field, text);
+					edit.TextSubmitted += _ => Enter();
+					break;
 
-			// a labelled row: the words, then the control
-			HBoxContainer row = new();
-			row.AddThemeConstantOverride("separation", 6);
-			row.AddChild(new Label { Text = element.Label, ThemeTypeVariation = "InspectorLabel", CustomMinimumSize = new Vector2(108, 24), VerticalAlignment = VerticalAlignment.Center });
-			control.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			row.AddChild(control);
+				case DialogPathField path:
+					row.GetNode<LineEdit>("%Field").TextChanged += text => dialog.UserEdited(path, text);
+					row.GetNode<Button>("%Browse").Pressed += () => Browse(path);
+					break;
+
+				case DialogDropdown dropdown:
+					row.GetNode<OptionButton>("%Dropdown").ItemSelected += i => dialog.UserEdited(dropdown, (int)i);
+					break;
+
+				case DialogNumber number:
+					row.GetNode<SpinBox>("%Number").ValueChanged += v => dialog.UserEdited(number, v);
+					break;
+
+				case DialogCheckbox check:
+					row.GetNode<Control>("%Indent").Visible = labels;
+					row.GetNode<CheckBox>("%Box").Toggled += on => dialog.UserEdited(check, on);
+					break;
+			}
+
 			return row;
 		}
 
-		LineEdit Field(DialogTextField field)
+		void Browse(DialogPathField path)
 		{
-			LineEdit edit = new() { ThemeTypeVariation = "InspectorField", CustomMinimumSize = new Vector2(240, 24) };
-			edit.TextChanged += text => dialog.UserEdited(field, text);
-			edit.TextSubmitted += _ => Enter();
-			return edit;
-		}
+			DisplayServer.FileDialogMode mode = path.Mode switch
+			{
+				DialogPathField.PathMode.OpenFolder => DisplayServer.FileDialogMode.OpenDir,
+				DialogPathField.PathMode.SaveFile => DisplayServer.FileDialogMode.SaveFile,
+				_ => DisplayServer.FileDialogMode.OpenFile,
+			};
 
-		HBoxContainer PathField(DialogPathField path)
-		{
-			HBoxContainer box = new();
-			box.AddThemeConstantOverride("separation", 6);
-			LineEdit edit = new() { ThemeTypeVariation = "InspectorField", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(180, 24) };
-			edit.TextChanged += text => dialog.UserEdited(path, text);
-			Button browse = new() { Text = "Browse...", ThemeTypeVariation = "InspectorButton" };
-			browse.Pressed += () => DisplayServer.FileDialogShow(path.Label, path.Value, "", false,
-				path.Mode switch { DialogPathField.PathMode.OpenFolder => DisplayServer.FileDialogMode.OpenDir, DialogPathField.PathMode.SaveFile => DisplayServer.FileDialogMode.SaveFile, _ => DisplayServer.FileDialogMode.OpenFile },
-				path.Filters, Callable.From((bool ok, string[] picked, long _) => { if (ok && picked.Length > 0) { path.Value = picked[0]; dialog.UserEdited(path, picked[0]); } }));
-			box.AddChild(edit);
-			box.AddChild(browse);
-			return box;
-		}
-
-		OptionButton Dropdown(DialogDropdown dropdown)
-		{
-			OptionButton option = new() { CustomMinimumSize = new Vector2(0, 24) };
-			option.ItemSelected += i => dialog.UserEdited(dropdown, (int)i);
-			return option;
-		}
-
-		SpinBox Number(DialogNumber number)
-		{
-			SpinBox spin = new() { CustomMinimumSize = new Vector2(120, 24) };
-			spin.ValueChanged += v => dialog.UserEdited(number, v);
-			return spin;
-		}
-
-		CheckBox Checkbox(DialogCheckbox check)
-		{
-			CheckBox box = new();
-			box.Toggled += on => dialog.UserEdited(check, on);
-			return box;
+			DisplayServer.FileDialogShow(path.Label, path.Value, "", false, mode, path.Filters, Callable.From((bool ok, string[] picked, long _) =>
+			{
+				if (!ok || picked.Length == 0) return;
+				path.Value = picked[0];
+				dialog.UserEdited(path, picked[0]);
+			}));
 		}
 
 		// ---- following the elements ----
 
-		// the element's value and state onto its control
+		// the element's value and state onto its row
 		void Apply(DialogElement element)
 		{
 			if (!rows.TryGetValue(element, out Control row)) return;
 
 			row.Visible = element.Visible;
-			Control control = row is HBoxContainer labelled && labelled.GetChildCount() == 2 && labelled.GetChild(0) is Label && element is not DialogPathField ? (Control)labelled.GetChild(1) : row;
+			if (row.GetNodeOrNull<Label>("%Label") is Label label)
+			{
+				label.Text = element.Label;
+				label.Visible = element.Label.Length > 0;
+			}
 
 			switch (element)
 			{
-				case DialogText text when control is Label label:
-					label.Text = text.Text;
-					label.ThemeTypeVariation = text.Style == DialogText.TextStyle.Heading ? "HeaderLabel" : "InspectorLabel";
+				case DialogText text when row is Label words:
+					words.Text = text.Text;
+					words.ThemeTypeVariation = text.Style switch
+					{
+						DialogText.TextStyle.Heading => "HeaderLabel",
+						DialogText.TextStyle.Error => "ErrorLabel",
+						_ => "InspectorLabel",
+					};
 					break;
 
-				case DialogTextField field when control is LineEdit edit:
+				case DialogTextField field:
+					LineEdit edit = row.GetNode<LineEdit>("%Field");
 					if (edit.Text != field.Value) edit.Text = field.Value;
 					edit.PlaceholderText = field.Placeholder;
 					edit.Editable = field.Enabled;
 					break;
 
 				case DialogPathField path:
-					if (Descendants(row).OfType<LineEdit>().FirstOrDefault() is { } pathEdit && pathEdit.Text != path.Value) pathEdit.Text = path.Value;
+					LineEdit pathEdit = row.GetNode<LineEdit>("%Field");
+					if (pathEdit.Text != path.Value) pathEdit.Text = path.Value;
+					pathEdit.Editable = path.Enabled;
+					row.GetNode<Button>("%Browse").Disabled = !path.Enabled;
 					break;
 
-				case DialogDropdown dropdown when control is OptionButton option:
+				case DialogDropdown dropdown:
+					OptionButton option = row.GetNode<OptionButton>("%Dropdown");
 					if (option.ItemCount != dropdown.Options.Length || Enumerable.Range(0, option.ItemCount).Any(i => option.GetItemText(i) != dropdown.Options[i]))
 					{
 						option.Clear();
@@ -202,7 +191,8 @@ public sealed class GodotDialogHandler : DialogHandler
 					option.Disabled = !dropdown.Enabled;
 					break;
 
-				case DialogNumber number when control is SpinBox spin:
+				case DialogNumber number:
+					SpinBox spin = row.GetNode<SpinBox>("%Number");
 					spin.MinValue = number.Min;
 					spin.MaxValue = number.Max;
 					spin.Step = number.Step;
@@ -211,72 +201,74 @@ public sealed class GodotDialogHandler : DialogHandler
 					spin.Editable = number.Enabled;
 					break;
 
-				case DialogCheckbox check when control is CheckBox box:
+				case DialogCheckbox check:
+					CheckBox box = row.GetNode<CheckBox>("%Box");
 					box.Text = check.Text;
 					box.SetPressedNoSignal(check.Checked);
 					box.Disabled = !check.Enabled;
 					break;
 
-				case DialogList list when control is VBoxContainer rowsBox:
-					FillList(list, rowsBox);
+				case DialogList list:
+					FillList(list, row);
 					break;
 			}
 
 			Validate();
+
+			// fitted to what's shown now, smaller as well as larger
+			if (window.Visible) Callable.From(() => { if (IsInstanceValid(window)) window.ResetSize(); }).CallDeferred();
 		}
 
 		// the rows, each with its button, then the list's own buttons
-		void FillList(DialogList list, VBoxContainer box)
+		void FillList(DialogList list, Control block)
 		{
-			foreach (Node child in box.GetChildren()) child.QueueFree();
-
-			if (!string.IsNullOrEmpty(list.Label)) box.AddChild(new Label { Text = list.Label, ThemeTypeVariation = "InspectorLabel" });
+			VBoxContainer items = block.GetNode<VBoxContainer>("%Rows");
+			HBoxContainer under = block.GetNode<HBoxContainer>("%Buttons");
+			// out of the layout at once, so the window can fit what replaces them
+			foreach (Node child in items.GetChildren().Concat(under.GetChildren()))
+			{
+				child.GetParent().RemoveChild(child);
+				child.QueueFree();
+			}
 
 			foreach (DialogListRow row in list.Rows)
 			{
-				HBoxContainer line = new();
-				line.AddThemeConstantOverride("separation", 6);
+				Control item = view.ListItem.Instantiate<Control>();
+				item.GetNode<Label>("%Text").Text = row.Text;
+				Label detail = item.GetNode<Label>("%Detail");
+				detail.Text = row.Detail;
+				detail.Visible = row.Detail.Length > 0;
 
-				VBoxContainer words = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-				words.AddThemeConstantOverride("separation", 0);
-				words.AddChild(new Label { Text = row.Text, ThemeTypeVariation = "InspectorLabel", ClipText = true });
-				if (!string.IsNullOrEmpty(row.Detail)) words.AddChild(new Label { Text = row.Detail, ThemeTypeVariation = "SubheaderLabel", ClipText = true });
-				line.AddChild(words);
-
-				if (!string.IsNullOrEmpty(row.ButtonText))
-				{
-					Button button = new() { Text = row.ButtonText, ThemeTypeVariation = "InspectorButton", Disabled = !row.ButtonEnabled, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-					DialogListRow pressed = row;
-					button.Pressed += () => list.Press(pressed, null);
-					line.AddChild(button);
-				}
-
-				box.AddChild(line);
+				Button press = item.GetNode<Button>("%Press");
+				press.Text = row.ButtonText;
+				press.Visible = row.ButtonText.Length > 0;
+				press.Disabled = !row.ButtonEnabled || !list.Enabled;
+				DialogListRow pressed = row;
+				press.Pressed += () => list.Press(pressed, null);
+				items.AddChild(item);
 			}
 
-			if (list.Buttons.Count > 0)
+			foreach (DialogButton b in list.Buttons)
 			{
-				HBoxContainer under = new();
-				under.AddThemeConstantOverride("separation", 6);
-				foreach (DialogButton b in list.Buttons)
-				{
-					Button button = new() { Text = b.Text, ThemeTypeVariation = "InspectorButton" };
-					DialogButton pressed = b;
-					button.Pressed += () => list.Press(null, pressed);
-					under.AddChild(button);
-				}
-				box.AddChild(under);
+				Button button = view.Button.Instantiate<Button>();
+				button.Text = b.Text;
+				DialogButton pressed = b;
+				button.Pressed += () => list.Press(null, pressed);
+				under.AddChild(button);
 			}
+
+			items.Visible = list.Rows.Count > 0;
+			under.Visible = list.Buttons.Count > 0;
 		}
 
 		// the problem, if any, and the Enter button greyed while there is one
 		void Validate()
 		{
-			if (problem is null) return;
+			if (view is null) return;
 
 			string text = dialog.Problem();
-			problem.Text = text ?? "";
-			problem.Visible = text is not null;
+			view.Problem.Text = text ?? "";
+			view.Problem.Visible = text is not null;
 
 			foreach ((DialogButton b, Button button) in buttons)
 				if (b.Role == DialogButtonRole.Default) button.Disabled = text is not null;
@@ -312,15 +304,6 @@ public sealed class GodotDialogHandler : DialogHandler
 			window.QueueFree();
 			owner?.GrabFocus();
 			answer.TrySetResult(button);
-		}
-
-		static IEnumerable<Node> Descendants(Node node)
-		{
-			foreach (Node child in node.GetChildren())
-			{
-				yield return child;
-				foreach (Node below in Descendants(child)) yield return below;
-			}
 		}
 	}
 }

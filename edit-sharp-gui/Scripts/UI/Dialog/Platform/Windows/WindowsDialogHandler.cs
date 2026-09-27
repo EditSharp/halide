@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform.Windows;
 
-// windows dialogs: real dialog boxes built on the menu thread (NativeDialog), dark or
-// light with the app. the window that asked is disabled while one is up, and godot keeps drawing
+// native Windows dialogs; the owner window is disabled while one is up
 public sealed class WindowsDialogHandler : DialogHandler
 {
 	public override Task<string> ShowAsync(Dialog dialog, Window owner)

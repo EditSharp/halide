@@ -4,8 +4,7 @@ using System;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs;
 
-// rows of text, each with a button of its own, and buttons under the list.
-// pressing any of them raises Pressed and leaves the dialog up
+// rows with a button each, and buttons under the list; pressing one keeps the dialog open
 [GlobalClass]
 public partial class DialogList : DialogElement
 {

@@ -7,11 +7,7 @@ using EditSharpGUI.Scripts.App.Platform;
 using EditSharpGUI.Scripts.UI.Dialogs;
 using EditSharpGUI.Scripts.UI.ContextMenu;
 
-// the multi-window app, driven from code: a project saved to disk and opened
-// in its own window, a second open of it focusing the first, saving it, and
-// closing it. prints PROBE lines and WINDOWS OK at the end
-//
-//   godot --path . res://Tools/Scenes/Tests/WindowsProbe.tscn
+// the multi-window app driven from code; prints WINDOWS OK
 public partial class WindowsProbe : Node
 {
 	bool ok = true;

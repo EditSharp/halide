@@ -9,14 +9,10 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-// what a project file held: the project, the editor's view of it, and
-// anything that loaded only as a placeholder
+// a loaded project file: the project, the editor's saved view and any placeholders
 public sealed record LoadedProject(Project Project, JsonObject Gui, IReadOnlyList<string> Warnings);
 
-// a project on disk: <folder>/<Name>.esproj, JSON. the edit itself is an
-// EditSharp TimelineDocument; around it go the render settings, which
-// timeline is the main one and the editor's own "gui" section. media inside
-// the project folder is saved relative to it, so the folder can move whole
+// reads and writes <folder>/<Name>.esproj; media inside the folder is stored relative to it
 public static class ProjectFile
 {
 	public const string Extension = ".esproj";
@@ -24,8 +20,7 @@ public static class ProjectFile
 
 	static readonly JsonSerializerOptions Indented = new() { WriteIndented = true };
 
-	// writes the project; `folder` is what media paths are relative to, the
-	// file's own folder unless this is a backup kept elsewhere
+	// writes the project with media paths relative to `folder`
 	public static void Save(Project project, string path, JsonObject gui = null, string folder = null)
 	{
 		folder ??= Path.GetDirectoryName(Path.GetFullPath(path));

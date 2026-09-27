@@ -10,10 +10,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-// a channel dragged by its handle with the real mouse, in a project window the
-// way the app opens one: up and down a few times, then dropped. checks the frames
-// stay smooth, the clips stay on their rows, and the next drag still works.
-// prints CHANNEL DRAG OK
+// drags a channel by its handle with the real mouse; prints CHANNEL DRAG OK
 public partial class ChannelDragProbe : Node
 {
 	bool ok = true;
@@ -80,8 +77,7 @@ public partial class ChannelDragProbe : Node
 			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 			await Frames(3);
 
-			// up and down past its neighbours, then back to one row below where it started
-			// the second round drifts sideways into the clips, as a hand does
+			// up and down past its neighbours; round 1 drifts into the clips
 			float drift = round == 1 ? 400f : 0f;
 			foreach (float rows in new[] { 0.5f, 1f, 1.5f, 2f, 1f, 0f, -1f, 0f, 1f })
 			{

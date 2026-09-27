@@ -6,8 +6,7 @@ using System.Runtime.InteropServices;
 using static EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows.Win32;
 using static EditSharpGUI.Scripts.UI.Dialogs.Platform.Windows.DialogWin32;
 
-// the probe's hands on a native windows dialog: found by title, its controls worked
-// by their text the way a user would, and captured as it's drawn on screen
+// works a native Windows dialog by its title and captures it
 static class WindowsDialogDriver
 {
 	static nint DialogOf(string title) => FindWindowW("#32770", title);
@@ -78,8 +77,7 @@ static class WindowsDialogDriver
 		nint dc = CreateCompatibleDC(screen);
 		nint bitmap = CreateCompatibleBitmap(screen, rect.Width, rect.Height);
 		nint was = SelectObject(dc, bitmap);
-		// from the screen, as composed: rounded corners and all. a locked screen shows the
-		// lock screen instead, so then it's the window's own drawing, square
+		// captured from the screen, or from the window itself while the screen is locked
 		byte[] bgra;
 		if (!Locked())
 		{

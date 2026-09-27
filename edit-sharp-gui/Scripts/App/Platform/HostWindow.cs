@@ -5,9 +5,7 @@ using EditSharpGUI.Scripts.UI.ContextMenu.Platform.MacOS;
 
 namespace EditSharpGUI.Scripts.App.Platform;
 
-// the root window hosts the app and is never shown: godot won't hide its main
-// window itself, so each OS is asked directly. wayland has no way to hide a
-// window, so there it becomes a one pixel transparent window that can't take focus
+// hides the root window natively on each OS; on Wayland it shrinks to one clear pixel
 public static class HostWindow
 {
 	public static void Hide(Window root)

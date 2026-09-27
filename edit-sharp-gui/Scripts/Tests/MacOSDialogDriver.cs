@@ -2,8 +2,7 @@ using EditSharpGUI.Scripts.UI.Dialogs.Platform.MacOS;
 using Godot;
 using System.Globalization;
 
-// the probe's hands on a macOS dialog sheet: the library finds it by title and works
-// its controls the way a user would; captures are the screen's, owner and sheet together
+// works a macOS dialog sheet by its title and captures it with screencapture
 static class MacOSDialogDriver
 {
 	static MacOSDialogHandler.Library Library => MacOSDialogHandler.Library.Get();

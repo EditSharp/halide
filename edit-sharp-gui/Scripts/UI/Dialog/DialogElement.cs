@@ -4,8 +4,7 @@ using System;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs;
 
-// one part of a dialog, found by Id. setting a value while the dialog is up
-// raises Changed, and the dialog shows the new value in place
+// one part of a dialog, found by Id; changing it while shown updates the dialog
 [GlobalClass]
 public partial class DialogElement : Resource
 {

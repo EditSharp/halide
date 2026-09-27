@@ -6,10 +6,7 @@ using System.Linq;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs;
 
-// a question asked of the user: a title, the elements, and the buttons along
-// the bottom. built in res://Dialogs as .tres like the menus, filled in by
-// code, and shown with Dialogs.Show. an open dialog follows its elements:
-// set a value and it shows the new one
+// a dialog: title, elements and buttons, shown with Dialogs.Show; it follows its elements while open
 [GlobalClass]
 public partial class Dialog : Resource
 {
@@ -17,8 +14,7 @@ public partial class Dialog : Resource
 	[Export] public Array<DialogElement> Elements = [];
 	[Export] public Array<DialogButton> Buttons = [];
 
-	// what's wrong with the answers as they stand, or null; while there is
-	// something, the Default buttons are greyed and it shows as an error line
+	// the problem with the current answers, or null; while set, Default buttons are disabled
 	public Func<Dialog, string> Validate;
 
 	// an element changed, by code or by the user; a showing dialog listens

@@ -7,12 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-// dialogs through whichever handler this platform uses: a form with every
-// kind of element, updated while it's up, validated, and answered by pressing
-// its buttons from code; then the unsaved-changes question a project window
-// asks when it closes. screenshots go to user://probe-dialog-*.png
-//
-//   godot --path . res://Tools/Scenes/Tests/DialogProbe.tscn
+// every dialog element through this platform's handler; prints DIALOGS OK
 public partial class DialogProbe : Node
 {
 	bool ok = true;
@@ -245,8 +240,7 @@ public partial class DialogProbe : Node
 	}
 }
 
-// the native handlers' side of the probe: finds a native dialog by title and
-// works its controls the way a user would; false or null when it's the themed windows'
+// routes the probe's actions to the native driver; false or null for the themed dialogs
 public static partial class DialogProbeDriver
 {
 	static bool Windows => Dialogs.Handler is EditSharpGUI.Scripts.UI.Dialogs.Platform.Windows.WindowsDialogHandler;

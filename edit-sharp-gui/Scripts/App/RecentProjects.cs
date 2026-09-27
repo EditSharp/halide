@@ -13,8 +13,7 @@ public sealed record RecentProject(string Path, DateTime LastOpenedUtc)
 	public bool Exists => File.Exists(Path);
 }
 
-// every project opened or created, newest first, in user://projects.json.
-// Changed fires on every change
+// every project opened or created, newest first, in user://projects.json
 public static class RecentProjects
 {
 	public const string DefaultPath = "user://projects.json";

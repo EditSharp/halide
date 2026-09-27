@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Dialog/Platform/GodotDialogView.cs" id="1_view"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogText.tscn" id="2_text"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogField.tscn" id="3_field"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogPath.tscn" id="4_path"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogDropdown.tscn" id="5_dropdown"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogNumber.tscn" id="6_number"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogCheckbox.tscn" id="7_checkbox"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogList.tscn" id="8_list"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogListItem.tscn" id="9_item"]
+[ext_resource type="PackedScene" path="res://Scenes/Dialog/DialogButton.tscn" id="10_button"]
+
+[node name="GodotDialog" type="PanelContainer" node_paths=PackedStringArray("Elements", "Problem", "Buttons")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ViewBackground"
+script = ExtResource("1_view")
+Elements = NodePath("Margin/Body/Elements")
+Problem = NodePath("Margin/Body/Problem")
+Buttons = NodePath("Margin/Body/Buttons")
+Text = ExtResource("2_text")
+Field = ExtResource("3_field")
+Path = ExtResource("4_path")
+Dropdown = ExtResource("5_dropdown")
+Number = ExtResource("6_number")
+Checkbox = ExtResource("7_checkbox")
+List = ExtResource("8_list")
+ListItem = ExtResource("9_item")
+Button = ExtResource("10_button")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Body" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Elements" type="VBoxContainer" parent="Margin/Body"]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Problem" type="Label" parent="Margin/Body"]
+visible = false
+custom_minimum_size = Vector2(384, 0)
+layout_mode = 2
+theme_type_variation = &"ErrorLabel"
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Body"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 2

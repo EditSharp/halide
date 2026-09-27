@@ -3,8 +3,7 @@ using System.Linq;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs.Platform;
 
-// a dialog as plain values, made on godot's thread and handed to a native
-// dialog on another thread or in another process; it never touches the resources
+// a dialog as plain values, safe to hand to another thread or process
 public sealed record DialogSnapshot(string Title, IReadOnlyList<ElementSnapshot> Elements, IReadOnlyList<ButtonSnapshot> Buttons, string Problem)
 {
 	public static DialogSnapshot Of(Dialog dialog) => new(

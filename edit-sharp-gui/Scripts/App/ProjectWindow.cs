@@ -1,9 +1,7 @@
 using Godot;
 using System.Threading.Tasks;
 
-// one open project: an OS window holding its session and an editor. its
-// history is the one writes go to while it has focus. closing it asks about
-// unsaved changes first
+// the OS window for one open project; closing it asks about unsaved changes
 public partial class ProjectWindow : Window
 {
 	public ProjectSession Session { get; private set; }

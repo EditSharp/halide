@@ -23,7 +23,9 @@ public enum ThemeDefinition
 
 	// the colour of everything to do with time and motion: the playhead,
 	// keyframes, the play button
-	PlaybackColor
+	PlaybackColor,
+	// problems: invalid values, conflicts, anything that stops an action
+	ErrorColor
 }
 
 // the colours a clip can wear. each is a palette colour; a clip kind's

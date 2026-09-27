@@ -7,10 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-// a project's pictures for its Home tile, in <folder>/Thumbnails: the
-// preview at the playhead when it was saved (poster.jpg), and ten frames
-// spread across the timeline that was open (frames.jpg, one strip). each
-// picture is 768x432, the project's frame fitted inside on black
+// Home tile pictures in <folder>/Thumbnails: poster.jpg and a ten-frame strip, 768x432 each
 public static class ProjectThumbnails
 {
 	public const int Width = 768;
@@ -24,8 +21,7 @@ public static class ProjectThumbnails
 	// how long a frame waits for sources still opening before it's taken as it is
 	static readonly TimeSpan Patience = TimeSpan.FromSeconds(4);
 
-	// renders the poster and the frames off the main thread and writes them;
-	// nothing waits on it, and a failure only leaves the old pictures
+	// renders and writes the pictures in the background; a failure keeps the old ones
 	public static async Task CaptureAsync(Project project, Timeline timeline, Time playhead, string projectFolder, CancellationToken ct = default)
 	{
 		string folder = Path.Combine(projectFolder, FolderName);
@@ -60,8 +56,7 @@ public static class ProjectThumbnails
 		}
 	}
 
-	// the frame at a time, fitted into Width x Height on black, waiting a
-	// little for sources that are still opening
+	// the frame at a time, fitted on black
 	static async Task<Image> RenderAsync(Playback playback, Time at, CancellationToken ct)
 	{
 		DateTime until = DateTime.UtcNow + Patience;

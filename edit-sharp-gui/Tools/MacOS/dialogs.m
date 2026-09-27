@@ -1,19 +1,4 @@
-// the macOS dialogs: a library loaded into EditSharp that shows a dialog as a
-// sheet on its window, built from a snapshot of the dialog resource (JSON).
-// godot's main thread is appkit's, and a sheet doesn't block it, so this runs
-// in the app's own process; every call is made on the main thread.
-//
-// build:  sh build.sh
-//
-//   esd_set_callback(fn)                      events go to fn as one JSON object each
-//   esd_show(owner NSWindow*, dark, json) -> id
-//   esd_update(id, json)                      the dialog changed in code
-//   esd_set_problem(id, text or NULL)         what Validate says now
-// events: {"event":"edited","dialog":N,"index":i,"value":..}
-//         {"event":"list","dialog":N,"index":i,"row":r,"button":b}     -1 for none
-//         {"event":"browse","dialog":N,"index":i}
-//         {"event":"closed","dialog":N,"button":"id"|null}
-// the esd_test_* calls work a dialog by its title the way a user would, for the probes
+// macOS dialog sheets for EditSharp, driven by JSON snapshots through the esd_* exports; built by build.sh
 #import <Cocoa/Cocoa.h>
 
 typedef void (*EventCallback)(const char *json);
@@ -22,7 +7,7 @@ static EventCallback callback;
 static NSMutableDictionary<NSNumber *, id> *dialogs;
 static long nextDialog;
 
-static const CGFloat Width = 420, Margin = 20, Gap = 12, RowHeight = 44;
+static const CGFloat Width = 420, Margin = 21, Gap = 12, Inner = 9, Line = 6, RowHeight = 48, Scroller = 18, MinButton = 81;
 static const NSInteger MaxRows = 6;
 
 static void emit(NSDictionary *event) {
@@ -236,7 +221,7 @@ static void collect(NSView *view, NSMutableArray *into) {
         return part;
     }
 
-    NSStackView *row = stack(NSUserInterfaceLayoutOrientationHorizontal, 8, views);
+    NSStackView *row = stack(NSUserInterfaceLayoutOrientationHorizontal, Inner, views);
     if ([kind isEqual:@"field"] || [kind isEqual:@"path"] || [kind isEqual:@"dropdown"]) row.distribution = NSStackViewDistributionFill;
     else {
         // a spacer takes what's left, so the controls keep together
@@ -271,8 +256,8 @@ static void collect(NSView *view, NSMutableArray *into) {
         detail.lineBreakMode = NSLineBreakByTruncatingMiddle;
         for (NSTextField *t in @[text, detail]) [t setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
 
-        NSStackView *words = stack(NSUserInterfaceLayoutOrientationVertical, 2, @[text, detail]);
-        NSStackView *lineView = stack(NSUserInterfaceLayoutOrientationHorizontal, 8, @[]);
+        NSStackView *words = stack(NSUserInterfaceLayoutOrientationVertical, Line, @[text, detail]);
+        NSStackView *lineView = stack(NSUserInterfaceLayoutOrientationHorizontal, Inner, @[]);
         [lineView addView:words inGravity:NSStackViewGravityLeading];
         id button = NSNull.null;
         if (str(r[@"ButtonText"]).length > 0) {
@@ -281,14 +266,14 @@ static void collect(NSView *view, NSMutableArray *into) {
             [lineView addView:press inGravity:NSStackViewGravityTrailing];
             button = press;
         }
-        [lineView.heightAnchor constraintEqualToConstant:RowHeight - 8].active = YES;
+        [lineView.heightAnchor constraintEqualToConstant:RowHeight - Inner].active = YES;
         [lines addObject:lineView];
         [part.rows addObject:@[text, detail, button]];
     }
 
     if (lines.count > 0) {
-        NSStackView *rowsView = stack(NSUserInterfaceLayoutOrientationVertical, 8, lines);
-        for (NSView *line in lines) [line.widthAnchor constraintEqualToConstant:Width - 2 * Margin - (lines.count > MaxRows ? 16 : 0)].active = YES;
+        NSStackView *rowsView = stack(NSUserInterfaceLayoutOrientationVertical, Inner, lines);
+        for (NSView *line in lines) [line.widthAnchor constraintEqualToConstant:Width - 2 * Margin - (lines.count > MaxRows ? Scroller : 0)].active = YES;
 
         if (lines.count > MaxRows) {
             // a long list scrolls in a box of its own
@@ -299,7 +284,7 @@ static void collect(NSView *view, NSMutableArray *into) {
             NSClipView *clip = scroll.contentView;
             rowsView.translatesAutoresizingMaskIntoConstraints = NO;
             scroll.documentView = [self flipped:rowsView];
-            [scroll.heightAnchor constraintEqualToConstant:MaxRows * RowHeight - 8].active = YES;
+            [scroll.heightAnchor constraintEqualToConstant:MaxRows * RowHeight - Inner].active = YES;
             [scroll.widthAnchor constraintEqualToConstant:Width - 2 * Margin].active = YES;
             [NSLayoutConstraint activateConstraints:@[
                 [scroll.documentView.topAnchor constraintEqualToAnchor:clip.topAnchor],
@@ -318,9 +303,9 @@ static void collect(NSView *view, NSMutableArray *into) {
         [part.buttons addObject:press];
         [under addObject:press];
     }
-    if (under.count > 0) [views addObject:stack(NSUserInterfaceLayoutOrientationHorizontal, 8, under)];
+    if (under.count > 0) [views addObject:stack(NSUserInterfaceLayoutOrientationHorizontal, Inner, under)];
 
-    return stack(NSUserInterfaceLayoutOrientationVertical, 8, views);
+    return stack(NSUserInterfaceLayoutOrientationVertical, Inner, views);
 }
 
 // a document view that lays out top down, so a scroll box starts at the first row
@@ -346,7 +331,7 @@ static void collect(NSView *view, NSMutableArray *into) {
         int role = [b[@"Role"] intValue];
         NSButton *button = [NSButton buttonWithTitle:@"" target:self action:@selector(footerPressed:)];
         button.identifier = str(b[@"Id"]);
-        [button.widthAnchor constraintGreaterThanOrEqualToConstant:80].active = YES;
+        [button.widthAnchor constraintGreaterThanOrEqualToConstant:MinButton].active = YES;
         [self.footer addObject:button];
 
         if (role == RoleDefault && !enter) {

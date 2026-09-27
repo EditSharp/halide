@@ -3,11 +3,7 @@ using Godot;
 using System;
 using System.IO;
 
-// one tile on Home: a project. the picture is its poster - the preview as it
-// was when last saved - and sliding the mouse across it skims ten frames
-// from its timeline, a tick along the bottom showing where. the name and
-// when it was last edited sit under it, an options button in the corner.
-// laid out in ProjectItem.tscn; Home places it and answers its gestures
+// a Home tile: poster, hover scrub over ten frames, name and date; laid out in ProjectItem.tscn
 public partial class UIProjectItem : VBoxContainer
 {
 	[ExportGroup("Controls")]

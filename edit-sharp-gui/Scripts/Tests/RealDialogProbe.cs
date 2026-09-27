@@ -6,9 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-// native dialogs the way the app raises them: root hidden as Host hides it, a
-// project window closed from its close box with unsaved changes, and a question
-// over Home. prints REAL DIALOGS OK when each dialog shows up on screen
+// native dialogs raised the way the app raises them; prints REAL DIALOGS OK
 public partial class RealDialogProbe : Node
 {
 	bool ok = true;

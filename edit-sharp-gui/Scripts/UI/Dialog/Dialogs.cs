@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace EditSharpGUI.Scripts.UI.Dialogs;
 
-// shows dialogs, the way ContextMenus shows menus: natively where the OS has
-// them, as a themed window of our own where it doesn't (linux, or when
-// EDITSHARP_DIALOG_HANDLER=godot). a dialog belongs to the window of the node
-// that asked, which waits while it's up; the rest of the app carries on
+// shows dialogs natively where the OS has them, as a themed window elsewhere
 public static class Dialogs
 {
 	public static DialogHandler Handler { get; } = Create();
@@ -30,8 +27,7 @@ public static class Dialogs
 		};
 	}
 
-	// shows the dialog over the window `owner` is in and waits for an answer:
-	// the button that closed it, and what every element held then
+	// shows the dialog over `owner`'s window and returns the button and every value
 	public static async Task<DialogResult> Show(Dialog dialog, Node owner)
 	{
 		ArgumentNullException.ThrowIfNull(dialog);
@@ -50,8 +46,7 @@ public static class Dialogs
 		}
 	}
 
-	// a plain question with buttons, made in code: the message, its detail,
-	// and the buttons as (id, text, role), the first Default one being Enter's
+	// a message dialog with buttons given as (id, text, role)
 	public static Dialog Question(string title, string message, string detail, params (string Id, string Text, DialogButtonRole Role)[] buttons)
 	{
 		Dialog dialog = new() { Title = title };

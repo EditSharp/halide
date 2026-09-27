@@ -6,8 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-// adding a project: a native dialog over Home. a name, where it goes, and its
-// frame size and rate, with a way to open an existing project instead
+// the New Project dialog: name, location, size and rate, or open an existing project
 public static class NewProjectDialog
 {
 	// the preset sizes, landscape; Vertical swaps width and height
