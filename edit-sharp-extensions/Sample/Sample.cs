@@ -1,8 +1,8 @@
 using EditSharp.Components.Media;
-using EditSharpGUI.Api;
-using EditSharpGUI.Api.Extensions;
-using EditSharpGUI.Scripts.App.Commands;
-using EditSharpGUI.Scripts.Input;
+using Halide.Api;
+using Halide.Api.Extensions;
+using Halide.Scripts.App.Commands;
+using Halide.Scripts.Input;
 using Godot;
 using System.Text.Json.Nodes;
 

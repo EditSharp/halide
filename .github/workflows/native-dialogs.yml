@@ -1,4 +1,4 @@
-# Runs the dialog probe through macOS's native handler (sheets from edit-sharp-gui/Tools/MacOS/dialogs.m)
+# Runs the dialog probe through macOS's native handler (sheets from halide/Tools/MacOS/dialogs.m)
 # and uploads its screenshots, so the dialogs can be checked without a Mac.
 name: Native dialogs
 
@@ -7,7 +7,7 @@ on:
   push:
     branches: [macos-dialogs]
     paths:
-      - "edit-sharp-gui/**"
+      - "halide/**"
       - ".github/workflows/native-dialogs.yml"
 
 env:
@@ -47,28 +47,28 @@ jobs:
           "$GODOT" --version
 
       - name: Build the macOS natives
-        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+        run: sh halide/Tools/MacOS/build.sh
 
       - name: Build
-        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+        run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       # the first import pass can log resources it has not reached yet; the second is clean
       - name: Import project
         run: |
-          "$GODOT" --headless --path edit-sharp-gui --import || true
-          "$GODOT" --headless --path edit-sharp-gui --import
+          "$GODOT" --headless --path halide --import || true
+          "$GODOT" --headless --path halide --import
 
       - name: Dialog probe (dark)
         timeout-minutes: 5
         run: |
-          perl -e 'alarm 180; exec @ARGV' "$GITHUB_WORKSPACE/$GODOT" --rendering-method gl_compatibility --path edit-sharp-gui res://Tools/Scenes/Tests/DialogProbe.tscn 2>&1 | tee dialog-probe-dark.log | grep -E "PROBE|DIALOGS|ERROR" || true
+          perl -e 'alarm 180; exec @ARGV' "$GITHUB_WORKSPACE/$GODOT" --rendering-method gl_compatibility --path halide res://Tools/Scenes/Tests/DialogProbe.tscn 2>&1 | tee dialog-probe-dark.log | grep -E "PROBE|DIALOGS|ERROR" || true
           grep -q "^DIALOGS OK" dialog-probe-dark.log
 
       - name: Dialog probe (light)
         if: always()
         timeout-minutes: 5
         run: |
-          perl -e 'alarm 180; exec @ARGV' "$GITHUB_WORKSPACE/$GODOT" --rendering-method gl_compatibility --path edit-sharp-gui res://Tools/Scenes/Tests/DialogProbe.tscn -- --palette=res://Themes/Light.tres 2>&1 | tee dialog-probe-light.log | grep -E "PROBE|DIALOGS|ERROR" || true
+          perl -e 'alarm 180; exec @ARGV' "$GITHUB_WORKSPACE/$GODOT" --rendering-method gl_compatibility --path halide res://Tools/Scenes/Tests/DialogProbe.tscn -- --palette=res://Themes/Light.tres 2>&1 | tee dialog-probe-light.log | grep -E "PROBE|DIALOGS|ERROR" || true
           grep -q "^DIALOGS OK" dialog-probe-light.log
 
       - uses: actions/upload-artifact@v4
@@ -76,6 +76,6 @@ jobs:
         with:
           name: native-dialogs-macos
           path: |
-            ~/Library/Application Support/Godot/app_userdata/EditSharp GUI/probe-dialog-*.png
+            ~/Library/Application Support/Godot/app_userdata/Halide/probe-dialog-*.png
             dialog-probe-*.log
           if-no-files-found: warn

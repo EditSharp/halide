@@ -1,5 +1,5 @@
 # Runs the EditSharp library's unit tests and the app's API-driven suite (headless, then windowed) on each OS.
-# Driven by edit-sharp-gui/Tools/run_tests.py; results.xml, logs and failure screenshots are uploaded per OS.
+# Driven by halide/Tools/run_tests.py; results.xml, logs and failure screenshots are uploaded per OS.
 name: Tests
 
 on:
@@ -92,11 +92,11 @@ jobs:
 
       - name: Build the macOS natives
         if: matrix.name == 'macos'
-        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+        run: sh halide/Tools/MacOS/build.sh
 
       - name: Build the app
         shell: bash
-        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+        run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       - name: Build the sample extension
         shell: bash
@@ -105,8 +105,8 @@ jobs:
       - name: Import project
         shell: bash
         run: |
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+          "${{ matrix.bin }}" --headless --path halide --import || true
+          "${{ matrix.bin }}" --headless --path halide --import
 
       # a hung test prints every thread's stack through it
       - name: Stack tool
@@ -119,7 +119,7 @@ jobs:
         shell: bash
         run: |
           PY=python3; if [ "${{ matrix.name }}" = "windows" ]; then PY=python; fi
-          $PY edit-sharp-gui/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --out "$GITHUB_WORKSPACE/results/headless"
+          $PY halide/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --out "$GITHUB_WORKSPACE/results/headless"
 
       - name: Windowed suite
         if: always()
@@ -133,7 +133,7 @@ jobs:
             openbox &
             sleep 1
           fi
-          $PY edit-sharp-gui/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --windowed --extra "${{ matrix.extra }}" --out "$GITHUB_WORKSPACE/results/windowed"
+          $PY halide/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --windowed --extra "${{ matrix.extra }}" --out "$GITHUB_WORKSPACE/results/windowed"
 
       # Home, Settings and a project window in each preset layout, to look at
       - name: Screenshots
@@ -147,7 +147,7 @@ jobs:
             openbox &
             sleep 1
           fi
-          "$GITHUB_WORKSPACE/${{ matrix.bin }}" ${{ matrix.extra }} --path edit-sharp-gui res://Tools/Scenes/Tests/ChromeShotsProbe.tscn -- "--shots=$GITHUB_WORKSPACE/results/shots" || true
+          "$GITHUB_WORKSPACE/${{ matrix.bin }}" ${{ matrix.extra }} --path halide res://Tools/Scenes/Tests/ChromeShotsProbe.tscn -- "--shots=$GITHUB_WORKSPACE/results/shots" || true
 
       - uses: actions/upload-artifact@v4
         if: always()

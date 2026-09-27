@@ -3,8 +3,8 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Folder Name="/edit-sharp-gui/">
-    <Project Path="edit-sharp-gui/EditSharp GUI.csproj">
+  <Folder Name="/halide/">
+    <Project Path="halide/Halide.csproj">
       <BuildType Project="Debug" />
     </Project>
   </Folder>

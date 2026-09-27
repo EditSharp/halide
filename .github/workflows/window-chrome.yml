@@ -1,5 +1,5 @@
 # Opens a project window with the drawn top bar on each OS and uploads screenshots of it,
-# so the title bar can be checked without those machines. Driven by edit-sharp-gui/Tools/window_chrome_preview.py.
+# so the title bar can be checked without those machines. Driven by halide/Tools/window_chrome_preview.py.
 name: Window chrome
 
 on:
@@ -74,17 +74,17 @@ jobs:
 
       - name: Build the macOS natives
         if: matrix.name == 'macos'
-        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+        run: sh halide/Tools/MacOS/build.sh
 
       - name: Build
         shell: bash
-        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+        run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       - name: Import project
         shell: bash
         run: |
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+          "${{ matrix.bin }}" --headless --path halide --import || true
+          "${{ matrix.bin }}" --headless --path halide --import
 
       # nothing of the runner's own in front of the window
       - name: Clear the desktop
@@ -95,7 +95,7 @@ jobs:
       - name: Screenshots
         shell: bash
         run: |
-          cd edit-sharp-gui
+          cd halide
           GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
           PY=python3
           if [ "${{ matrix.name }}" = "windows10" ]; then PY=python; fi
@@ -119,7 +119,7 @@ jobs:
       - name: Resize grips
         if: matrix.name == 'linux'
         run: |
-          cd edit-sharp-gui
+          cd halide
           Xvfb :98 -screen 0 1920x1080x24 &
           export DISPLAY=:98
           sleep 2
@@ -131,5 +131,5 @@ jobs:
         if: always()
         with:
           name: window-chrome-${{ matrix.name }}
-          path: edit-sharp-gui/Tools/Previews/window-chrome-${{ matrix.name }}-*.png
+          path: halide/Tools/Previews/window-chrome-${{ matrix.name }}-*.png
           if-no-files-found: warn

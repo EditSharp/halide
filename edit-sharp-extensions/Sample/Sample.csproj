@@ -6,12 +6,12 @@
     <AssemblyName>SampleExtension</AssemblyName>
     <RootNamespace>SampleExtension</RootNamespace>
     <!-- the app's own assemblies, built by Godot; override with -p:EditSharpBin=... -->
-    <EditSharpBin Condition=" '$(EditSharpBin)' == '' ">$(MSBuildThisFileDirectory)../../edit-sharp-gui/.godot/mono/temp/bin/Debug</EditSharpBin>
+    <EditSharpBin Condition=" '$(EditSharpBin)' == '' ">$(MSBuildThisFileDirectory)../../halide/.godot/mono/temp/bin/Debug</EditSharpBin>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- the app provides these at run time: referenced, never copied -->
-    <Reference Include="EditSharp GUI" HintPath="$(EditSharpBin)/EditSharp GUI.dll" Private="false" />
+    <Reference Include="Halide" HintPath="$(EditSharpBin)/Halide.dll" Private="false" />
     <Reference Include="EditSharp" HintPath="$(EditSharpBin)/EditSharp.dll" Private="false" />
     <Reference Include="GodotSharp" HintPath="$(EditSharpBin)/GodotSharp.dll" Private="false" />
   </ItemGroup>

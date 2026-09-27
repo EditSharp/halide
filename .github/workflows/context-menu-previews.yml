@@ -1,6 +1,6 @@
 # Renders the context menu showcase through each OS's real handler and uploads the screenshots,
 # so the macOS and Linux menus can be approved without a machine running them.
-# Driven by edit-sharp-gui/Tools/context_menu_preview.py; see its header for the options.
+# Driven by halide/Tools/context_menu_preview.py; see its header for the options.
 name: Context menu previews
 
 on:
@@ -8,7 +8,7 @@ on:
   push:
     branches: [context-menus]
     paths:
-      - "edit-sharp-gui/**"
+      - "halide/**"
       - ".github/workflows/context-menu-previews.yml"
 
 env:
@@ -65,24 +65,24 @@ jobs:
 
       - name: Build
         shell: bash
-        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+        run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       # the process that shows real NSMenus, so they pause it and not the app
       - name: Build the macOS menu helper
         if: matrix.name == 'macos'
-        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+        run: sh halide/Tools/MacOS/build.sh
 
       # the first import pass can log resources it has not reached yet; the second is clean
       - name: Import project
         shell: bash
         run: |
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
-          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+          "${{ matrix.bin }}" --headless --path halide --import || true
+          "${{ matrix.bin }}" --headless --path halide --import
 
       - name: Render previews (linux)
         if: matrix.name == 'linux'
         run: |
-          cd edit-sharp-gui
+          cd halide
           GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
           EXTRA="--rendering-method gl_compatibility --rendering-driver opengl3"
           xvfb-run -a -s "-screen 0 1600x1000x24" python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-linux-dark.png
@@ -92,7 +92,7 @@ jobs:
         if: matrix.name == 'macos'
         continue-on-error: true
         run: |
-          cd edit-sharp-gui
+          cd halide
           GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
           EXTRA="--rendering-method gl_compatibility"
           python3 Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-macos-dark.png
@@ -104,7 +104,7 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          cd edit-sharp-gui
+          cd halide
           GODOT="$GITHUB_WORKSPACE/${{ matrix.bin }}"
           EXTRA="--rendering-method gl_compatibility --rendering-driver opengl3_angle"
           python Tools/context_menu_preview.py --godot "$GODOT" --extra "$EXTRA" --hover 3 --out Tools/Previews/context-menu-windows10-dark.png
@@ -118,7 +118,7 @@ jobs:
         env:
           EDITSHARP_MENU_DEBUG: 1
         run: |
-          perl -e 'alarm 90; exec @ARGV' "$GITHUB_WORKSPACE/${{ matrix.bin }}" --rendering-method gl_compatibility --path edit-sharp-gui res://Tools/Scenes/Tests/MenuProbe.tscn 2>&1 | tee menu-probe.log | grep -E "MENU|menuhost|menuapp|PREVIEW" || true
+          perl -e 'alarm 90; exec @ARGV' "$GITHUB_WORKSPACE/${{ matrix.bin }}" --rendering-method gl_compatibility --path halide res://Tools/Scenes/Tests/MenuProbe.tscn 2>&1 | tee menu-probe.log | grep -E "MENU|menuhost|menuapp|PREVIEW" || true
           grep -q "^MENU OK" menu-probe.log
 
       # the runner draws the editor at a few frames a second in software, so a menu can take
@@ -131,7 +131,7 @@ jobs:
           EDITSHARP_MENU_DEBUG: 1
         shell: bash
         run: |
-          "$GITHUB_WORKSPACE/${{ matrix.bin }}" --rendering-method gl_compatibility --rendering-driver opengl3_angle --path edit-sharp-gui res://Tools/Scenes/Tests/MenuProbe.tscn 2>&1 | tee menu-probe.log | grep -E "MENU|menuhost|PREVIEW" || true
+          "$GITHUB_WORKSPACE/${{ matrix.bin }}" --rendering-method gl_compatibility --rendering-driver opengl3_angle --path halide res://Tools/Scenes/Tests/MenuProbe.tscn 2>&1 | tee menu-probe.log | grep -E "MENU|menuhost|PREVIEW" || true
           grep -q "^MENU OK" menu-probe.log
 
       - uses: actions/upload-artifact@v4
@@ -139,6 +139,6 @@ jobs:
         with:
           name: context-menu-previews-${{ matrix.name }}
           path: |
-            edit-sharp-gui/Tools/Previews/context-menu-${{ matrix.name }}-*.png
+            halide/Tools/Previews/context-menu-${{ matrix.name }}-*.png
             menu-probe.log
           if-no-files-found: warn
