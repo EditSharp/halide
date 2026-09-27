@@ -53,7 +53,37 @@ public sealed class ThumbnailCache : IDisposable
 	public static double GridSeconds(int grid) => Math.ScaleB(1d, grid);
 
 	// how much texture memory to keep before the least recently shown go
-	public long Budget { get; set; } = 96L << 20;
+	public long Budget { get; set; } = (long)AppSettings.Current.ThumbnailCacheMegabytes << 20;
+
+	// every cache in use, one per open timeline view
+	public static IReadOnlyList<ThumbnailCache> Live => live;
+	static readonly List<ThumbnailCache> live = [];
+
+	// texture memory held across every open cache
+	public static long TotalBytes => live.Sum(c => c.Bytes);
+
+	// every cache lets go of everything; frames come back as they're shown
+	public static void ClearAll()
+	{
+		foreach (ThumbnailCache cache in live.ToList()) cache.Clear();
+	}
+
+	// every cache takes the budget from the settings
+	public static void ApplyBudget()
+	{
+		foreach (ThumbnailCache cache in live) cache.Budget = (long)AppSettings.Current.ThumbnailCacheMegabytes << 20;
+	}
+
+	// drops every frame held and tells each strip
+	public void Clear()
+	{
+		if (disposed) return;
+
+		List<Clip> clips = [.. entries.Keys.Select(k => k.Clip).Distinct()];
+		Drop(_ => true);
+		fingerprints.Clear();
+		foreach (Clip clip in clips) Updated?.Invoke(clip);
+	}
 
 	// what is held right now
 	public int Count => entries.Count;
@@ -88,6 +118,7 @@ public sealed class ThumbnailCache : IDisposable
 
 		ProxyCache.StatusChanged += OnProxyStatusChanged;
 		history.Changed += OnHistoryChanged;
+		live.Add(this);
 	}
 
 	// ---- the store ----
@@ -344,6 +375,7 @@ public sealed class ThumbnailCache : IDisposable
 	{
 		if (disposed) return;
 		disposed = true;
+		live.Remove(this);
 
 		history.Changed -= OnHistoryChanged;
 		ProxyCache.StatusChanged -= OnProxyStatusChanged;

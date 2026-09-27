@@ -17,7 +17,8 @@ public sealed record EditorSpec(
 	bool Nullable,
 	string Tooltip,
 	Choice[] Choices = null,
-	FrameMeasure Frame = FrameMeasure.None)
+	FrameMeasure Frame = FrameMeasure.None,
+	bool Folder = false)
 {
 	public static EditorSpec Of(PropertyDescriptor d)
 		=> new(d.Editor, d.ValueType, d.Min, d.Max, d.Step, d.Unit, d.IsReadOnly, d.IsNullable, d.Tooltip, Frame: d.Frame);

@@ -123,6 +123,9 @@ public partial class Inspector : Control
 	// commit. the page may need to redraw what it shows of the same objects
 	public event EventHandler Edited;
 
+	// which properties get rows; null shows every one. set before Show
+	public Func<PropertyDescriptor, bool> Filter { get; set; }
+
 	// a value settled on a row, with what it replaced
 	public event EventHandler<InspectorEditArgs> ValueCommitted;
 
@@ -377,7 +380,7 @@ public partial class Inspector : Control
 
 		// the descriptors of the first, kept only where every other object
 		// has one by the same name
-		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object).Where(d => d.Name != skip && (only is null || only.Contains(d.Name)))];
+		List<PropertyDescriptor> shared = [.. Inspect.Of(targets[0].Object).Where(d => d.Name != skip && (only is null || only.Contains(d.Name)) && (Filter is null || Filter(d)))];
 
 		for (int i = 1; i < targets.Count; i++)
 		{
@@ -446,7 +449,11 @@ public partial class Inspector : Control
 		}
 
 		// read-only while a sibling says so - a frozen clip's speed
-		EditorSpec spec = EditorSpec.Of(descriptor) with { ReadOnly = targets.Any(t => descriptor.IsReadOnlyOn(t.Object)) };
+		EditorSpec spec = EditorSpec.Of(descriptor) with
+		{
+			ReadOnly = targets.Any(t => descriptor.IsReadOnlyOn(t.Object)),
+			Folder = targets[0].Object.GetType().GetProperty(descriptor.Name)?.IsDefined(typeof(FolderPathAttribute), true) == true,
+		};
 
 		// a string the object offers choices for is a dropdown of them
 		if (targets[0].Object is IChoiceProvider provider && provider.ChoicesFor(descriptor.Name) is IReadOnlyList<Choice> choices)

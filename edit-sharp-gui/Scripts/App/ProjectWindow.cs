@@ -11,8 +11,8 @@ public partial class ProjectWindow : Window
 		ProjectWindow window = new()
 		{
 			Title = WindowTitle(filePath),
-			Size = new Vector2I(1600, 900),
-			MinSize = new Vector2I(960, 540),
+			Size = Screens.Sized(new Vector2I(1600, 900)),
+			MinSize = Screens.Sized(new Vector2I(960, 540)),
 			WrapControls = false,
 			// popups stay inside the window, as they did in the one-window app
 			GuiEmbedSubwindows = true,

@@ -399,6 +399,11 @@ public partial class Editor : Control
 				e.Handled = true;
 				break;
 
+			case Shortcuts.ShowSettings:
+				ProjectManager.Singleton.ShowSettings();
+				e.Handled = true;
+				break;
+
 			// J and L speed up; with K held they slow down instead
 			case Shortcuts.PlaybackForward or Shortcuts.PlaybackReverse:
 			{

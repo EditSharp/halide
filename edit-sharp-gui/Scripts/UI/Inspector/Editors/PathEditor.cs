@@ -30,6 +30,8 @@ public partial class PathEditor : TextEditor, IDropTarget
 		browse.Disabled = ReadOnly;
 		browse.Pressed += Browse;
 		dialog.FileSelected += path => { entry.Text = path; RaiseCommitted(path); };
+		dialog.DirSelected += path => { entry.Text = path; RaiseCommitted(path); };
+		if (Spec?.Folder == true) dialog.FileMode = FileDialog.FileModeEnum.OpenDir;
 	}
 
 	void Browse()

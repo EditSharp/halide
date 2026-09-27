@@ -33,6 +33,35 @@ public static class Shortcuts
     public const string Save = "project.save";
     public const string SaveAs = "project.saveAs";
     public const string ShowHome = "app.home";
+    public const string ShowSettings = "app.settings";
+
+    // every action as the settings list it: (action, category, label), in order
+    public static readonly (string Action, string Category, string Label)[] Catalog =
+    [
+        (PlaybackToggle, "Playback", "Play / pause"),
+        (PlaybackForward, "Playback", "Play forward, faster each press"),
+        (PlaybackReverse, "Playback", "Play backward, faster each press"),
+        (PlaybackStop, "Playback", "Stop"),
+        (StepForward, "Playback", "Next frame"),
+        (StepBack, "Playback", "Previous frame"),
+        (Undo, "Edit", "Undo"),
+        (Redo, "Edit", "Redo"),
+        (Cut, "Edit", "Cut"),
+        (Copy, "Edit", "Copy"),
+        (Paste, "Edit", "Paste"),
+        (SelectAll, "Edit", "Select all"),
+        (Delete, "Clips", "Delete"),
+        (RippleDelete, "Clips", "Ripple delete"),
+        (RippleDeleteAll, "Clips", "Ripple delete on every channel"),
+        (Split, "Clips", "Split at the playhead"),
+        (SplitAll, "Clips", "Split every channel at the playhead"),
+        (MediaRename, "Media", "Rename"),
+        (MediaImport, "Media", "Import files"),
+        (Save, "Project", "Save"),
+        (SaveAs, "Project", "Save as"),
+        (ShowHome, "App", "Show Home"),
+        (ShowSettings, "App", "App Settings"),
+    ];
 }
 
 // one key plus the modifiers that have to be held with it. Control folds cmd
@@ -102,6 +131,9 @@ public sealed class ShortcutMap
 {
     public const string DefaultPath = "user://shortcuts.json";
 
+    // where Load and Save go when not told; tests point it elsewhere
+    public static string FilePath { get; set; } = DefaultPath;
+
     static readonly Dictionary<string, KeyCombo[]> Defaults = new()
     {
         [Shortcuts.PlaybackToggle] = [new(Key.Space)],
@@ -126,6 +158,7 @@ public sealed class ShortcutMap
         [Shortcuts.Save] = [new(Key.S, Control: true)],
         [Shortcuts.SaveAs] = [new(Key.S, Control: true, Shift: true)],
         [Shortcuts.ShowHome] = [new(Key.H, Control: true, Shift: true)],
+        [Shortcuts.ShowSettings] = [new(Key.Comma, Control: true)],
     };
 
     readonly Dictionary<string, List<KeyCombo>> bindings = Defaults.ToDictionary(d => d.Key, d => d.Value.ToList());
@@ -138,6 +171,9 @@ public sealed class ShortcutMap
 
     public IReadOnlyList<KeyCombo> Get(string action) => bindings.TryGetValue(action, out List<KeyCombo> combos) ? combos : [];
 
+    // the keys an action has before anyone changes it
+    public static IReadOnlyList<KeyCombo> DefaultsFor(string action) => Defaults.TryGetValue(action, out KeyCombo[] combos) ? combos : [];
+
     // every action bound to this combo. more than one is allowed - whoever
     // is asked first decides which of them it answers to
     public IEnumerable<string> ActionsFor(KeyCombo combo)
@@ -146,8 +182,9 @@ public sealed class ShortcutMap
     // the file is action -> "Ctrl+Y, Ctrl+Shift+Z". an entry that does not
     // parse is reported and skipped rather than taking the whole file down,
     // and an action the file does not mention keeps its default
-    public void Load(string path = DefaultPath)
+    public void Load(string path = null)
     {
+        path ??= FilePath;
         string file = ProjectSettings.GlobalizePath(path);
 
         if (!File.Exists(file))
@@ -188,8 +225,9 @@ public sealed class ShortcutMap
         Save(path);
     }
 
-    public void Save(string path = DefaultPath)
+    public void Save(string path = null)
     {
+        path ??= FilePath;
         string file = ProjectSettings.GlobalizePath(path);
 
         try
@@ -197,7 +235,8 @@ public sealed class ShortcutMap
             Directory.CreateDirectory(Path.GetDirectoryName(file));
 
             Dictionary<string, string> entries = bindings.ToDictionary(b => b.Key, b => string.Join(", ", b.Value));
-            File.WriteAllText(file, JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true }));
+            // written plainly ("Ctrl+S", not "Ctrl+S"), since people edit this file by hand
+            File.WriteAllText(file, JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
         }
         catch (Exception e)
         {

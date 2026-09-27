@@ -25,6 +25,11 @@ public partial class ProjectManager : Node
 		if (Singleton != this) return;
 
 		EditSharpConfig.Logger = new ConsoleLogger();
+		AppSettings.Current.Apply();
+
+		// the interface scale follows the setting in every window, including ones opened later
+		AppSettings.Changed += ScaleWindows;
+		GetTree().NodeAdded += node => { if (node is Window window && window != GetTree().Root) Callable.From(() => { if (IsInstanceValid(window)) Screens.Scale(window); }).CallDeferred(); };
 
 		// a test scene's own window goes where the tests' windows go
 		Screens.Move(GetTree().Root);
@@ -34,6 +39,9 @@ public partial class ProjectManager : Node
 		if (ThemeDB.GetProjectTheme() is EditSharpTheme theme)
 		{
 			theme.LoadUserSettings();
+
+			// a theme that follows the OS switches with it
+			DisplayServer.SetSystemThemeChangeCallback(Callable.From(theme.SystemThemeChanged));
 			themeFile = ProjectSettings.GlobalizePath("res://main_theme.tres");
 			themeStamp = Godot.FileAccess.GetModifiedTime(themeFile);
 		}
@@ -325,7 +333,12 @@ public partial class ProjectManager : Node
 	}
 
 	// App Settings: comes with its own window later in this step
-	public void ShowSettings() => GD.Print("App Settings: not built yet.");
+	public void ShowSettings() => SettingsWindow.Open();
+
+	void ScaleWindows()
+	{
+		foreach (Window window in GetTree().Root.FindChildren("*", "Window", true, false).OfType<Window>()) Screens.Scale(window);
+	}
 
 	// ---- saving ----
 

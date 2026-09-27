@@ -15,6 +15,7 @@ public partial class Home : Control
 	[Export] TabBar tabs;
 	[Export] LineEdit search;
 	[Export] Button sortButton;
+	[Export] Button settingsButton;
 	[Export] HFlowContainer flow;
 	[Export] Control addTile;
 	[Export] Label empty;
@@ -38,6 +39,7 @@ public partial class Home : Control
 
 		if (search is not null) search.TextChanged += _ => Rebuild();
 		if (sortButton is not null) sortButton.Pressed += ShowSortMenu;
+		if (settingsButton is not null) settingsButton.Pressed += ProjectManager.Singleton.ShowSettings;
 		if (addTile is not null) addTile.GuiInput += e => { if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true }) ShowAddProject(); };
 
 		RecentProjects.Changed += Rebuild;
@@ -263,6 +265,11 @@ public partial class Home : Control
 
 			case Shortcuts.MediaRename:
 				if (SelectedProjects() is [RecentProject only] && tiles.TryGetValue(only.Path, out UIProjectItem tile)) tile.BeginRename();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.ShowSettings:
+				ProjectManager.Singleton.ShowSettings();
 				e.Handled = true;
 				break;
 		}

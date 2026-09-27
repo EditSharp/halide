@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Settings/ShortcutKeyButton.cs" id="1_key"]
+
+[node name="ShortcutKey" type="HBoxContainer"]
+theme_override_constants/separation = 6
+
+[node name="Key" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 27)
+layout_mode = 2
+theme_type_variation = &"InspectorButton"
+script = ExtResource("1_key")
+
+[node name="Remove" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(27, 27)
+layout_mode = 2
+tooltip_text = "Remove this shortcut"
+theme_type_variation = &"InspectorButton"
+text = "×"

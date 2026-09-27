@@ -13,6 +13,9 @@ public enum StartupAction { Home, ReopenLastSession, HomeAndLastProject }
 // how Home orders its projects
 public enum HomeSort { LastOpened, Name, Created }
 
+// how large the interface is drawn: the OS's own scale, or a fixed percentage
+public enum InterfaceScale { System, Percent75, Percent100, Percent125, Percent150, Percent175, Percent200 }
+
 // the app's settings in user://settings.json; missing values keep their defaults
 public sealed class AppSettings
 {
@@ -32,6 +35,53 @@ public sealed class AppSettings
 
 	// the projects open when the app last quit, for ReopenLastSession
 	public string[] LastSession { get; set; } = [];
+
+	public InterfaceScale InterfaceScale { get; set; } = InterfaceScale.System;
+
+	// App Settings shows its advanced settings
+	public bool ShowAdvancedSettings { get; set; }
+
+	// media and caches; an empty proxy folder is EditSharp's own
+	public string ProxyFolder { get; set; } = "";
+	public int ProxyMaxDimension { get; set; } = 1280;
+	public int ProxyBuilds { get; set; } = 1;
+	public int ThumbnailCacheMegabytes { get; set; } = 96;
+	public string FfmpegPath { get; set; } = "ffmpeg";
+	public string FfprobePath { get; set; } = "ffprobe";
+	public int AudioLatencyMilliseconds { get; set; } = 100;
+
+	// EditSharp's proxy folder before any setting changed it
+	public static readonly string DefaultProxyFolder = EditSharp.EditSharpConfig.ProxyDirectory;
+
+	// pushes the media settings into EditSharp; the rest is read where it's used
+	public void Apply()
+	{
+		EditSharp.EditSharpConfig.ProxyDirectory = string.IsNullOrWhiteSpace(ProxyFolder) ? DefaultProxyFolder : ProxyFolder;
+		EditSharp.EditSharpConfig.ProxyMaxDimension = Math.Max(16, ProxyMaxDimension);
+		EditSharp.EditSharpConfig.MaxConcurrentProxyBuilds = Math.Max(1, ProxyBuilds);
+		EditSharp.EditSharpConfig.FfmpegPath = string.IsNullOrWhiteSpace(FfmpegPath) ? "ffmpeg" : FfmpegPath;
+		EditSharp.EditSharpConfig.FfprobePath = string.IsNullOrWhiteSpace(FfprobePath) ? "ffprobe" : FfprobePath;
+		EditSharp.EditSharpConfig.AudioLatency = EditSharp.Time.FromMilliseconds(Math.Max(1, AudioLatencyMilliseconds));
+	}
+
+	// the factor windows draw their content at
+	public float ScaleFor(Window window) => InterfaceScale switch
+	{
+		InterfaceScale.Percent75 => 0.75f,
+		InterfaceScale.Percent100 => 1f,
+		InterfaceScale.Percent125 => 1.25f,
+		InterfaceScale.Percent150 => 1.5f,
+		InterfaceScale.Percent175 => 1.75f,
+		InterfaceScale.Percent200 => 2f,
+		_ => SystemScale(window),
+	};
+
+	// the OS scale of the screen a window is on; windows reports it as DPI
+	static float SystemScale(Window window)
+	{
+		int screen = window is not null && window.IsInsideTree() ? window.CurrentScreen : DisplayServer.GetPrimaryScreen();
+		return OS.GetName() == "Windows" ? DisplayServer.ScreenGetDpi(screen) / 96f : DisplayServer.ScreenGetScale(screen);
+	}
 
 	// above Current: static fields start in order, and Load needs these
 	static readonly JsonSerializerOptions Options = new()

@@ -26,6 +26,19 @@ public sealed class WaveformCache : IDisposable
 
 	public int Count => envelopes.Count;
 
+	// every cache in use, one per open timeline view
+	static readonly List<WaveformCache> live = [];
+
+	// envelopes held across every open cache
+	public static int TotalCount => live.Sum(c => c.Count);
+
+	// every cache lets go of its envelopes; they're rebuilt as they're shown
+	public static void ClearAll()
+	{
+		foreach (WaveformCache cache in live.ToList())
+			foreach (Clip clip in cache.envelopes.Keys.ToList()) cache.Invalidate(clip);
+	}
+
 	readonly Timeline timeline;
 	readonly History history;
 
@@ -36,6 +49,7 @@ public sealed class WaveformCache : IDisposable
 
 		history.Changed += OnHistoryChanged;
 		AudioAnalysisCache.Completed += OnAnalysis;
+		live.Add(this);
 	}
 
 	readonly Dictionary<Clip, EnvelopeTexture> envelopes = [];
@@ -213,6 +227,7 @@ public sealed class WaveformCache : IDisposable
 	{
 		if (disposed) return;
 		disposed = true;
+		live.Remove(this);
 
 		history.Changed -= OnHistoryChanged;
 		AudioAnalysisCache.Completed -= OnAnalysis;

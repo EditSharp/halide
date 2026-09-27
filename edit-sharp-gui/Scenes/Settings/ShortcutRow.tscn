@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Settings/ShortcutRow.cs" id="1_row"]
+[ext_resource type="Script" path="res://Scripts/UI/Settings/ShortcutKeyButton.cs" id="2_key"]
+[ext_resource type="PackedScene" path="res://Scenes/Settings/ShortcutKey.tscn" id="3_keyscene"]
+
+[node name="ShortcutRow" type="VBoxContainer" node_paths=PackedStringArray("label", "keys", "add", "reset", "conflict", "conflictText", "reassign", "keep")]
+theme_override_constants/separation = 6
+script = ExtResource("1_row")
+label = NodePath("Top/Label")
+keys = NodePath("Top/Keys")
+add = NodePath("Top/Add")
+reset = NodePath("Top/Reset")
+conflict = NodePath("Conflict")
+conflictText = NodePath("Conflict/Text")
+reassign = NodePath("Conflict/Reassign")
+keep = NodePath("Conflict/Keep")
+keyScene = ExtResource("3_keyscene")
+
+[node name="Top" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Label" type="Label" parent="Top"]
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorLabel"
+vertical_alignment = 1
+clip_text = true
+
+[node name="Keys" type="HBoxContainer" parent="Top"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Add" type="Button" parent="Top"]
+custom_minimum_size = Vector2(27, 27)
+layout_mode = 2
+tooltip_text = "Add a shortcut"
+theme_type_variation = &"InspectorButton"
+script = ExtResource("2_key")
+
+[node name="Reset" type="Button" parent="Top"]
+custom_minimum_size = Vector2(60, 27)
+layout_mode = 2
+tooltip_text = "Back to the default keys"
+theme_type_variation = &"InspectorButton"
+text = "Reset"
+
+[node name="Conflict" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Text" type="Label" parent="Conflict"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ErrorLabel"
+vertical_alignment = 1
+
+[node name="Reassign" type="Button" parent="Conflict"]
+custom_minimum_size = Vector2(90, 27)
+layout_mode = 2
+theme_type_variation = &"InspectorButton"
+text = "Reassign"
+
+[node name="Keep" type="Button" parent="Conflict"]
+custom_minimum_size = Vector2(90, 27)
+layout_mode = 2
+theme_type_variation = &"InspectorButton"
+text = "Cancel"

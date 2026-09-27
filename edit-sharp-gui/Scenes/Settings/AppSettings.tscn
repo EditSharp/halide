@@ -1,0 +1,129 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Views/AppSettingsView.cs" id="1_view"]
+[ext_resource type="PackedScene" path="res://Scenes/Views/Inspector.tscn" id="2_inspector"]
+[ext_resource type="PackedScene" path="res://Scenes/Settings/ShortcutsPage.tscn" id="3_shortcuts"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_sections"]
+allow_unpress = false
+
+[node name="AppSettings" type="PanelContainer" node_paths=PackedStringArray("search", "appearance", "shortcuts", "media", "projects", "advanced", "noMatches", "inspector", "shortcutsPage")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ViewBackground"
+script = ExtResource("1_view")
+search = NodePath("Columns/Sidebar/Column/Search")
+appearance = NodePath("Columns/Sidebar/Column/Sections/Appearance")
+shortcuts = NodePath("Columns/Sidebar/Column/Sections/Shortcuts")
+media = NodePath("Columns/Sidebar/Column/Sections/Media")
+projects = NodePath("Columns/Sidebar/Column/Sections/Projects")
+advanced = NodePath("Columns/Sidebar/Column/Advanced")
+noMatches = NodePath("Columns/Page/Content/NoMatches")
+inspector = NodePath("Columns/Page/Content/Inspector")
+shortcutsPage = NodePath("Columns/Page/Content/ShortcutsPage")
+
+[node name="Columns" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Sidebar" type="MarginContainer" parent="Columns"]
+custom_minimum_size = Vector2(228, 0)
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Column" type="VBoxContainer" parent="Columns/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Search" type="LineEdit" parent="Columns/Sidebar/Column"]
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+theme_type_variation = &"InspectorField"
+placeholder_text = "Search settings"
+clear_button_enabled = true
+
+[node name="Sections" type="VBoxContainer" parent="Columns/Sidebar/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="Appearance" type="Button" parent="Columns/Sidebar/Column/Sections"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_sections")
+text = "Appearance"
+alignment = 0
+
+[node name="Shortcuts" type="Button" parent="Columns/Sidebar/Column/Sections"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_sections")
+text = "Keyboard Shortcuts"
+alignment = 0
+
+[node name="Media" type="Button" parent="Columns/Sidebar/Column/Sections"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_sections")
+text = "Media & Cache"
+alignment = 0
+
+[node name="Projects" type="Button" parent="Columns/Sidebar/Column/Sections"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_sections")
+text = "Projects & Autosave"
+alignment = 0
+
+[node name="Advanced" type="CheckButton" parent="Columns/Sidebar/Column"]
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Shows settings most people never need"
+text = "Show advanced"
+
+[node name="Divider" type="Panel" parent="Columns"]
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ToolbarBackground"
+
+[node name="Page" type="MarginContainer" parent="Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
+
+[node name="Content" type="VBoxContainer" parent="Columns/Page"]
+layout_mode = 2
+
+[node name="NoMatches" type="Label" parent="Columns/Page/Content"]
+visible = false
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+text = "No settings match the search."
+horizontal_alignment = 1
+
+[node name="Inspector" parent="Columns/Page/Content" instance=ExtResource("2_inspector")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShortcutsPage" parent="Columns/Page/Content" instance=ExtResource("3_shortcuts")]
+visible = false
+layout_mode = 2

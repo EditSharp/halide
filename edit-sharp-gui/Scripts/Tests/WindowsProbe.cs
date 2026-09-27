@@ -231,7 +231,7 @@ public partial class WindowsProbe : Node
 		// a tile's menu from a right click opens at the cursor, not at the view's corner
 		UIProjectItem gammaTile = Descendants(home).OfType<UIProjectItem>().First(t => t.Project.Name == "Gamma Probe");
 		Vector2I cursor = ContextMenus.ToScreen(gammaTile.GetViewport(), gammaTile.GetGlobalRect().GetCenter());
-		DisplayServer.WarpMouse((Vector2I)gammaTile.GetGlobalRect().GetCenter());
+		gammaTile.GetViewport().WarpMouse(gammaTile.GetGlobalRect().GetCenter());
 		await Frames(3);
 		home.ShowTileMenu(gammaTile, null);
 		Rect2I? tileMenu = null;

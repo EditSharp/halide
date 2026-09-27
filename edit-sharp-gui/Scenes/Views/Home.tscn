@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cq446xk6os5i2" path="res://Images/Icons/Add.png" id="2_add"]
 [ext_resource type="PackedScene" uid="uid://c73t3qeow7o8d" path="res://Scenes/Components/ProjectItem.tscn" id="3_tile"]
 
-[node name="Home" type="Control" node_paths=PackedStringArray("tabs", "search", "sortButton", "flow", "addTile", "empty")]
+[node name="Home" type="Control" node_paths=PackedStringArray("tabs", "search", "sortButton", "settingsButton", "flow", "addTile", "empty")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,6 +15,7 @@ script = ExtResource("1_home")
 tabs = NodePath("VBoxContainer/Temporary Fake Top Bar/TabBar")
 search = NodePath("VBoxContainer/Toolbar/HBoxContainer/Search")
 sortButton = NodePath("VBoxContainer/Toolbar/HBoxContainer/Sort")
+settingsButton = NodePath("VBoxContainer/Toolbar/HBoxContainer/Settings")
 flow = NodePath("VBoxContainer/ScrollContainer/Margin/Projects")
 addTile = NodePath("VBoxContainer/ScrollContainer/Margin/Projects/Add Project")
 empty = NodePath("Empty")
@@ -103,6 +104,15 @@ size_flags_vertical = 4
 focus_mode = 0
 theme_type_variation = &"InspectorButton"
 text = "Sort: Last Opened"
+
+[node name="Settings" type="Button" parent="VBoxContainer/Toolbar/HBoxContainer"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+tooltip_text = "App Settings (Ctrl+,)"
+theme_type_variation = &"InspectorButton"
+text = "Settings"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2

@@ -215,6 +215,9 @@ public partial class EditSharpTheme : Theme
 
 	public const string SettingsPath = "user://theme.json";
 
+	// where the user's choice is kept; tests point it elsewhere
+	public static string SettingsFile { get; set; } = SettingsPath;
+
 	sealed class Settings
 	{
 		public string Palette { get; set; } = "";
@@ -225,11 +228,53 @@ public partial class EditSharpTheme : Theme
 
 	string userAccent = "";
 
+	public const string DarkPalette = "res://Themes/Dark.tres", LightPalette = "res://Themes/Light.tres", SystemPalette = "system";
+
+	// the palette picked: a palette path, SystemPalette to follow the OS, or empty for the theme's own
+	public string PaletteChoice { get; private set; } = "";
+
+	// the accent picked over the palette's own, or null
+	public Color? UserAccent => Color.HtmlIsValid(userAccent) ? Color.FromHtml(userAccent) : null;
+
+	// the palette's accent as saved, ignoring any pick
+	public Color PaletteAccent => _palette is not null && ResourceLoader.Load(_palette.ResourcePath, cacheMode: ResourceLoader.CacheMode.Ignore) is ThemePalette saved ? saved.AccentColor : Colors.White;
+
+	// picks a palette and saves the choice
+	public void ChoosePalette(string choice)
+	{
+		PaletteChoice = choice ?? "";
+		ApplyPaletteChoice();
+		SaveUserSettings();
+	}
+
+	// picks an accent, or goes back to the palette's with null, and saves it
+	public void ChooseAccent(Color? accent)
+	{
+		userAccent = accent is Color c ? "#" + c.ToHtml(false) : "";
+		if (_palette is not null) _palette.AccentColor = accent ?? PaletteAccent;
+		SaveUserSettings();
+	}
+
+	// the OS switched between dark and light; a system choice follows it
+	public void SystemThemeChanged()
+	{
+		if (PaletteChoice == SystemPalette) ApplyPaletteChoice();
+	}
+
+	void ApplyPaletteChoice()
+	{
+		string path = PaletteChoice == SystemPalette ? (DisplayServer.IsDarkMode() ? DarkPalette : LightPalette) : PaletteChoice;
+		if (string.IsNullOrWhiteSpace(path) || !ResourceLoader.Exists(path) || ResourceLoader.Load(path) is not ThemePalette chosen) return;
+
+		if (chosen != _palette) Palette = chosen;
+		_palette.AccentColor = UserAccent ?? PaletteAccent;
+	}
+
 	// swaps in the palette the user chose and sets their accent on it; seeds
 	// the file on first run so there is something to edit
 	public void LoadUserSettings()
 	{
-		string file = ProjectSettings.GlobalizePath(SettingsPath);
+		string file = ProjectSettings.GlobalizePath(SettingsFile);
 
 		if (!File.Exists(file)) { SaveUserSettings(); return; }
 
@@ -237,14 +282,10 @@ public partial class EditSharpTheme : Theme
 		{
 			Settings settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(file)) ?? new();
 
-			if (!string.IsNullOrWhiteSpace(settings.Palette) && ResourceLoader.Exists(settings.Palette) && ResourceLoader.Load(settings.Palette) is ThemePalette chosen)
-				Palette = chosen;
-
-			if (_palette is not null && !string.IsNullOrWhiteSpace(settings.Accent) && Color.HtmlIsValid(settings.Accent))
-			{
-				userAccent = settings.Accent;
-				_palette.AccentColor = Color.FromHtml(settings.Accent);
-			}
+			PaletteChoice = settings.Palette ?? "";
+			if (!string.IsNullOrWhiteSpace(settings.Accent) && Color.HtmlIsValid(settings.Accent)) userAccent = settings.Accent;
+			ApplyPaletteChoice();
+			if (_palette is not null && UserAccent is Color accent) _palette.AccentColor = accent;
 		}
 		catch (Exception e)
 		{
@@ -258,7 +299,7 @@ public partial class EditSharpTheme : Theme
 
 	public void SaveUserSettings()
 	{
-		string file = ProjectSettings.GlobalizePath(SettingsPath);
+		string file = ProjectSettings.GlobalizePath(SettingsFile);
 
 		try
 		{
@@ -266,7 +307,7 @@ public partial class EditSharpTheme : Theme
 
 			Settings settings = new()
 			{
-				Palette = _palette?.ResourcePath ?? "",
+				Palette = PaletteChoice.Length > 0 ? PaletteChoice : _palette?.ResourcePath ?? "",
 				Accent = userAccent
 			};
 

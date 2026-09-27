@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="ShortcutCategory" type="Label"]
+custom_minimum_size = Vector2(0, 36)
+theme_type_variation = &"SubheaderLabel"
+vertical_alignment = 2

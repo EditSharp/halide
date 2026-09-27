@@ -34,6 +34,19 @@ public static class Screens
 		window.InitialPosition = Window.WindowInitialPosition.CenterOtherScreen;
 	}
 
+	// draws a window's content at the Interface scale setting
+	public static void Scale(Window window)
+	{
+		// embedded popups draw at their window's scale already
+		if (window.IsEmbedded()) return;
+
+		float factor = AppSettings.Current.ScaleFor(window);
+		if (!Mathf.IsEqualApprox(window.ContentScaleFactor, factor)) window.ContentScaleFactor = factor;
+	}
+
+	// a window's default size, grown with the interface scale
+	public static Vector2I Sized(Vector2I size) => (Vector2I)(new Vector2(size.X, size.Y) * AppSettings.Current.ScaleFor(null)).Round();
+
 	// moves an already showing window to the middle of the preferred screen
 	public static void Move(Window window)
 	{
