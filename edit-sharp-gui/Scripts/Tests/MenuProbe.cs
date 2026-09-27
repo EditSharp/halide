@@ -38,7 +38,7 @@ public partial class MenuProbe : Node
 		string[] args = OS.GetCmdlineUserArgs();
 		if (args.Contains("--clip"))
 		{
-			UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+			UITimeline timeline = editor.FindChildren("*", "", true, false).OfType<UITimeline>().First();
 			UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
 			// the topmost clip whose button is in view: the rows at the bottom sit under the scrollbar
 			filter = clipsView.UIClips.Select(c => Find<Button>(c).First(b => b.Name == "Options"))
@@ -55,7 +55,7 @@ public partial class MenuProbe : Node
 		// the menu; the click should open the clip's), dismiss that, then open the filter menu again
 		if (args.Contains("--cascade"))
 		{
-			UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+			UITimeline timeline = editor.FindChildren("*", "", true, false).OfType<UITimeline>().First();
 			UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
 			Button clipOptions = clipsView.UIClips.Select(c => Find<Button>(c).First(b => b.Name == "Options"))
 				.Where(b => b.IsVisibleInTree() && timeline.ViewContains(b.GetGlobalRect().GetCenter()))

@@ -42,7 +42,7 @@ public partial class PlayProbe : Node
 
 		await Frames(30);
 
-		UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Viewers/Playback");
+		UIPlayback preview = (UIPlayback)editor.FindChild("Program", true, false);
 		Playback playback = preview.Playback;
 
 		// --build: a proxy build of the media runs alongside, as an import starts one

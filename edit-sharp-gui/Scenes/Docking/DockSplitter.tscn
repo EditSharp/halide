@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockSplitter.cs" id="1_splitter"]
+
+[node name="DockSplitter" type="SplitContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+drag_nested_intersections = true
+script = ExtResource("1_splitter")

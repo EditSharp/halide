@@ -24,7 +24,14 @@ public partial class UIRuler : Control, IDragCancellable
 
 	public override void _Notification(int what)
 	{
-		if (what == NotificationThemeChanged && lastPixelsPerSecond > 0d) Update(lastPixelsPerSecond, lastFramerate);
+		if (what == NotificationReady) marksRect.Resized += Redraw;
+		if (what == NotificationThemeChanged) Redraw();
+	}
+
+	// the marks again at the last scale, for a new size or theme
+	void Redraw()
+	{
+		if (lastPixelsPerSecond > 0d) Update(lastPixelsPerSecond, lastFramerate);
 	}
 
 	[ExportGroup("Controls")]
@@ -69,6 +76,9 @@ public partial class UIRuler : Control, IDragCancellable
 
 		// marks per second use the nominal rate: 30 for 30000/1001
 		int nominal = Math.Max(1, (int)Math.Round(framerate.Value));
+
+		// not laid out yet; the resize redraws it
+		if (marksRect.Size.Y < 1 || pixelsPerSecond < 1) return;
 
 		if (UpdateMarks(new((float)pixelsPerSecond, marksRect.Size.Y), GetScaledMarksOptions(pixelsPerSecond, nominal)))
 		{

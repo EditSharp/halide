@@ -47,10 +47,15 @@ public partial class CaptionButton : Button
 		// a glyph with a hot colour (close's white) fades to it with the fill
 		if (HasThemeColor("glyph_hot"))
 		{
-			Color rest = GetThemeColor("font_color"), glyph = rest.Lerp(GetThemeColor("glyph_hot"), lit ? 1f : 0f);
-			fade.TweenProperty(this, "theme_override_colors/font_color", glyph, lit ? FadeIn : FadeOut);
-			fade.TweenProperty(this, "theme_override_colors/font_hover_color", glyph, lit ? FadeIn : FadeOut);
-			fade.TweenProperty(this, "theme_override_colors/font_pressed_color", glyph, lit ? FadeIn : FadeOut);
+			Color rest = ThemeDB.GetProjectTheme()?.GetColor("font_color", ThemeTypeVariation) ?? GetThemeColor("font_color");
+			Color glyph = rest.Lerp(GetThemeColor("glyph_hot"), lit ? 1f : 0f);
+
+			foreach (string item in new[] { "font_color", "font_hover_color", "font_pressed_color" })
+			{
+				// a tween needs a value to start from
+				if (!HasThemeColorOverride(item)) AddThemeColorOverride(item, rest);
+				fade.TweenProperty(this, $"theme_override_colors/{item}", glyph, lit ? FadeIn : FadeOut);
+			}
 		}
 	}
 }

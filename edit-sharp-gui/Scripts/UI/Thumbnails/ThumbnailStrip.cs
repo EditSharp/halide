@@ -106,6 +106,15 @@ public partial class ThumbnailStrip : Control
 		else if (what == NotificationThemeChanged) UpdateMask();
 	}
 
+	// back in the tree after its view moved between panes or windows: listening again, and caught up
+	public override void _EnterTree()
+	{
+		if (cache is null) return;
+		cache.Updated -= OnUpdated;
+		cache.Updated += OnUpdated;
+		QueueRedraw();
+	}
+
 	public override void _ExitTree()
 	{
 		if (cache is not null) cache.Updated -= OnUpdated;

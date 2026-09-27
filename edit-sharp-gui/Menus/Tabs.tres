@@ -28,15 +28,6 @@ Id = "tabs.closeOthers"
 [sub_resource type="Resource" id="divider_5"]
 script = ExtResource("divider")
 
-[sub_resource type="Resource" id="text_6"]
-script = ExtResource("text")
-Text = "Move to Other Side"
-
-[sub_resource type="Resource" id="button_7"]
-script = ExtResource("button")
-Text = SubResource("text_6")
-Id = "tabs.moveSide"
-
 [sub_resource type="Resource" id="text_8"]
 script = ExtResource("text")
 Text = "Make Floating"
@@ -72,4 +63,4 @@ Id = "tabs.reset"
 
 [resource]
 script = ExtResource("menu")
-Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("button_4"), SubResource("divider_5"), SubResource("button_7"), SubResource("button_9"), SubResource("divider_10"), SubResource("submenu_12"), SubResource("divider_13"), SubResource("button_15")])
+Elements = Array[ExtResource("element")]([SubResource("button_2"), SubResource("button_4"), SubResource("divider_5"), SubResource("button_9"), SubResource("divider_10"), SubResource("submenu_12"), SubResource("divider_13"), SubResource("button_15")])

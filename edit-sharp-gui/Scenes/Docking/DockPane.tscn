@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockPane.cs" id="1_pane"]
+[ext_resource type="Texture2D" uid="uid://cnpfy75rgbpy8" path="res://Images/Icons/Options.png" id="2_options"]
+[ext_resource type="Resource" path="res://Menus/Tabs.tres" id="3_menu"]
+
+[node name="DockPane" type="VBoxContainer" node_paths=PackedStringArray("strip", "tabBar", "content", "options")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_pane")
+strip = NodePath("Strip")
+tabBar = NodePath("Strip/TabBar")
+content = NodePath("Content")
+options = NodePath("Strip/Options")
+menu = ExtResource("3_menu")
+
+[node name="Strip" type="HBoxContainer" parent="."]
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="Strip"]
+layout_mode = 2
+size_flags_horizontal = 3
+tab_alignment = 1
+tab_close_display_policy = 1
+scrolling_enabled = false
+
+[node name="Options" type="Button" parent="Strip"]
+texture_filter = 4
+custom_minimum_size = Vector2(27, 0)
+layout_mode = 2
+tooltip_text = "Tab options"
+focus_mode = 0
+offset_transform_enabled = true
+offset_transform_rotation = 1.5707964
+icon = ExtResource("2_options")
+expand_icon = true
+
+[node name="Content" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 3

@@ -144,6 +144,14 @@ public partial class Inspector : Control
 			GetViewport().GuiReleaseFocus();
 	}
 
+	// moved between panes or windows: listening again where it lands
+	public override void _EnterTree()
+	{
+		if (History is not History h) return;
+		h.Changed -= OnHistoryChanged;
+		h.Changed += OnHistoryChanged;
+	}
+
 	public override void _ExitTree()
 	{
 		if (History is History h) h.Changed -= OnHistoryChanged;

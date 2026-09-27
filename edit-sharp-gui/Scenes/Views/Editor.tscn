@@ -3,12 +3,13 @@
 [ext_resource type="Script" uid="uid://cik13faqv5l5b" path="res://Scripts/UI/Views/Editor.cs" id="1_ktno0"]
 [ext_resource type="PackedScene" uid="uid://byuamsawv1kcd" path="res://Scenes/Views/MediaViewer.tscn" id="2_gtnbc"]
 [ext_resource type="PackedScene" uid="uid://c3uao3qqjglxj" path="res://Scenes/Views/Playback.tscn" id="3_3xcsf"]
-[ext_resource type="PackedScene" uid="uid://ddl0543e6u2fc" path="res://Scenes/Views/TabsView.tscn" id="3_ffi10"]
+[ext_resource type="PackedScene" path="res://Scenes/Docking/DockArea.tscn" id="6_dock"]
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockManager.cs" id="7_docks"]
 [ext_resource type="PackedScene" uid="uid://rmor8if075lh" path="res://Scenes/Views/Timeline.tscn" id="4_ffi10"]
 [ext_resource type="PackedScene" uid="uid://dm10ihadq0lji" path="res://Scenes/Views/Inspector.tscn" id="4_gtnbc"]
 [ext_resource type="PackedScene" path="res://Scenes/Views/GraphEditor.tscn" id="5_graph"]
 
-[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "SourceViewer", "LeftTabs", "RightTabs")]
+[node name="Editor" type="Control" unique_id=359435738 node_paths=PackedStringArray("UITimeline", "UIPlayback", "SourceViewer", "Dock")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,11 +17,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ktno0")
-UITimeline = NodePath("VSplitContainer/Timeline")
-UIPlayback = NodePath("VSplitContainer/HSplitContainer/Viewers/Playback")
-SourceViewer = NodePath("VSplitContainer/HSplitContainer/Viewers/Source Viewer")
-LeftTabs = NodePath("VSplitContainer/HSplitContainer/Left Tabs")
-RightTabs = NodePath("VSplitContainer/HSplitContainer/Right Tabs")
+UITimeline = NodePath("Parking/Timeline")
+UIPlayback = NodePath("Parking/Program")
+SourceViewer = NodePath("Parking/Source")
+Dock = NodePath("Docks")
 MediaViewerScene = ExtResource("2_gtnbc")
 InspectorScene = ExtResource("4_gtnbc")
 GraphEditorScene = ExtResource("5_graph")
@@ -34,35 +34,29 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"ViewBackground"
 
-[node name="VSplitContainer" type="VSplitContainer" parent="." unique_id=1206312887]
+[node name="Dock" parent="." instance=ExtResource("6_dock")]
+layout_mode = 1
+
+[node name="Parking" type="Control" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="HSplitContainer" type="HSplitContainer" parent="VSplitContainer" unique_id=812098013]
-layout_mode = 2
-size_flags_vertical = 3
-split_offsets = PackedInt32Array(0, 0)
+[node name="Timeline" parent="Parking" unique_id=407201115 instance=ExtResource("4_ffi10")]
+layout_mode = 1
 
-[node name="Left Tabs" parent="VSplitContainer/HSplitContainer" unique_id=1798555551 instance=ExtResource("3_ffi10")]
-layout_mode = 2
+[node name="Program" parent="Parking" unique_id=1515650523 instance=ExtResource("3_3xcsf")]
+layout_mode = 1
 
-[node name="Viewers" type="HSplitContainer" parent="VSplitContainer/HSplitContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
+[node name="Source" parent="Parking" instance=ExtResource("3_3xcsf")]
+layout_mode = 1
 
-[node name="Source Viewer" parent="VSplitContainer/HSplitContainer/Viewers" instance=ExtResource("3_3xcsf")]
-visible = false
-layout_mode = 2
-
-[node name="Playback" parent="VSplitContainer/HSplitContainer/Viewers" unique_id=1515650523 instance=ExtResource("3_3xcsf")]
-layout_mode = 2
-
-[node name="Right Tabs" parent="VSplitContainer/HSplitContainer" unique_id=141499235 instance=ExtResource("3_ffi10")]
-layout_mode = 2
-
-[node name="Timeline" parent="VSplitContainer" unique_id=407201115 instance=ExtResource("4_ffi10")]
-layout_mode = 2
+[node name="Docks" type="Node" parent="." node_paths=PackedStringArray("main", "parking")]
+script = ExtResource("7_docks")
+main = NodePath("../Dock")
+parking = NodePath("../Parking")

@@ -61,9 +61,12 @@ public partial class UIPlayback : Control
 
 	public Playback Playback => playback;
 
-	// the window closing: the playback goes with it, and a frame still on its
-	// way finds nothing listening
-	public override void _ExitTree() => SetPlayback(null);
+	// the view going for good: the playback goes with it, and a frame still on its
+	// way finds nothing listening. a move between panes or windows keeps it
+	public override void _Notification(int what)
+	{
+		if (what == NotificationPredelete) SetPlayback(null);
+	}
 
 	// where playback is, as far as anything watching from outside should know -
 	// a timeline playhead, say. raised on the main thread only: from _Process

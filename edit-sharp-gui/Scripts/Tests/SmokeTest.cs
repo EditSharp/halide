@@ -61,7 +61,7 @@ public partial class SmokeTest : Node
 		AddChild(editor);
 		await Frames(3);
 
-		UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+		UITimeline timeline = editor.FindChildren("*", "", true, false).OfType<UITimeline>().First();
 		Inspector inspector = Find<Inspector>(editor).FirstOrDefault();
 		UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
 
@@ -71,7 +71,7 @@ public partial class SmokeTest : Node
 
 		// ---- the preview shows a frame without being played, and again after each change
 		{
-			UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Viewers/Playback");
+			UIPlayback preview = (UIPlayback)editor.FindChild("Program", true, false);
 			var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
 			int shown = 0;
 			pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref shown);
@@ -673,7 +673,7 @@ public partial class SmokeTest : Node
 					{
 						var textNode = (EditSharp.Components.Nodes.Input.TextNode)((PropertyBinding)Find<InspectorRow>(inspector).Find(r => r.Label == "Text").Bindings[0]).Target;
 						TextEdit field = Find<TextEdit>(Find<InspectorRow>(inspector).Find(r => r.Label == "Text")).First();
-						UIPlayback preview = editor.GetNode<UIPlayback>("VSplitContainer/HSplitContainer/Viewers/Playback");
+						UIPlayback preview = (UIPlayback)editor.FindChild("Program", true, false);
 						var pb = (EditSharp.Playback.Playback)typeof(UIPlayback).GetField("playback", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(preview);
 						int frames = 0;
 						pb.VideoFrame += (_, _) => System.Threading.Interlocked.Increment(ref frames);

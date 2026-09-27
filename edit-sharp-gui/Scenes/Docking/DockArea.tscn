@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockArea.cs" id="1_area"]
+[ext_resource type="PackedScene" path="res://Scenes/Docking/DockPane.tscn" id="2_pane"]
+[ext_resource type="PackedScene" path="res://Scenes/Docking/DockSplitter.tscn" id="3_splitter"]
+[ext_resource type="PackedScene" path="res://Scenes/Docking/DockCompass.tscn" id="4_compass"]
+
+[node name="DockArea" type="Control" node_paths=PackedStringArray("tree", "preview", "marker", "compass")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_area")
+paneScene = ExtResource("2_pane")
+splitterScene = ExtResource("3_splitter")
+tree = NodePath("Tree")
+preview = NodePath("Overlay/Preview")
+marker = NodePath("Overlay/Marker")
+compass = NodePath("Overlay/Compass")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ViewBackground"
+
+[node name="Tree" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Preview" type="Panel" parent="Overlay"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"DockPreview"
+
+[node name="Marker" type="Panel" parent="Overlay"]
+visible = false
+layout_mode = 0
+offset_right = 3.0
+offset_bottom = 27.0
+mouse_filter = 2
+theme_type_variation = &"DockInsertMarker"
+
+[node name="Compass" parent="Overlay" instance=ExtResource("4_compass")]
+layout_mode = 0

@@ -183,11 +183,14 @@ public partial class MediaViewer : Control, IDropTarget
 			addTile.TooltipText = "Import media files";
 		}
 
-		ProxyCache.StatusChanged += OnProxyStatus;
 		Rebuild();
 	}
 
-	public override void _EnterTree() => InputManager.Singleton.Keyboard.Register(this, OnShortcut);
+	public override void _EnterTree()
+	{
+		InputManager.Singleton.Keyboard.Register(this, OnShortcut);
+		ProxyCache.StatusChanged += OnProxyStatus;
+	}
 
 	public override void _ExitTree()
 	{

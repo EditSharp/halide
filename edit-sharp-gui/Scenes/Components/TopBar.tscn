@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Components/TopBarMenu.tscn" id="3_menu"]
 [ext_resource type="Script" path="res://Scripts/UI/Components/CaptionButton.cs" id="4_caption"]
 
-[node name="TopBar" type="PanelContainer" node_paths=PackedStringArray("leading", "logo", "menus", "layouts", "title", "captionButtons", "minimize", "maximize", "close")]
+[node name="TopBar" type="PanelContainer" node_paths=PackedStringArray("leading", "logo", "menus", "layouts", "slot", "spacer", "title", "captionButtons", "minimize", "maximize", "close")]
 custom_minimum_size = Vector2(0, 36)
 anchors_preset = 10
 anchor_right = 1.0
@@ -17,6 +17,8 @@ leading = NodePath("Row/Leading")
 logo = NodePath("Row/Logo")
 menus = NodePath("Row/Menus")
 layouts = NodePath("Row/Layouts")
+slot = NodePath("Row/Slot")
+spacer = NodePath("Row/Spacer")
 title = NodePath("TitleCenter/Title")
 captionButtons = NodePath("Row/CaptionButtons")
 minimize = NodePath("Row/CaptionButtons/Minimize")
@@ -39,8 +41,9 @@ theme_override_constants/separation = 0
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Logo" type="Button" parent="Row"]
-custom_minimum_size = Vector2(36, 36)
+[node name="Logo" type="Button" parent="Row" node_paths=PackedStringArray("fill")]
+texture_filter = 4
+custom_minimum_size = Vector2(48, 36)
 layout_mode = 2
 focus_mode = 0
 tooltip_text = "Home"
@@ -48,6 +51,19 @@ theme_type_variation = &"TopBarLogo"
 icon = ExtResource("2_logo")
 icon_alignment = 1
 expand_icon = true
+script = ExtResource("4_caption")
+fill = NodePath("Fill")
+
+[node name="Fill" type="Panel" parent="Row/Logo"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"CaptionFill"
 
 [node name="Menus" type="HBoxContainer" parent="Row"]
 layout_mode = 2
@@ -59,6 +75,10 @@ size_flags_vertical = 4
 focus_mode = 0
 tooltip_text = "Layout"
 theme_type_variation = &"TopBarButton"
+
+[node name="Slot" type="HBoxContainer" parent="Row"]
+layout_mode = 2
+theme_override_constants/separation = 0
 
 [node name="Spacer" type="Control" parent="Row"]
 layout_mode = 2

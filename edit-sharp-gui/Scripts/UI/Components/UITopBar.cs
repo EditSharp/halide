@@ -12,6 +12,8 @@ public partial class UITopBar : PanelContainer
 	[Export] Button logo;
 	[Export] HBoxContainer menus;
 	[Export] Button layouts;
+	[Export] HBoxContainer slot;
+	[Export] Control spacer;
 	[Export] Label title;
 	[Export] HBoxContainer captionButtons;
 	[Export] Button minimize;
@@ -44,7 +46,7 @@ public partial class UITopBar : PanelContainer
 	public void SetMetrics(float height, float captionWidth)
 	{
 		CustomMinimumSize = new Vector2(0, height);
-		logo.CustomMinimumSize = new Vector2(height, height);
+		logo.CustomMinimumSize = new Vector2(captionWidth, height);
 		foreach (Button b in new[] { minimize, maximize, close }) b.CustomMinimumSize = new Vector2(captionWidth, height);
 	}
 
@@ -54,6 +56,22 @@ public partial class UITopBar : PanelContainer
 		float alpha = active ? 1f : (ThemeDB.GetProjectTheme() as EditSharpTheme)?.Palette?.DisabledAlpha ?? 0.5f;
 		captionButtons.Modulate = new Color(1f, 1f, 1f, alpha);
 		title.Modulate = new Color(1f, 1f, 1f, alpha);
+	}
+
+	// something of the host's shown in the bar in place of the title, like a float's tabs; null takes it out without freeing it
+	public void Hold(Control content)
+	{
+		foreach (Node child in slot.GetChildren()) slot.RemoveChild(child);
+		if (content is not null)
+		{
+			content.GetParent()?.RemoveChild(content);
+			slot.AddChild(content);
+		}
+		title.Visible = content is null;
+
+		// what it holds takes the free space
+		slot.SizeFlagsHorizontal = content is null ? SizeFlags.Fill : SizeFlags.ExpandFill;
+		spacer.Visible = content is null;
 	}
 
 	public string LayoutName { get => layouts.Text; set { layouts.Text = value; layouts.Visible = value is not null; } }
@@ -96,7 +114,7 @@ public partial class UITopBar : PanelContainer
 		DisplayServer.WindowSetMode(maximized ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Maximized, id);
 	}
 
-	bool Maximized => IsInsideTree() && DisplayServer.WindowGetMode(GetWindow().GetWindowId()) == DisplayServer.WindowMode.Maximized;
+	bool Maximized => IsInsideTree() && GetWindow().Mode == Window.ModeEnum.Maximized;
 
 	void ShowMaximized()
 	{
@@ -137,6 +155,14 @@ public partial class UITopBar : PanelContainer
 	{
 		if (!IsVisibleInTree() || !Bounds(this).HasPoint(at)) return Region.None;
 		if (maximize.IsVisibleInTree() && Bounds(maximize).HasPoint(at)) return Region.Maximize;
+
+		// a held tab bar's space past its tabs still moves the window
+		foreach (TabBar tabs in slot.FindChildren("*", "TabBar", true, false).OfType<TabBar>())
+		{
+			if (!tabs.IsVisibleInTree() || !Bounds(tabs).HasPoint(at)) continue;
+			return tabs.GetTabIdxAtPoint(tabs.GetGlobalTransform().AffineInverse() * at) < 0 ? Region.Caption : Region.None;
+		}
+
 		return Interactive().Any(c => Bounds(c).HasPoint(at)) ? Region.None : Region.Caption;
 	}
 
@@ -147,6 +173,7 @@ public partial class UITopBar : PanelContainer
 	{
 		foreach (Control c in new Control[] { logo, layouts, minimize, maximize, close }) if (c.IsVisibleInTree()) yield return c;
 		foreach (Control c in menus.GetChildren().OfType<Control>()) if (c.IsVisibleInTree()) yield return c;
+		foreach (Control c in slot.GetChildren().OfType<Control>()) if (c.IsVisibleInTree()) yield return c;
 	}
 
 	// the OS reports the pointer over maximize and presses on it, since those events never reach the bar

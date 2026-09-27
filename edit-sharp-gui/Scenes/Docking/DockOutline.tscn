@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockOutlineWindow.cs" id="1_outline"]
+
+[node name="DockOutline" type="Window"]
+transparent_bg = true
+visible = false
+wrap_controls = false
+unresizable = true
+borderless = true
+always_on_top = true
+transparent = true
+unfocusable = true
+mouse_passthrough = true
+force_native = true
+script = ExtResource("1_outline")
+
+[node name="Preview" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"DockPreview"

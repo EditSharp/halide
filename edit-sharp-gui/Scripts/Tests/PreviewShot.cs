@@ -23,7 +23,7 @@ public partial class PreviewShot : Node
 
 		// the audio channels, further down the timeline
 		{
-			UITimeline scrolled = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+			UITimeline scrolled = editor.FindChildren("*", "", true, false).OfType<UITimeline>().First();
 			scrolled.ScrollViewNow(new Vector2(0f, 420f));
 			await Frames(30);
 			Save("preview-audio");
@@ -45,7 +45,7 @@ public partial class PreviewShot : Node
 		}
 
 		// a clip's menu from its options button
-		UITimeline timeline = editor.GetNode<UITimeline>("VSplitContainer/Timeline");
+		UITimeline timeline = editor.FindChildren("*", "", true, false).OfType<UITimeline>().First();
 		UIClipsView clipsView = (UIClipsView)timeline.Get("clipsView");
 		UIClip clip = clipsView.UIClips.FirstOrDefault(u => u.Clip is EditSharp.Components.Clips.VideoClip);
 		if (clip is not null)

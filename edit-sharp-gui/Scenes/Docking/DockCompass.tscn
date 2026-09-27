@@ -1,0 +1,166 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockCompass.cs" id="1_compass"]
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockCompassTile.cs" id="2_tile"]
+
+[node name="DockCompass" type="Control"]
+visible = false
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 120.0
+offset_bottom = 120.0
+mouse_filter = 2
+script = ExtResource("1_compass")
+
+[node name="Top" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 0.0
+offset_right = 78.0
+offset_bottom = 36.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassTile"
+script = ExtResource("2_tile")
+Side = 3
+
+[node name="Pane" type="Panel" parent="Top"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassPane"
+
+[node name="Fill" type="Panel" parent="Top/Pane"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 0.5
+mouse_filter = 2
+theme_type_variation = &"DockCompassFill"
+
+[node name="Left" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 42.0
+offset_right = 36.0
+offset_bottom = 78.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassTile"
+script = ExtResource("2_tile")
+Side = 1
+
+[node name="Pane" type="Panel" parent="Left"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassPane"
+
+[node name="Fill" type="Panel" parent="Left/Pane"]
+layout_mode = 1
+anchor_right = 0.5
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassFill"
+
+[node name="Center" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 78.0
+offset_bottom = 78.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassTile"
+script = ExtResource("2_tile")
+Side = 0
+
+[node name="Pane" type="Panel" parent="Center"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassPane"
+
+[node name="Fill" type="Panel" parent="Center/Pane"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassFill"
+
+[node name="Right" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 84.0
+offset_top = 42.0
+offset_right = 120.0
+offset_bottom = 78.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassTile"
+script = ExtResource("2_tile")
+Side = 2
+
+[node name="Pane" type="Panel" parent="Right"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassPane"
+
+[node name="Fill" type="Panel" parent="Right/Pane"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassFill"
+
+[node name="Bottom" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 84.0
+offset_right = 78.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassTile"
+script = ExtResource("2_tile")
+Side = 4
+
+[node name="Pane" type="Panel" parent="Bottom"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassPane"
+
+[node name="Fill" type="Panel" parent="Bottom/Pane"]
+layout_mode = 1
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DockCompassFill"

@@ -102,7 +102,7 @@ public partial class WindowsProbe : Node
 		Guid pick = window.Session.Project.Timeline.Channels.SelectMany(c => c.Clips).Skip(1).First().Id;
 		Descendants(window).OfType<UIClipsView>().First().SelectClips(window.Session.Project.Timeline.Channels.SelectMany(c => c.Clips).Where(c => c.Id == pick));
 		media.RestoreState(new System.Text.Json.Nodes.JsonObject { ["tab"] = "Audio" });
-		Descendants(window).OfType<Editor>().First().GetNode<SplitContainer>("VSplitContainer").SplitOffset = 123;
+		Descendants(window).OfType<EditSharpGUI.Scripts.UI.Docking.DockManager>().First().Close("inspector");
 		await Frames(3);
 		manager.Save(window.Session);
 		await window.CloseAsync();
@@ -115,7 +115,7 @@ public partial class WindowsProbe : Node
 		Check(view.PixelsPerSecond == 173d && view.PlayheadTime == Time.FromSeconds(3), $"zoom and playhead come back: {view.PixelsPerSecond}, {view.PlayheadTime}");
 		Check(view.SelectedClips.Select(c => c.Id).SequenceEqual([pick]), "so does the selection");
 		Check(media.SaveState()["tab"]?.GetValue<string>() == "Audio", "and the media viewer's tab");
-		Check(Descendants(window).OfType<Editor>().First().GetNode<SplitContainer>("VSplitContainer").SplitOffset == 123, "and the split");
+		Check(!Descendants(window).OfType<EditSharpGUI.Scripts.UI.Docking.DockManager>().First().IsOpen("inspector"), "and the dock layout");
 
 		// the drawn top bar: the project's name, and the caption buttons where Windows draws them
 		UITopBar bar = Descendants(window).OfType<UITopBar>().First();

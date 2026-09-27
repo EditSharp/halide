@@ -5,6 +5,7 @@ using EditSharp.Components.Media;
 using EditSharp.History;
 using EditSharp.Playback;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.UI.Docking;
 using EditSharpGUI.Scripts.UI.DragDrop;
 using EditSharpGUI.Scripts.UI.Thumbnails;
 using Godot;
@@ -20,8 +21,7 @@ public partial class Editor : Control
 	[Export] UITimeline UITimeline;
 	[Export] UIPlayback UIPlayback;
 	[Export] UIPlayback SourceViewer;
-	[Export] TabsView LeftTabs;
-	[Export] TabsView RightTabs;
+	[Export] DockManager Dock;
 
 	[ExportGroup("Packed Scenes")]
 
@@ -32,9 +32,6 @@ public partial class Editor : Control
 	MediaViewer mediaViewer;
 	Inspector inspector;
 	Control graphEditor;
-
-	// every view the tab bars can hold, by id; kept alive while closed
-	readonly Dictionary<string, (string Title, Control View)> views = [];
 
 	// the clips' frames and waveforms. each owns a playback of its own,
 	// apart from the one the user watches, so none waits on another
@@ -55,13 +52,15 @@ public partial class Editor : Control
 		inspector = InspectorScene.Instantiate<Inspector>();
 		graphEditor = GraphEditorScene?.Instantiate<Control>();
 
-		views["media"] = ("Media", mediaViewer);
-		views["inspector"] = ("Inspector", inspector);
-		if (graphEditor is not null) views["graph"] = ("Graph Editor", graphEditor);
-
-		WireTabs(LeftTabs, RightTabs);
-		WireTabs(RightTabs, LeftTabs);
-		ResetLayout();
+		Dock.Register("media", "Media", mediaViewer);
+		Dock.Register("inspector", "Inspector", inspector);
+		if (graphEditor is not null) Dock.Register("graph", "Graph Editor", graphEditor);
+		Dock.Register("source", "Source", SourceViewer);
+		Dock.Register("program", "Program", UIPlayback);
+		Dock.Register("timeline", "Timeline", UITimeline);
+		Dock.DefaultLayout = DefaultLayout;
+		Dock.DefaultSpot = id => id == "source" ? ("program", DockSide.Left) : null;
+		Dock.FloatOpened += WireFloat;
 
 		thumbnails = new ThumbnailCache(project.Timeline, project.RenderSettings, project.History);
 		waveforms = new WaveformCache(project.Timeline, project.History);
@@ -174,17 +173,7 @@ public partial class Editor : Control
 			["timelineId"] = UITimeline.Timeline.Id.ToString(),
 			["timeline"] = UITimeline.SaveState(),
 			["media"] = mediaViewer.SaveState(),
-			["splits"] = new System.Text.Json.Nodes.JsonObject
-			{
-				["main"] = GetNode<SplitContainer>("VSplitContainer").SplitOffset,
-				["panels"] = GetNode<SplitContainer>("VSplitContainer/HSplitContainer").SplitOffset,
-				["viewers"] = GetNode<SplitContainer>("VSplitContainer/HSplitContainer/Viewers").SplitOffset,
-			},
-			["tabs"] = new System.Text.Json.Nodes.JsonObject
-			{
-				["left"] = TabIds(LeftTabs),
-				["right"] = TabIds(RightTabs),
-			},
+			["dock"] = Dock.Save(),
 		};
 
 		if (GetWindow() is ProjectWindow window)
@@ -202,11 +191,9 @@ public partial class Editor : Control
 		return state;
 	}
 
-	System.Text.Json.Nodes.JsonArray TabIds(TabsView tabs) =>
-		[.. tabs.Views.Select(v => views.FirstOrDefault(p => p.Value.View == v).Key).Where(id => id is not null).Select(id => (System.Text.Json.Nodes.JsonNode)id)];
-
 	void RestoreState(System.Text.Json.Nodes.JsonObject state)
 	{
+		Dock.Restore(state?["dock"]?.AsObject());
 		if (state is null || state.Count == 0) return;
 
 		if (state["window"] is System.Text.Json.Nodes.JsonObject w && GetWindow() is ProjectWindow window)
@@ -214,20 +201,6 @@ public partial class Editor : Control
 			window.Position = new(w["x"]?.GetValue<int>() ?? window.Position.X, w["y"]?.GetValue<int>() ?? window.Position.Y);
 			window.Size = new(w["width"]?.GetValue<int>() ?? window.Size.X, w["height"]?.GetValue<int>() ?? window.Size.Y);
 			if (w["maximized"]?.GetValue<bool>() == true) window.Mode = Window.ModeEnum.Maximized;
-		}
-
-		if (state["splits"] is System.Text.Json.Nodes.JsonObject s)
-		{
-			if (s["main"]?.GetValue<int>() is int main) GetNode<SplitContainer>("VSplitContainer").SplitOffset = main;
-			if (s["panels"]?.GetValue<int>() is int panels) GetNode<SplitContainer>("VSplitContainer/HSplitContainer").SplitOffset = panels;
-			if (s["viewers"]?.GetValue<int>() is int viewers) GetNode<SplitContainer>("VSplitContainer/HSplitContainer/Viewers").SplitOffset = viewers;
-		}
-
-		if (state["tabs"] is System.Text.Json.Nodes.JsonObject tabs)
-		{
-			foreach ((string _, Control view) in views.Values) { LeftTabs.RemoveView(view); RightTabs.RemoveView(view); }
-			foreach (System.Text.Json.Nodes.JsonNode id in tabs["left"]?.AsArray() ?? []) if (views.TryGetValue(id?.GetValue<string>() ?? "", out var v)) LeftTabs.AddTab(v.View);
-			foreach (System.Text.Json.Nodes.JsonNode id in tabs["right"]?.AsArray() ?? []) if (views.TryGetValue(id?.GetValue<string>() ?? "", out var v)) RightTabs.AddTab(v.View);
 		}
 
 		mediaViewer.RestoreState(state["media"]?.AsObject());
@@ -241,28 +214,24 @@ public partial class Editor : Control
 		UIPlayback.EndScrub();
 	}
 
-	// ---- the tab bars ----
+	// ---- the layout ----
 
-	void WireTabs(TabsView tabs, TabsView other)
+	// media on the left, the program and inspector beside it, the timeline under them all
+	static DockTree DefaultLayout()
 	{
-		tabs.AvailableViews = () => views.Where(v => !LeftTabs.Holds(v.Value.View) && !RightTabs.Holds(v.Value.View)).Select(v => (v.Key, v.Value.Title));
-		tabs.OpenRequested += id => { if (views.TryGetValue(id, out (string Title, Control View) v)) tabs.AddTab(v.View); };
-		tabs.MoveToOtherSideRequested += view => { tabs.RemoveView(view); other.AddTab(view); };
-		tabs.ResetLayoutRequested += ResetLayout;
-		tabs.FloatRequested += view => GD.Print($"Floating '{view.Name}': comes with the rearrangeable views step.");
+		DockSplit viewers = new(false, 0.7f, new DockStack(["program"]), new DockStack(["inspector"]));
+		DockSplit top = new(false, 0.25f, new DockStack(["media"]), viewers);
+		return new DockTree(new DockSplit(true, 0.55f, top, new DockStack(["timeline"])));
 	}
 
-	// media on the left, the inspector on the right
-	void ResetLayout()
+	// a float takes the page's shortcuts and dropped files, and makes this project the one in use
+	void WireFloat(DockFloatWindow window)
 	{
-		foreach ((string _, Control view) in views.Values)
-		{
-			LeftTabs.RemoveView(view);
-			RightTabs.RemoveView(view);
-		}
-
-		LeftTabs.AddTab(mediaViewer);
-		RightTabs.AddTab(inspector);
+		InputManager.Singleton.Keyboard.Register(window, OnShortcut);
+		window.TreeExiting += () => InputManager.Singleton.Keyboard.Unregister(window);
+		window.FocusEntered += session.Activate;
+		window.FilesDropped += files => DragDrop.DropFiles(files, window.Area.GetViewport().GetMousePosition(), window.Area);
+		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Install(window);
 	}
 
 	// ---- the source viewer ----
@@ -290,7 +259,7 @@ public partial class Editor : Control
 				return;
 		}
 
-		SourceViewer.Visible = true;
+		Dock.Open("source");
 		SourceViewer.SetPlayback(new Playback
 		{
 			Timeline = timeline,

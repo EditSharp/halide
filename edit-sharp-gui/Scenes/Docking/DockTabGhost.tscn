@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Docking/DockTabGhost.cs" id="1_ghost"]
+
+[node name="DockTabGhost" type="PanelContainer" node_paths=PackedStringArray("title")]
+modulate = Color(1, 1, 1, 0.85)
+z_index = 4000
+top_level = true
+mouse_filter = 2
+theme_type_variation = &"DockTabGhost"
+script = ExtResource("1_ghost")
+title = NodePath("Title")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+mouse_filter = 2
