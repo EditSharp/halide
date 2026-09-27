@@ -12,8 +12,6 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="../EditSharp/EditSharp.csproj" Id="a6492b06-aea6-400d-837a-934e39f0c8e7" />
-  <Project Path="PlaybackTest/PlaybackTest.csproj" Id="e14a3df9-1f70-4a4d-b52c-670836c2d0b4" />
-  <Project Path="Slopmaxxing/Slopmaxxing.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
+  <Project Path="edit-sharp-tests/EditSharp.Tests.csproj" />
+  <Project Path="edit-sharp-extensions/Sample/Sample.csproj" />
 </Solution>
