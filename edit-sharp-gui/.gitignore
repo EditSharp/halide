@@ -2,3 +2,4 @@
 .godot/
 /android/
 Tools/MacOS/editsharp-menu
+Tools/MacOS/libeditsharp-dialogs.dylib

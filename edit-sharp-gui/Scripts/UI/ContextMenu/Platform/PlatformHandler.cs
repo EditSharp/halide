@@ -5,7 +5,8 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform;
 
 public abstract class PlatformHandler
 {
-    public abstract void HandleMenu(ContextMenu menu, Vector2? position = null);
+    // owner: the OS window the menu belongs to, null for none (the tray). at: screen pixels, null for the cursor
+    public abstract void HandleMenu(ContextMenu menu, Window owner, Vector2I? at);
 
     // for previews: the screen rect of the open popup, when the platform can tell. safe from any thread
     public virtual Rect2I? OpenMenuRect() => null;

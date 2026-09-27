@@ -146,7 +146,7 @@ public partial class UITimeline : Control
 				clipsView.Refresh();
 
 				// update ruler
-				ruler.Update(value, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
+				ruler.Update(value, Framerate);
 
 				//
 			}
@@ -389,11 +389,11 @@ public partial class UITimeline : Control
 	// reads as -1, which is nothing to snap to
 	public MagnetMode Magnet => magnetLevel.Selected < 0 ? MagnetMode.Off : (MagnetMode)magnetLevel.GetSelectedId();
 
-	static Rational Framerate => ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate;
+	Rational Framerate => ProjectSession.Of(this)?.Project.RenderSettings.Framerate ?? 30;
 
 	// the one place a frame number becomes a time, so every grid point is
 	// rounded the same way and edges that should line up compare equal
-	static Time FrameToTime(long frame) => Time.FromFrame(frame, Framerate);
+	Time FrameToTime(long frame) => Time.FromFrame(frame, Framerate);
 
 	// the nearest frame boundary, or t untouched when the magnet is off
 	public Time SnapToFrame(Time t)
@@ -530,7 +530,7 @@ public partial class UITimeline : Control
 		clipsView.Refresh();
 
 		// update ruler
-		ruler.Update(PixelsPerSecond, ProjectManager.Singleton.CurrentProject.RenderSettings.Framerate);
+		ruler.Update(PixelsPerSecond, Framerate);
 	}
 
     public override void _Process(double delta)
@@ -562,13 +562,140 @@ public partial class UITimeline : Control
 
 
 	// the history every edit made through this timeline lands in
-	public History History => ProjectManager.Singleton.CurrentProject.History;
+	public History History => ProjectSession.Of(this)?.Project.History;
+
+	// ---- a channel dragged by its handle ----
+	// it lifts and follows the pointer within its kind, its old slot becomes the gap
+	// where it would land, and the move is one step on release; escape puts it back
+
+	UIChannelEdit draggedEdit, liftedEdit;
+	int dragRow, dragTarget;
+	float dragGrabY;
+
+	public bool DraggingChannel => draggedEdit is not null;
+
+	// rows count down from the top: video channels top down, then audio
+	int RowOf(Channel channel) => channel is VideoChannel ? Timeline.VideoChannels.Count - 1 - channel.Index : Timeline.VideoChannels.Count + channel.Index;
+
+	(int First, int Last) RowsOfKind(Channel channel)
+	{
+		int video = Timeline.VideoChannels.Count;
+		return channel is VideoChannel ? (0, video - 1) : (video, video + Timeline.AudioChannels.Count - 1);
+	}
+
+	public void BeginChannelDrag(UIChannelEdit edit, float globalY)
+	{
+		if (draggedEdit is not null || !ReferenceEquals(edit.Channel.Timeline, Timeline) || phantomEdits.Count > 0) return;
+
+		draggedEdit = edit;
+		dragRow = dragTarget = RowOf(edit.Channel);
+		dragGrabY = globalY;
+
+		liftedEdit = channelEditScene.Instantiate<UIChannelEdit>();
+		liftedEdit.Channel = edit.Channel;
+		liftedEdit.UITimeline = this;
+		liftedEdit.Lifted = true;
+		liftedEdit.TopLevel = true;
+		liftedEdit.ZIndex = 100;
+		AddChild(liftedEdit);
+
+		// placed by hand, so its scene anchors must not size it
+		liftedEdit.SetAnchorsPreset(LayoutPreset.TopLeft);
+
+		edit.Modulate = Colors.Transparent;
+		UpdateChannelDrag(globalY);
+	}
+
+	public void UpdateChannelDrag(float globalY)
+	{
+		if (draggedEdit is null) return;
+
+		// either header gone from under the drag: it's over
+		if (!IsInstanceValid(draggedEdit) || !IsInstanceValid(liftedEdit) || draggedEdit.GetParent() != edits)
+		{
+			CancelChannelDrag();
+			return;
+		}
+
+		(int first, int last) = RowsOfKind(draggedEdit.Channel);
+		float row = Mathf.Clamp(dragRow + (globalY - dragGrabY) / (float)VerticalScale, first, last);
+		int target = Mathf.RoundToInt(row);
+
+		if (target != dragTarget)
+		{
+			dragTarget = target;
+			edits.MoveChild(draggedEdit, target);
+		}
+
+		liftedEdit.Size = new Vector2(edits.Size.X, (float)VerticalScale);
+		liftedEdit.GlobalPosition = new Vector2(edits.GlobalPosition.X, edits.GlobalPosition.Y + row * (float)VerticalScale);
+		clipsView.PreviewChannelMove(draggedEdit.Channel, dragRow, dragTarget, row);
+	}
+
+	public void FinishChannelDrag()
+	{
+		if (draggedEdit is null) return;
+
+		Channel channel = draggedEdit.Channel;
+		int from = dragRow, to = dragTarget;
+		EndChannelDrag();
+		if (from == to || !ReferenceEquals(channel.Timeline, Timeline)) return;
+
+		// down the screen is a lower index for video and a higher one for audio
+		bool down = to > from;
+		using (Transaction.Scope change = History.Begin("Move channel"))
+		{
+			for (int i = 0; i < Math.Abs(to - from); i++)
+			{
+				if (channel is VideoChannel == down) channel.MoveDown();
+				else channel.MoveUp();
+			}
+			change.Commit();
+		}
+
+		Reconcile();
+	}
+
+	public void CancelChannelDrag()
+	{
+		if (draggedEdit is not null) EndChannelDrag();
+	}
+
+	// the drag is over before anything is tidied, so nothing that fails below can leave it half open
+	void EndChannelDrag()
+	{
+		UIChannelEdit dragged = draggedEdit, lifted = liftedEdit;
+		draggedEdit = null;
+		liftedEdit = null;
+
+		clipsView.PreviewChannelMove(null, 0, 0, 0f);
+		if (IsInstanceValid(lifted)) lifted.QueueFree();
+
+		// back in its own slot; a move rebuilds the column from the model after
+		if (IsInstanceValid(dragged) && !dragged.IsQueuedForDeletion())
+		{
+			dragged.Modulate = Colors.White;
+			if (dragged.GetParent() == edits) edits.MoveChild(dragged, Math.Min(dragRow, edits.GetChildCount() - 1));
+		}
+	}
+
+	public override void _Input(InputEvent e)
+	{
+		if (draggedEdit is not null && e is InputEventKey { Keycode: Key.Escape, Pressed: true })
+		{
+			CancelChannelDrag();
+			GetViewport().SetInputAsHandled();
+		}
+	}
 
 	// the data moved without this view seeing a drag - an undo or redo. the
 	// channel list is rebuilt outright, since a channel can come or go
 	// anywhere in it and the incremental refresh only ever appends
 	public void Reconcile()
 	{
+		// the headers are about to be rebuilt; a drag holding one of them ends here
+		CancelChannelDrag();
+
 		foreach (UIChannelEdit e in ChannelEdits)
 		{
 			edits.RemoveChild(e);
@@ -655,6 +782,35 @@ public partial class UITimeline : Control
 	// makes everything think the cursor jumped by however far the scroll went
 	public Vector2 ToViewContent(Vector2 globalPosition)
 		=> globalPosition - clipsViewContainer.GlobalPosition + ViewScroll;
+
+	// ---- remembered with the project ----
+
+	// zoom, scroll, playhead and which clips were selected
+	public System.Text.Json.Nodes.JsonObject SaveState() => new()
+	{
+		["pixelsPerSecond"] = PixelsPerSecond,
+		["verticalScale"] = VerticalScale,
+		["scrollX"] = ViewScroll.X,
+		["scrollY"] = ViewScroll.Y,
+		["playhead"] = PlayheadTime.Ticks,
+		["selected"] = new System.Text.Json.Nodes.JsonArray([.. SelectedClips.Select(c => (System.Text.Json.Nodes.JsonNode)c.Id.ToString())]),
+	};
+
+	public void RestoreState(System.Text.Json.Nodes.JsonObject state)
+	{
+		if (state is null) return;
+
+		if (state["pixelsPerSecond"]?.GetValue<double>() is double pps and > 0d) PixelsPerSecond = pps;
+		if (state["verticalScale"]?.GetValue<double>() is double scale and > 0d) VerticalScale = scale;
+		if (state["playhead"]?.GetValue<long>() is long ticks) PlayheadTime = new Time(ticks);
+
+		HashSet<Guid> ids = [.. (state["selected"]?.AsArray() ?? []).Select(n => Guid.TryParse(n?.GetValue<string>(), out Guid id) ? id : Guid.Empty)];
+		clipsView.SelectClips(clipsView.UIClips.Select(u => u.Clip).Where(c => ids.Contains(c.Id)));
+
+		// once the view has laid out, so the scroll has room to land
+		Vector2 scroll = new(state["scrollX"]?.GetValue<float>() ?? 0f, state["scrollY"]?.GetValue<float>() ?? 0f);
+		Callable.From(() => SetViewScroll(scroll)).CallDeferred();
+	}
 
 	void SetViewScroll(Vector2 scroll)
 	{

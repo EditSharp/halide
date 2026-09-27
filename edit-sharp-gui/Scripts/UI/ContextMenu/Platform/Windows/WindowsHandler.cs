@@ -11,14 +11,19 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 // the menu is tracked on a thread of its own (MenuThread), so godot's frame loop runs on while it is up
 public class WindowsHandler : PlatformHandler
 {
-    public override void HandleMenu(ContextMenu menu, Vector2? position = null)
+    public override void HandleMenu(ContextMenu menu, Window owner, Vector2I? at)
     {
-        int window = (int)DisplayServer.MainWindowId;
-        nint hwnd = MainHwnd;
-        Vector2I at = position is Vector2 p ? ToScreen(p, window) : DisplayServer.MouseGetPosition();
+        nint hwnd = owner is not null ? (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, owner.GetWindowId()) : MainHwnd;
         bool dark = ApplyTheme();
 
-        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), at, dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect));
+        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), ToWin32(at ?? DisplayServer.MouseGetPosition()), dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect));
+    }
+
+    // godot's screen pixels start at the top-left of all screens together; win32's at the primary's
+    static Vector2I ToWin32(Vector2I screen)
+    {
+        GetCursorPos(out MenuThread.POINT cursor);
+        return screen + new Vector2I(cursor.x, cursor.y) - DisplayServer.MouseGetPosition();
     }
 
     public override Rect2I? OpenMenuRect()
@@ -50,14 +55,9 @@ public class WindowsHandler : PlatformHandler
 
     const int VK_RETURN = 0x0D;
 
-    static nint MainHwnd => (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, (int)DisplayServer.MainWindowId);
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out MenuThread.POINT point);
 
-    static Vector2I ToScreen(Vector2 viewportPosition, int window)
-    {
-        Viewport root = ((SceneTree)Engine.GetMainLoop()).Root;
-        Vector2 inWindow = root.GetScreenTransform() * viewportPosition;
-        return DisplayServer.WindowGetPosition(window) + (Vector2I)inWindow.Round();
-    }
+    static nint MainHwnd => (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, (int)DisplayServer.MainWindowId);
 
     // win32 menus only go dark through undocumented uxtheme exports (windows 10 1903+); returns whether they did
     static bool ApplyTheme()

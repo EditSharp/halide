@@ -14,43 +14,40 @@ namespace EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows;
 // here as well, since godot's own target is revoked
 public static class OleDragHover
 {
-	static DropTarget target;
-	static nint hwnd;
+	// one target per OS window that takes files
+	static readonly Dictionary<nint, DropTarget> targets = [];
 
-	public static bool Installed => target is not null;
-
-	// takes the window's drop target. call once, on the main thread
-	public static void Install()
+	// takes the window's drop target. call once per window, on the main thread
+	public static void Install(Window window)
 	{
-		if (Installed || OS.GetName() != "Windows") return;
+		if (OS.GetName() != "Windows" || window is null) return;
 
-		int window = (int)DisplayServer.MainWindowId;
-		hwnd = (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window);
-		if (hwnd == 0) return;
+		nint hwnd = Handle(window);
+		if (hwnd == 0 || targets.ContainsKey(hwnd)) return;
 
 		// godot registered its own target for its FilesDropped signal
 		RevokeDragDrop(hwnd);
 
-		target = new DropTarget(window);
+		DropTarget target = new(window);
 		int result = RegisterDragDrop(hwnd, target);
 
-		if (result != 0)
-		{
-			GD.PushWarning($"Could not take the window's drop target (0x{result:X8}); files drop without hover.");
-			target = null;
-		}
+		if (result != 0) GD.PushWarning($"Could not take the window's drop target (0x{result:X8}); files drop without hover.");
+		else targets[hwnd] = target;
 	}
 
-	public static void Uninstall()
+	public static void Uninstall(Window window)
 	{
-		if (!Installed) return;
-		RevokeDragDrop(hwnd);
-		target = null;
+		if (window is null) return;
+
+		nint hwnd = Handle(window);
+		if (targets.Remove(hwnd)) RevokeDragDrop(hwnd);
 	}
+
+	static nint Handle(Window window) => (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId());
 
 	[ComVisible(true)]
 	[ClassInterface(ClassInterfaceType.None)]
-	sealed class DropTarget(int window) : IDropTarget
+	sealed class DropTarget(Window window) : IDropTarget
 	{
 		FilesPayload payload;
 
@@ -66,7 +63,7 @@ public static class OleDragHover
 			}
 
 			payload = new FilesPayload(files);
-			DragDrop.Begin(payload, null, Vector2.Zero, external: true);
+			DragDrop.Begin(payload, null, Vector2.Zero, window, external: true);
 			DragDrop.Update(ToViewport(point));
 			effect = DragDrop.CanDropAt(ToViewport(point)) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
 			return 0;
@@ -101,12 +98,11 @@ public static class OleDragHover
 			return 0;
 		}
 
-		// screen pixels to the main viewport's own space
+		// screen pixels to the window's own space
 		Vector2 ToViewport(POINTL point)
 		{
-			Vector2 inWindow = new Vector2(point.x, point.y) - DisplayServer.WindowGetPosition(window);
-			Window root = ((SceneTree)Engine.GetMainLoop()).Root;
-			return root.GetScreenTransform().AffineInverse() * inWindow;
+			Vector2 inWindow = new Vector2(point.x, point.y) - DisplayServer.WindowGetPosition(window.GetWindowId());
+			return window.GetScreenTransform().AffineInverse() * inWindow;
 		}
 
 		static List<string> ReadFiles(IDataObject data)

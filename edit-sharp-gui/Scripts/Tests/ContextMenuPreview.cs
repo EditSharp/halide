@@ -50,7 +50,7 @@ public partial class ContextMenuPreview : Control
 			GetTree().Quit();
 		};
 		Vector2 at = new(40, 40);
-		ContextMenus.ShowContextMenu(menu, at);
+		ContextMenus.ShowContextMenu(menu, this, at);
 
 		// where the menu's top-left was asked to be, in the screen units the platform's capture tool uses:
 		// pixels, or points on macos

@@ -30,6 +30,9 @@ public static class Shortcuts
     public const string SplitAll = "clips.splitAll";
     public const string MediaRename = "media.rename";
     public const string MediaImport = "media.import";
+    public const string Save = "project.save";
+    public const string SaveAs = "project.saveAs";
+    public const string ShowHome = "app.home";
 }
 
 // one key plus the modifiers that have to be held with it. Control folds cmd
@@ -120,6 +123,9 @@ public sealed class ShortcutMap
         [Shortcuts.SplitAll] = [new(Key.B, Control: true, Shift: true)],
         [Shortcuts.MediaRename] = [new(Key.F2)],
         [Shortcuts.MediaImport] = [new(Key.I, Control: true)],
+        [Shortcuts.Save] = [new(Key.S, Control: true)],
+        [Shortcuts.SaveAs] = [new(Key.S, Control: true, Shift: true)],
+        [Shortcuts.ShowHome] = [new(Key.H, Control: true, Shift: true)],
     };
 
     readonly Dictionary<string, List<KeyCombo>> bindings = Defaults.ToDictionary(d => d.Key, d => d.Value.ToList());

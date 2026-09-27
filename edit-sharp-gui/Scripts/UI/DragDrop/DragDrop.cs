@@ -61,12 +61,15 @@ public static class DragDrop
 	static IDropTarget over;
 	static Vector2 ghostGrab;
 
+	// the window the drag is in; only its targets take it
+	static Window scope;
+
 	// the targets in the tree when the drag began, deepest last
 	static List<(Control Control, IDropTarget Target, int Depth)> targets = [];
 
 	// begins a drag. the ghost is placed at the cursor, offset so the
-	// cursor sits at `grab` inside it
-	public static void Begin(DragPayload payload, Control ghost, Vector2 grab, bool external = false)
+	// cursor sits at `grab` inside it, in the window of `from`, the node the drag starts in
+	public static void Begin(DragPayload payload, Control ghost, Vector2 grab, Node from = null, bool external = false)
 	{
 		Cancel();
 
@@ -74,6 +77,7 @@ public static class DragDrop
 		Ghost = ghost;
 		ghostGrab = grab;
 		External = external;
+		scope = from?.GetWindow();
 		targets = CollectTargets();
 
 		if (ghost is not null)
@@ -81,7 +85,7 @@ public static class DragDrop
 			ghost.MouseFilter = Control.MouseFilterEnum.Ignore;
 			ghost.TopLevel = true;
 			ghost.ZIndex = 4000;
-			Root.AddChild(ghost);
+			(scope ?? Root).AddChild(ghost);
 		}
 
 		Update(InputManager.Singleton.Mouse.CurrentPosition);
@@ -143,14 +147,15 @@ public static class DragDrop
 		}
 	}
 
-	// files from outside the app, let go at a point: the target under it takes them
-	public static void DropFiles(string[] files, Vector2 at)
+	// files from outside the app, let go at a point in `from`'s window: the target under it takes them
+	public static void DropFiles(string[] files, Vector2 at, Node from = null)
 	{
 		if (files is null || files.Length == 0) return;
 
 		if (Active && External) { Finish(at); return; }
 
 		FilesPayload payload = new([.. files]);
+		scope = from?.GetWindow();
 		targets = CollectTargets();
 		IDropTarget target = Find(payload, at);
 		targets = [];
@@ -178,7 +183,7 @@ public static class DragDrop
 	static List<(Control, IDropTarget, int)> CollectTargets()
 	{
 		List<(Control, IDropTarget, int)> found = [];
-		Walk(Root, 0, found);
+		Walk(scope ?? Root, 0, found);
 		found.Sort((a, b) => a.Item3.CompareTo(b.Item3));
 		return found;
 	}

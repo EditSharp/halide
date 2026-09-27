@@ -1,47 +1,88 @@
 [gd_scene format=3 uid="uid://c24hvkyrk1yim"]
 
 [ext_resource type="Script" uid="uid://cbjg1iy54ks5k" path="res://Scripts/UI/Components/UIChannelEdit.cs" id="1_vnlxm"]
-[ext_resource type="Resource" path="res://Menus/Channel.tres" id="2_menu"]
+[ext_resource type="Resource" uid="uid://bjt5br1ag2aad" path="res://Menus/Channel.tres" id="2_menu"]
 
-[node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName", "muteOrHide", "solo")]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rt4o7"]
+
+[node name="Channel Edit" type="PanelContainer" unique_id=203571486 node_paths=PackedStringArray("channelName", "muteOrHide", "solo", "dragHandle", "kindColor")]
 custom_minimum_size = Vector2(0, 80)
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 80.0
+offset_bottom = 50.0
 grow_horizontal = 2
 theme_type_variation = &"ChannelHeader"
 script = ExtResource("1_vnlxm")
-channelName = NodePath("Options/Channel Name")
-muteOrHide = NodePath("Options/Toggles/Mute")
-solo = NodePath("Options/Toggles/Solo")
+channelName = NodePath("HBoxContainer/Options/Channel Name")
+muteOrHide = NodePath("HBoxContainer/Options/Toggles/Mute")
+solo = NodePath("HBoxContainer/Options/Toggles/Solo")
 menu = ExtResource("2_menu")
+dragHandle = NodePath("HBoxContainer/Drag Handle")
+kindColor = NodePath("HBoxContainer/Drag Handle/Mask/Channel Color")
 
-[node name="Options" type="VBoxContainer" parent="." unique_id=843101200]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=385418336]
 layout_mode = 2
+theme_override_constants/separation = 0
 
-[node name="Channel Name" type="LineEdit" parent="Options" unique_id=1705346188]
+[node name="Drag Handle" type="Panel" parent="HBoxContainer" unique_id=480552868]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxEmpty_rt4o7")
+
+[node name="Mask" type="Panel" parent="HBoxContainer/Drag Handle" unique_id=625373886]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+theme_type_variation = &"RoundedPanel"
+
+[node name="Channel Color" type="ColorRect" parent="HBoxContainer/Drag Handle/Mask" unique_id=1573022549]
+custom_minimum_size = Vector2(9, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0.101960786, 0.37254903, 0.7058824, 1)
+
+[node name="Options" type="VBoxContainer" parent="HBoxContainer" unique_id=843101200]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Channel Name" type="LineEdit" parent="HBoxContainer/Options" unique_id=1705346188]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_type_variation = &"ChannelName"
 text = "Channel 1"
 
-[node name="Toggles" type="HBoxContainer" parent="Options"]
+[node name="Toggles" type="HBoxContainer" parent="HBoxContainer/Options" unique_id=13595859]
 layout_mode = 2
 theme_type_variation = &"InspectorEditor"
 
-[node name="Mute" type="Button" parent="Options/Toggles"]
+[node name="Mute" type="Button" parent="HBoxContainer/Options/Toggles" unique_id=1606076578]
 layout_mode = 2
 tooltip_text = "Mute or hide this channel"
 focus_mode = 0
-toggle_mode = true
 theme_type_variation = &"ChannelToggle"
+toggle_mode = true
 text = "Mute"
 
-[node name="Solo" type="Button" parent="Options/Toggles"]
+[node name="Solo" type="Button" parent="HBoxContainer/Options/Toggles" unique_id=1652231478]
 layout_mode = 2
 tooltip_text = "Solo this channel"
 focus_mode = 0
-toggle_mode = true
 theme_type_variation = &"ChannelToggle"
+toggle_mode = true
 text = "Solo"

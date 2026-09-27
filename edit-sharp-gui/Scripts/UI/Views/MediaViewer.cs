@@ -110,6 +110,53 @@ public partial class MediaViewer : Control, IDropTarget
 	bool requireAudio, requireAlpha, matchFrameRate, matchResolution;
 	readonly HashSet<string> tagFilter = [];
 
+	// the tab, the sort and every filter, remembered with the project
+	public System.Text.Json.Nodes.JsonObject SaveState() => new()
+	{
+		["tab"] = tab.ToString(),
+		["sort"] = sortKey.ToString(),
+		["descending"] = descending,
+		["used"] = showUsed,
+		["unused"] = showUnused,
+		["offline"] = showOffline,
+		["proxyStates"] = new System.Text.Json.Nodes.JsonArray([.. shownProxyStates.Select(s => (System.Text.Json.Nodes.JsonNode)s.ToString())]),
+		["audio"] = requireAudio,
+		["alpha"] = requireAlpha,
+		["frameRate"] = matchFrameRate,
+		["resolution"] = matchResolution,
+		["tags"] = new System.Text.Json.Nodes.JsonArray([.. tagFilter.Select(t => (System.Text.Json.Nodes.JsonNode)t)]),
+		["search"] = search?.Text ?? "",
+	};
+
+	public void RestoreState(System.Text.Json.Nodes.JsonObject state)
+	{
+		if (state is null) return;
+
+		if (Enum.TryParse(state["tab"]?.GetValue<string>(), out Tab t)) { tab = t; if (tabs is not null) tabs.CurrentTab = (int)t; }
+		if (Enum.TryParse(state["sort"]?.GetValue<string>(), out SortKey k)) sortKey = k;
+		descending = state["descending"]?.GetValue<bool>() ?? descending;
+		showUsed = state["used"]?.GetValue<bool>() ?? showUsed;
+		showUnused = state["unused"]?.GetValue<bool>() ?? showUnused;
+		showOffline = state["offline"]?.GetValue<bool>() ?? showOffline;
+		requireAudio = state["audio"]?.GetValue<bool>() ?? requireAudio;
+		requireAlpha = state["alpha"]?.GetValue<bool>() ?? requireAlpha;
+		matchFrameRate = state["frameRate"]?.GetValue<bool>() ?? matchFrameRate;
+		matchResolution = state["resolution"]?.GetValue<bool>() ?? matchResolution;
+
+		if (state["proxyStates"] is System.Text.Json.Nodes.JsonArray states)
+		{
+			shownProxyStates.Clear();
+			foreach (System.Text.Json.Nodes.JsonNode s in states) if (Enum.TryParse(s?.GetValue<string>(), out ProxyState p)) shownProxyStates.Add(p);
+		}
+
+		tagFilter.Clear();
+		foreach (System.Text.Json.Nodes.JsonNode tag in state["tags"]?.AsArray() ?? []) if (tag?.GetValue<string>() is { } text) tagFilter.Add(text);
+
+		if (search is not null) search.Text = state["search"]?.GetValue<string>() ?? "";
+
+		Rebuild();
+	}
+
 	readonly Dictionary<object, UIMediaItem> tiles = [];
 	readonly List<UIMediaItem> shown = [];
 	readonly Selection<UIMediaItem> selection = new();
@@ -348,7 +395,12 @@ public partial class MediaViewer : Control, IDropTarget
 		};
 
 		AddChild(dialog);
-		dialog.FilesSelected += files => { dialog.QueueFree(); Import(files); };
+		dialog.FilesSelected += files =>
+		{
+			dialog.QueueFree();
+			Import(files);
+			if (files.Length > 0) ShowTabFor(files[0]);
+		};
 		dialog.Canceled += dialog.QueueFree;
 		dialog.PopupCentered(new Vector2I(900, 600));
 	}
@@ -559,7 +611,7 @@ public partial class MediaViewer : Control, IDropTarget
 			: new MediaPayload([.. dragged.Where(t => t.Media is not null).Select(t => t.Media)]);
 
 		Control ghost = MakeGhost(tile, dragged.Count);
-		DragDrop.Begin(payload, ghost, ghost.Size / 2f);
+		DragDrop.Begin(payload, ghost, ghost.Size / 2f, this);
 	}
 
 	Control MakeGhost(UIMediaItem tile, int count)
@@ -834,8 +886,8 @@ public partial class MediaViewer : Control, IDropTarget
 			Wire(menu, "media.proxy.reveal", proxyFile is not null, () => OS.ShellShowInFileManager(proxyFile));
 		}
 
-		if (button is not null) ContextMenus.ShowContextMenu(menu, button);
-		else ContextMenus.ShowContextMenu(menu, at);
+		if (button is not null) ContextMenus.ShowContextMenuBelow(menu, button);
+		else ContextMenus.ShowContextMenu(menu, this, at);
 	}
 
 	// the proxy file a media has on disk: the .esrp, or a MOV proxy's finished
@@ -894,7 +946,7 @@ public partial class MediaViewer : Control, IDropTarget
 			filter.Elements = inner.Elements;
 		}
 
-		ContextMenus.ShowContextMenu(menu, at);
+		ContextMenus.ShowContextMenu(menu, this, at);
 	}
 
 	void ShowSortMenu(Control button)
@@ -902,7 +954,7 @@ public partial class MediaViewer : Control, IDropTarget
 		if (sortMenu is null) return;
 		ContextMenu shown = sortMenu.Clone();
 		ConfigureSort(shown);
-		ContextMenus.ShowContextMenu(shown, button);
+		ContextMenus.ShowContextMenuBelow(shown, button);
 	}
 
 	void ShowFilterMenu(Control button)
@@ -910,7 +962,7 @@ public partial class MediaViewer : Control, IDropTarget
 		if (filterMenu is null) return;
 		ContextMenu shown = filterMenu.Clone();
 		ConfigureFilter(shown);
-		ContextMenus.ShowContextMenu(shown, button);
+		ContextMenus.ShowContextMenuBelow(shown, button);
 	}
 
 	static readonly (string Id, SortKey Key)[] SortKeys =
@@ -1011,9 +1063,15 @@ public partial class MediaViewer : Control, IDropTarget
 	// files hovering over the viewer open the tab their kind lives on
 	public void DragOver(DragPayload payload, Vector2 at)
 	{
-		if (payload is not FilesPayload files || files.Paths.Count == 0 || tabs is null) return;
+		if (payload is FilesPayload files && files.Paths.Count > 0) ShowTabFor(files.Paths[0]);
+	}
 
-		string extension = Path.GetExtension(files.Paths[0]).ToLowerInvariant();
+	// the tab a file's kind lives on, by its extension
+	void ShowTabFor(string path)
+	{
+		if (tabs is null) return;
+
+		string extension = Path.GetExtension(path).ToLowerInvariant();
 		Tab wanted = AudioExtensions.Contains(extension) ? Tab.Audio : ImageExtensions.Contains(extension) ? Tab.Images : Tab.Video;
 
 		if (tabs.CurrentTab != (int)wanted) tabs.CurrentTab = (int)wanted;

@@ -10,14 +10,14 @@ public partial class TestPopup : Control
 
 	public override void _Ready()
 	{
-		ContextMenus.ShowContextMenu(Menu);
+		ContextMenus.ShowContextMenu(Menu, this);
 	}
 
 	public override void _GuiInput(InputEvent @event)
 	{
 		if (@event is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: false } click)
 		{
-			ContextMenus.ShowContextMenu(Menu, click.GlobalPosition);
+			ContextMenus.ShowContextMenu(Menu, this, click.GlobalPosition);
 			AcceptEvent();
 		}
 	}

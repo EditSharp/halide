@@ -71,7 +71,10 @@ public partial class InputManager : Node
             Mouse.ForceReleaseAll();
     }
 
-    public override void _Input(InputEvent @event)
+    public override void _Input(InputEvent @event) => Feed(@event);
+
+    // one event's worth of state, from the root window or relayed from another OS window
+    public void Feed(InputEvent @event)
     {
         Mouse.EventId++;
 

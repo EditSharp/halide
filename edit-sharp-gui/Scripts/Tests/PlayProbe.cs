@@ -22,6 +22,8 @@ public partial class PlayProbe : Node
 			EditSharp.EditSharpConfig.ProxyDirectory = empty;
 		}
 
+		// the test project, as a project window would hold it
+		if (ProjectSession.Of(this) is null) ProjectSession.Attach(this, Project.FromBlueprint(Tests.TestBlueprint));
 		Node editor = GD.Load<PackedScene>("res://Scenes/Views/Editor.tscn").Instantiate();
 		AddChild(editor);
 		await Frames(2);
@@ -47,7 +49,7 @@ public partial class PlayProbe : Node
 		bool build = OS.GetCmdlineUserArgs().Contains("--build");
 		if (build)
 		{
-			string path = ProjectManager.Singleton.CurrentProject.Media.OfType<EditSharp.Components.Media.VideoMedia>().First().Path;
+			string path = ProjectSession.Of(this).Project.Media.OfType<EditSharp.Components.Media.VideoMedia>().First().Path;
 			_ = EditSharp.Caching.Proxy.ProxyCache.BuildAsync(path).ContinueWith(t => GD.Print($"PROBE build {(t.IsCompletedSuccessfully ? "done" : t.Exception?.GetBaseException().Message)}"), System.Threading.Tasks.TaskScheduler.Default);
 			await Frames(30);
 		}
@@ -57,7 +59,7 @@ public partial class PlayProbe : Node
 		playback.VideoFrame += (_, e) => { lock (stamps) { stamps.Add(Godot.Time.GetTicksMsec()); lastFramePosition = e.Position; } };
 
 		{
-			string path = ProjectManager.Singleton.CurrentProject.Media.OfType<EditSharp.Components.Media.VideoMedia>().First().Path;
+			string path = ProjectSession.Of(this).Project.Media.OfType<EditSharp.Components.Media.VideoMedia>().First().Path;
 			try
 			{
 				EditSharp.Caching.Proxy.ProxyStatus status = await EditSharp.Caching.Proxy.ProxyCache.GetStatusAsync(path);
@@ -316,7 +318,7 @@ public partial class PlayProbe : Node
 
 		// a dropped file is placed at its own length, not a stand-in's
 		{
-			EditSharp.Components.Media.VideoMedia video = ProjectManager.Singleton.CurrentProject.Media.OfType<EditSharp.Components.Media.VideoMedia>().First();
+			EditSharp.Components.Media.VideoMedia video = ProjectSession.Of(this).Project.Media.OfType<EditSharp.Components.Media.VideoMedia>().First();
 			Time length = await video.GetNaturalLengthAsync() ?? Time.Zero;
 			int before = timeline.Timeline.Channels.Sum(c => c.Clips.Count);
 			var drop = typeof(Editor).GetMethod("PlaceDroppedFiles", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

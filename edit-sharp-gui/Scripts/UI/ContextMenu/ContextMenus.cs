@@ -31,20 +31,46 @@ public static class ContextMenus
         };
     }
 
-    // position is in main window (viewport) pixels; null opens at the cursor.
-    // the menu opens once the event that asked for it has finished dispatching
-    public static void ShowContextMenu(ContextMenu menu, Vector2? position = null)
+    // the menu belongs to from's window (null for none: the tray). position is in
+    // from's viewport pixels; null opens at the cursor. the menu opens once the
+    // event that asked for it has finished dispatching
+    public static void ShowContextMenu(ContextMenu menu, Node from, Vector2? position = null)
     {
         ArgumentNullException.ThrowIfNull(menu);
-        Callable.From(() => Handler.HandleMenu(menu, position)).CallDeferred();
+        Window owner = NativeWindowOf(from);
+        Vector2I? at = position is Vector2 p && from?.GetViewport() is Viewport viewport ? ToScreen(viewport, p) : null;
+        Callable.From(() => Handler.HandleMenu(menu, owner, at)).CallDeferred();
     }
 
     // the menu's top-left at the button's bottom-left corner, like a dropdown
-    public static void ShowContextMenu(ContextMenu menu, Control button)
+    public static void ShowContextMenuBelow(ContextMenu menu, Control button)
     {
         ArgumentNullException.ThrowIfNull(button);
         Rect2 rect = button.GetGlobalRect();
-        ShowContextMenu(menu, new Vector2(rect.Position.X, rect.End.Y));
+        ShowContextMenu(menu, button, new Vector2(rect.Position.X, rect.End.Y));
+    }
+
+    // a point in a viewport's pixels, in screen pixels
+    public static Vector2I ToScreen(Viewport viewport, Vector2 at)
+    {
+        Window native = NativeWindowOf(viewport);
+        return DisplayServer.WindowGetPosition(native.GetWindowId()) + (Vector2I)(viewport.GetScreenTransform() * at).Round();
+    }
+
+    // the OS window a node shows in, past any windows embedded in it
+    public static Window NativeWindowOf(Node node)
+    {
+        Window window = node?.GetWindow();
+        while (window is not null && window.IsEmbedded()) window = window.GetParent()?.GetWindow();
+        return window;
+    }
+
+    // the window an embedded popup added under this node draws in: the nearest one embedding its subwindows
+    public static Window EmbedderOf(Node node)
+    {
+        Window window = node?.GetWindow();
+        while (window is not null && !window.GuiEmbedSubwindows) window = window.GetParent()?.GetWindow();
+        return window;
     }
 
     // the first key bound to a shortcut action, as a hint: "Ctrl+X"; null when none is

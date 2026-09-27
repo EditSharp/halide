@@ -9,13 +9,13 @@ public class GodotHandler : PlatformHandler
 {
     GodotMenuPopup current;
 
-    public override void HandleMenu(ContextMenu menu, Vector2? position = null)
+    public override void HandleMenu(ContextMenu menu, Window owner, Vector2I? at)
     {
         current?.Hide();
 
-        Window root = ((SceneTree)Engine.GetMainLoop()).Root;
+        Window parent = owner ?? ((SceneTree)Engine.GetMainLoop()).Root;
         GodotMenuPopup popup = new(MenuModel.Flatten(menu.Elements));
-        root.AddChild(popup);
+        parent.AddChild(popup);
 
         popup.Picked += item =>
         {
@@ -31,11 +31,13 @@ public class GodotHandler : PlatformHandler
             menu.EmitSignal(ContextMenu.SignalName.Closed);
         };
 
-        Vector2 at = position ?? root.GetMousePosition();
-        if (!popup.IsEmbedded()) at = DisplayServer.WindowGetPosition(root.GetWindowId()) + root.GetScreenTransform() * at;
+        // embedded popups take their embedder's pixels, native ones the screen's
+        Vector2 point = at ?? DisplayServer.MouseGetPosition();
+        if (popup.IsEmbedded() && ContextMenus.EmbedderOf(parent) is Window embedder)
+            point = embedder.GetScreenTransform().AffineInverse() * (point - DisplayServer.WindowGetPosition(ContextMenus.NativeWindowOf(embedder).GetWindowId()));
 
         current = popup;
-        popup.Popup(new Rect2I((Vector2I)at.Round(), Vector2I.Zero));
+        popup.Popup(new Rect2I((Vector2I)point.Round(), Vector2I.Zero));
         popup.KeepOnScreen();
     }
 

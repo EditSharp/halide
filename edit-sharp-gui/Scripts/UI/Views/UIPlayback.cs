@@ -61,6 +61,10 @@ public partial class UIPlayback : Control
 
 	public Playback Playback => playback;
 
+	// the window closing: the playback goes with it, and a frame still on its
+	// way finds nothing listening
+	public override void _ExitTree() => SetPlayback(null);
+
 	// where playback is, as far as anything watching from outside should know -
 	// a timeline playhead, say. raised on the main thread only: from _Process
 	// while playing, and from a scrub as it is requested. never from the

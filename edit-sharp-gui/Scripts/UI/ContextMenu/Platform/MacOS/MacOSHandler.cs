@@ -21,13 +21,12 @@ public class MacOSHandler : PlatformHandler
     static long picked;
     static nint currentMenu;
 
-    public override void HandleMenu(ContextMenu menu, Vector2? position = null)
+    public override void HandleMenu(ContextMenu menu, Window owner, Vector2I? at)
     {
         EnsureTargetClass();
         ApplyAppearance();
 
-        NSPoint at = position is Vector2 p ? ScreenPoint(p) : SendPoint(Class("NSEvent"), Sel("mouseLocation"));
-        Track(menu, at);
+        Track(menu, at is Vector2I screen ? ScreenPoint(screen) : SendPoint(Class("NSEvent"), Sel("mouseLocation")));
     }
 
     // one showing. appkit closes the menu on a pick, so a pick that keeps it
@@ -83,15 +82,13 @@ public class MacOSHandler : PlatformHandler
     }
 
     // godot screen pixels (top-left origin) to appkit screen points (bottom-left origin), via where the mouse is in both
-    internal static NSPoint ScreenPointOf(Vector2 viewportPosition) => ScreenPoint(viewportPosition);
+    internal static NSPoint ScreenPointOf(Vector2I screen) => ScreenPoint(screen);
 
     internal static (string Key, long Mask) KeyEquivalentOf(string hint) => Built.KeyEquivalent(hint);
 
-    static NSPoint ScreenPoint(Vector2 viewportPosition)
+    // godot's screen pixels to appkit's points, bottom-left origin, measured against the cursor
+    static NSPoint ScreenPoint(Vector2I target)
     {
-        Viewport root = ((SceneTree)Engine.GetMainLoop()).Root;
-        int window = (int)DisplayServer.MainWindowId;
-        Vector2I target = DisplayServer.WindowGetPosition(window) + (Vector2I)(root.GetScreenTransform() * viewportPosition).Round();
         Vector2I mouse = DisplayServer.MouseGetPosition();
         NSPoint mouseNs = SendPoint(Class("NSEvent"), Sel("mouseLocation"));
         double scale = Math.Max(1.0, DisplayServer.ScreenGetMaxScale());

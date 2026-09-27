@@ -490,12 +490,7 @@ public partial class UIClip : PanelContainer, IDragCancellable
 
 		if (content is not null) RefreshThemeColor();
 
-		int row = GhostRow ?? GetChannelsDown();
-
-		Position = new(
-			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start),
-			(float)(ClipsView.UITimeline.VerticalScale * (row + ClipsView.ChannelOffset))
-		);
+		Position = new((float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Start), RowY());
 
 		Size = new(
 			(float)ClipsView.UITimeline.TimeSpanToPixels(Clip.Duration),
@@ -547,6 +542,16 @@ public partial class UIClip : PanelContainer, IDragCancellable
 	// screen and a negative row means it wants a channel that does not exist yet
 	public int GetChannelsDownAfter(int channelDelta)
 		=> GetChannelsDown() + ((Clip is VideoClip) ? -channelDelta : channelDelta);
+
+	// the clip's top on its row, or where a channel drag has its row
+	float RowY()
+	{
+		float row = GhostRow ?? ClipsView.RowFor(Clip.Channel, GetChannelsDown());
+		return (float)(ClipsView.UITimeline.VerticalScale * (row + ClipsView.ChannelOffset));
+	}
+
+	// back onto its row, nothing else changed
+	public void PlaceRow() => Position = new(Position.X, RowY());
 
 	int GetChannelsDown()
 	{

@@ -43,9 +43,13 @@ public partial class Editor : Control
 	MediaThumbnails mediaThumbnails;
 
 	// Called when the node enters the scene tree for the first time.
+	// the project this editor edits: its window's
+	ProjectSession session;
+	Project project => session.Project;
+
 	public override void _Ready()
 	{
-		Project project = ProjectManager.Singleton.CurrentProject;
+		session = ProjectSession.Of(this);
 
 		mediaViewer = MediaViewerScene.Instantiate<MediaViewer>();
 		inspector = InspectorScene.Instantiate<Inspector>();
@@ -116,8 +120,8 @@ public partial class Editor : Control
 
 		// files dropped on the timeline come in through the library first
 		UITimeline.FilesDropped += PlaceDroppedFiles;
-		GetWindow().FilesDropped += files => DragDrop.DropFiles(files, GetViewport().GetMousePosition());
-		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Install();
+		GetWindow().FilesDropped += files => DragDrop.DropFiles(files, GetViewport().GetMousePosition(), this);
+		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Install(GetWindow());
 
 		// the graph editor opens in a window of its own in a later step
 		UITimeline.GraphRequested += clip => GD.Print($"Graph editor for '{clip.Clip.Name}': not built yet.");
@@ -153,6 +157,88 @@ public partial class Editor : Control
 		// page-wide shortcuts. every key that nothing closer wanted climbs up
 		// to here, since this page is above every view in it
 		InputManager.Singleton.Keyboard.Register(this, OnShortcut);
+
+		// the view as the project file left it, once everything has laid out;
+		// and what to save when the project is
+		session.GuiProvider = SaveState;
+		Callable.From(() => RestoreState(session.Gui)).CallDeferred();
+	}
+
+	// ---- remembered with the project ----
+
+	System.Text.Json.Nodes.JsonObject SaveState()
+	{
+		System.Text.Json.Nodes.JsonObject state = new()
+		{
+			["playhead"] = UITimeline.PlayheadTime.Ticks,
+			["timelineId"] = UITimeline.Timeline.Id.ToString(),
+			["timeline"] = UITimeline.SaveState(),
+			["media"] = mediaViewer.SaveState(),
+			["splits"] = new System.Text.Json.Nodes.JsonObject
+			{
+				["main"] = GetNode<SplitContainer>("VSplitContainer").SplitOffset,
+				["panels"] = GetNode<SplitContainer>("VSplitContainer/HSplitContainer").SplitOffset,
+				["viewers"] = GetNode<SplitContainer>("VSplitContainer/HSplitContainer/Viewers").SplitOffset,
+			},
+			["tabs"] = new System.Text.Json.Nodes.JsonObject
+			{
+				["left"] = TabIds(LeftTabs),
+				["right"] = TabIds(RightTabs),
+			},
+		};
+
+		if (GetWindow() is ProjectWindow window)
+		{
+			state["window"] = new System.Text.Json.Nodes.JsonObject
+			{
+				["x"] = window.Position.X,
+				["y"] = window.Position.Y,
+				["width"] = window.Size.X,
+				["height"] = window.Size.Y,
+				["maximized"] = window.Mode == Window.ModeEnum.Maximized,
+			};
+		}
+
+		return state;
+	}
+
+	System.Text.Json.Nodes.JsonArray TabIds(TabsView tabs) =>
+		[.. tabs.Views.Select(v => views.FirstOrDefault(p => p.Value.View == v).Key).Where(id => id is not null).Select(id => (System.Text.Json.Nodes.JsonNode)id)];
+
+	void RestoreState(System.Text.Json.Nodes.JsonObject state)
+	{
+		if (state is null || state.Count == 0) return;
+
+		if (state["window"] is System.Text.Json.Nodes.JsonObject w && GetWindow() is ProjectWindow window)
+		{
+			window.Position = new(w["x"]?.GetValue<int>() ?? window.Position.X, w["y"]?.GetValue<int>() ?? window.Position.Y);
+			window.Size = new(w["width"]?.GetValue<int>() ?? window.Size.X, w["height"]?.GetValue<int>() ?? window.Size.Y);
+			if (w["maximized"]?.GetValue<bool>() == true) window.Mode = Window.ModeEnum.Maximized;
+		}
+
+		if (state["splits"] is System.Text.Json.Nodes.JsonObject s)
+		{
+			if (s["main"]?.GetValue<int>() is int main) GetNode<SplitContainer>("VSplitContainer").SplitOffset = main;
+			if (s["panels"]?.GetValue<int>() is int panels) GetNode<SplitContainer>("VSplitContainer/HSplitContainer").SplitOffset = panels;
+			if (s["viewers"]?.GetValue<int>() is int viewers) GetNode<SplitContainer>("VSplitContainer/HSplitContainer/Viewers").SplitOffset = viewers;
+		}
+
+		if (state["tabs"] is System.Text.Json.Nodes.JsonObject tabs)
+		{
+			foreach ((string _, Control view) in views.Values) { LeftTabs.RemoveView(view); RightTabs.RemoveView(view); }
+			foreach (System.Text.Json.Nodes.JsonNode id in tabs["left"]?.AsArray() ?? []) if (views.TryGetValue(id?.GetValue<string>() ?? "", out var v)) LeftTabs.AddTab(v.View);
+			foreach (System.Text.Json.Nodes.JsonNode id in tabs["right"]?.AsArray() ?? []) if (views.TryGetValue(id?.GetValue<string>() ?? "", out var v)) RightTabs.AddTab(v.View);
+		}
+
+		mediaViewer.RestoreState(state["media"]?.AsObject());
+		UITimeline.RestoreState(state["timeline"]?.AsObject());
+
+		// the playhead, and the picture there
+		Time playhead = UITimeline.PlayheadTime;
+		inspector.Playhead = playhead;
+		UIPlayback.BeginScrub();
+		UIPlayback.ScrubTo(playhead);
+		UIPlayback.EndScrub();
 	}
 
 	// ---- the tab bars ----
@@ -187,7 +273,6 @@ public partial class Editor : Control
 	{
 		if (SourceViewer is null) return;
 
-		Project project = ProjectManager.Singleton.CurrentProject;
 		Timeline timeline;
 
 		switch (subject)
@@ -247,9 +332,9 @@ public partial class Editor : Control
 
 	public override void _ExitTree()
 	{
-		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Uninstall();
+		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Uninstall(GetWindow());
 		InputManager.Singleton.Keyboard.Unregister(this);
-		if (History.Active == ProjectManager.Singleton.CurrentProject.History) History.Active = null;
+		if (History.Active == project.History) History.Active = null;
 
 		thumbnails?.Dispose();
 		thumbnails = null;
@@ -266,7 +351,7 @@ public partial class Editor : Control
 		mediaViewer.Import(files);
 
 		List<IMedia> media = [.. files
-			.Select(path => ProjectManager.Singleton.CurrentProject.Media.FirstOrDefault(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase)))
+			.Select(path => project.Media.FirstOrDefault(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase)))
 			.Where(m => m is not null)];
 
 		await Task.WhenAll(media.Select(async m =>
@@ -295,6 +380,22 @@ public partial class Editor : Control
 		{
 			case Shortcuts.PlaybackToggle:
 				UIPlayback.TogglePlayback();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Save:
+				if (session.FilePath is null) ProjectManager.Singleton.SaveAs(session);
+				else ProjectManager.Singleton.Save(session);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.SaveAs:
+				ProjectManager.Singleton.SaveAs(session);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.ShowHome:
+				ProjectManager.Singleton.ShowHome();
 				e.Handled = true;
 				break;
 
@@ -329,12 +430,12 @@ public partial class Editor : Control
 			// not mid-gesture: a drag in flight is positioned from data that
 			// would move under it
 			case Shortcuts.Undo when !MouseDragging:
-				ProjectManager.Singleton.CurrentProject.History.Undo();
+				project.History.Undo();
 				e.Handled = true;
 				break;
 
 			case Shortcuts.Redo when !MouseDragging:
-				ProjectManager.Singleton.CurrentProject.History.Redo();
+				project.History.Redo();
 				e.Handled = true;
 				break;
 		}

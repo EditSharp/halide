@@ -40,6 +40,14 @@ public partial class SmokeTest : Node
 		GetTree().Quit(failures == 0 ? 0 : 1);
 	}
 
+	// where two texts part, with a little of each, for a failure message
+	static string FirstDifference(string a, string b)
+	{
+		int i = 0;
+		while (i < a.Length && i < b.Length && a[i] == b[i]) i++;
+		return $": differs at {i}: ...{a.Substring(Math.Max(0, i - 60), Math.Min(120, a.Length - Math.Max(0, i - 60)))}... vs ...{b.Substring(Math.Max(0, i - 60), Math.Min(120, b.Length - Math.Max(0, i - 60)))}...";
+	}
+
 	async Task Frames(int count)
 	{
 		for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -47,6 +55,8 @@ public partial class SmokeTest : Node
 
 	async Task Run()
 	{
+		// the test project, as a project window would hold it
+		if (ProjectSession.Of(this) is null) ProjectSession.Attach(this, Project.FromBlueprint(Tests.TestBlueprint));
 		Node editor = GD.Load<PackedScene>("res://Scenes/Views/Editor.tscn").Instantiate();
 		AddChild(editor);
 		await Frames(3);
@@ -188,6 +198,31 @@ public partial class SmokeTest : Node
 		await Frames(2);
 		inspector.ShowFrames = false;
 		await Frames(2);
+
+		// ---- saving and loading the project's timelines and media
+		{
+			Project project = ProjectSession.Of(this).Project;
+			string saved = EditSharp.Components.TimelineDocument.Serialize(project.Timelines, project.Media);
+			var loaded = EditSharp.Components.TimelineDocument.Deserialize(saved);
+			string again = EditSharp.Components.TimelineDocument.Serialize(loaded.Timelines, loaded.Media);
+			Check(saved == again, $"a saved project loads and saves back the same ({saved.Length} chars){(saved == again ? "" : FirstDifference(saved, again))}");
+			Check(loaded.Warnings.Count == 0, $"with nothing missing: {string.Join("; ", loaded.Warnings)}");
+			Check(loaded.Timelines.Count == project.Timelines.Count && loaded.Timelines[0].Channels.Sum(c => c.Clips.Count) == project.Timeline.Channels.Sum(c => c.Clips.Count), "every timeline and clip comes back");
+			Check(loaded.Timelines[0].Channels.SelectMany(c => c.Clips).Select(c => c.Id).SequenceEqual(project.Timeline.Channels.SelectMany(c => c.Clips).OrderBy(c => c.Start).Select(c => c.Id)) || loaded.Timelines[0].Channels.SelectMany(c => c.Clips).Select(c => c.Id).ToHashSet().SetEquals(project.Timeline.Channels.SelectMany(c => c.Clips).Select(c => c.Id)), "with their Ids");
+
+			// a node of a kind this build doesn't know: a placeholder that saves back exactly
+			var tree = System.Text.Json.Nodes.JsonNode.Parse(saved)!.AsObject();
+			var node = tree["timelines"]![0]!["channels"]!.AsArray().SelectMany(c => c!["clips"]!.AsArray()).SelectMany(c => c!["graph"]!["nodes"]!.AsArray()).First(n => n!["$kind"]!.GetValue<string>() != "image-output")!.AsObject();
+			string original = node["$kind"]!.GetValue<string>();
+			node["$kind"] = "someone.elses-node";
+			node["setting"] = 42;
+			string foreign = tree.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+			var withMissing = EditSharp.Components.TimelineDocument.Deserialize(foreign);
+			string resaved = EditSharp.Components.TimelineDocument.Serialize(withMissing.Timelines, withMissing.Media);
+			bool placeholder = withMissing.Timelines[0].Channels.SelectMany(c => c.Clips).SelectMany(c => c.Graph.Nodes).OfType<EditSharp.Components.Nodes.MissingNode>().Any(m => m.Kind == "someone.elses-node");
+			Check(placeholder && withMissing.Warnings.Count == 1, $"an unknown node ({original} renamed) loads as a placeholder with one warning: {string.Join("; ", withMissing.Warnings)}");
+			Check(resaved == foreign, $"and saves back word for word{(resaved == foreign ? "" : FirstDifference(foreign, resaved))}");
+		}
 
 		// ---- a move from outside any view, undone and redone under the views
 		EditSharp.Components.Clips.Clip clip = clipsView.UIClips[0].Clip;

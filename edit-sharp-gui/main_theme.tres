@@ -3132,6 +3132,25 @@ content_margin_bottom = 6.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_PopupPanel_panel")
 
+[sub_resource type="Resource" id="Resource_crof8"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+CornerRadiusTopLeft = 5
+CornerRadiusTopRight = 5
+CornerRadiusBottomRight = 5
+CornerRadiusBottomLeft = 5
+
+[sub_resource type="StyleBox" id="StyleBox_rt4o7"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("Resource_crof8")
+metadata/_custom_type_script = "uid://dv1xorpp4he7j"
+
 [sub_resource type="Resource" id="ThemeStyle_RulerBackground_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -4225,6 +4244,8 @@ PopupMenu/styles/hover = SubResource("ThemedStyleBox_PopupMenu_hover")
 PopupMenu/styles/panel = SubResource("ThemedStyleBox_PopupMenu_panel")
 PopupMenu/styles/separator = SubResource("ThemedStyleBox_PopupMenu_separator")
 PopupPanel/styles/panel = SubResource("ThemedStyleBox_PopupPanel_panel")
+RoundedPanel/base_type = &"Panel"
+RoundedPanel/styles/panel = SubResource("StyleBox_rt4o7")
 Ruler/colors/mark = Color(1, 1, 1, 1)
 Ruler/colors/submark = Color(0.537, 0.537, 0.537, 1)
 RulerBackground/base_type = &"Panel"

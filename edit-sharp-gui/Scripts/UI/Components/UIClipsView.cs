@@ -295,7 +295,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		return merged;
 	}
 
-	void SelectClips(IEnumerable<Clip> clips)
+	public void SelectClips(IEnumerable<Clip> clips)
 	{
 		HashSet<Clip> set = [.. clips];
 
@@ -438,8 +438,8 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 			ConfigureClipMenu(shown, [clip]);
 		}
 
-		if (button is not null) ContextMenus.ShowContextMenu(shown, button);
-		else ContextMenus.ShowContextMenu(shown, at);
+		if (button is not null) ContextMenus.ShowContextMenuBelow(shown, button);
+		else ContextMenus.ShowContextMenu(shown, this, at);
 	}
 
 	// the menu's state and handlers for a set of clips
@@ -711,7 +711,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		Wire(shown, "clips.deselect", null, Selection.Count > 0, DeselectAll);
 		Wire(shown, "clips.insertGap", null, true, () => InsertGap(time, Time.FromSeconds(1)));
 
-		ContextMenus.ShowContextMenu(shown, at);
+		ContextMenus.ShowContextMenu(shown, this, at);
 	}
 
 	// opens a gap on every channel: clips spanning the time are split there,
@@ -755,11 +755,12 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 	public void DragOver(DragPayload payload, Vector2 at)
 	{
-		if (DragDrop.Ghost is not null) DragDrop.Ghost.Visible = false;
-
 		List<Placement> placements = Layout(payload, at, out Time? lineAt);
 		UITimeline.SnapLine = lineAt;
 		ShowGhosts(placements);
+
+		// the clips stand in for the drag's own ghost, but only once there are some to see
+		if (DragDrop.Ghost is not null) DragDrop.Ghost.Visible = !ghosts.Any(g => g.Visible);
 	}
 
 	public void DragLeave()
@@ -1456,6 +1457,46 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// how far every clip is laid out below its real row, to leave the phantom
 	// video channels their room above it
 	public int ChannelOffset => phantomVideoChannels;
+
+	// a channel being dragged by its handle: its clips sit at `at` (a row, fractional while
+	// it follows the pointer), and the rows between `from` and `to` shift over to open the gap
+	Channel previewChannel;
+	int previewFrom, previewTo;
+	float previewAt;
+
+	public void PreviewChannelMove(Channel channel, int from, int to, float at)
+	{
+		previewChannel = channel;
+		previewFrom = from;
+		previewTo = to;
+		previewAt = at;
+
+		foreach (UIClip clip in UIClips)
+		{
+			clip.PlaceRow();
+
+			// the lifted channel's clips pass over the others, and go back to their own stacking after
+			bool lifted = channel is not null && ReferenceEquals(clip.Clip.Channel, channel);
+			if (lifted && !liftedZ.ContainsKey(clip))
+			{
+				liftedZ[clip] = clip.ZIndex;
+				clip.ZIndex = 4000;
+			}
+			else if (!lifted && liftedZ.Remove(clip, out int z)) clip.ZIndex = z;
+		}
+	}
+
+	readonly Dictionary<UIClip, int> liftedZ = [];
+
+	// the row a channel's clips show on: their own, or where a channel drag has them
+	public float RowFor(Channel channel, int row)
+	{
+		if (previewChannel is null) return row;
+		if (ReferenceEquals(channel, previewChannel)) return previewAt;
+		if (previewFrom < previewTo && row > previewFrom && row <= previewTo) return row - 1;
+		if (previewTo < previewFrom && row >= previewTo && row < previewFrom) return row + 1;
+		return row;
+	}
 
 	// grow the phantom rows to cover wherever this move is reaching. grow only
 	// for the life of the drag, so crossing the boundary back and forth does not

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="EditSharp GUI"
-run/main_scene="uid://g6wy0pbq4w6j"
+run/main_scene="res://Scenes/Host.tscn"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/App/Host.cs" id="1_host"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+
+[node name="Host" type="Node"]
+script = ExtResource("1_host")
+trayIcon = ExtResource("2_icon")

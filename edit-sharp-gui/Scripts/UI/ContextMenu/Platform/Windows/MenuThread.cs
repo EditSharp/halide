@@ -15,15 +15,22 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 // a hidden window, tracks every menu against it, draws the items itself,
 // and hands each pick back to godot as a deferred call; godot keeps
 // rendering, and a pick that keeps the menu open shows again once godot
-// has applied it
+// has applied it. native dialogs live here too (see WindowsDialog): the
+// thread runs a message loop, and work is posted to it
 static class MenuThread
 {
     // what one showing needs from the main thread, gathered there
     public sealed record Showing(ContextMenu Menu, Snapshot Snapshot, Vector2I At, bool Dark, uint Dpi, nint MainWindow, bool HideOnItem, bool HideOnCheckable);
 
-    static readonly BlockingCollection<Showing> requests = [];
+    // work for the thread, run from its message loop in order. a menu tracks
+    // modally, so work that arrives meanwhile waits until the menu closes
+    static readonly ConcurrentQueue<Action> work = new();
+    static bool working;
+    const uint WM_APP_WORK = 0x8000 + 1;
+
     static Thread thread;
-    static nint helper;
+    static readonly object startLock = new();
+    static volatile nint helper;
     static uint threadId;
     static MenuPainter painter;
     static WndProc wndProc;
@@ -32,34 +39,72 @@ static class MenuThread
 
     static readonly bool Debug = OS.HasEnvironment("EDITSHARP_MENU_DEBUG");
 
-    public static void Show(Showing showing)
+    public static void Show(Showing showing) => Post(() =>
     {
-        if (thread is null)
+        try
         {
-            thread = new Thread(Run) { IsBackground = true, Name = "EditSharp-Menus" };
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
+            Track(showing);
+        }
+        catch (Exception e)
+        {
+            GD.PushError($"Context menu failed: {e}");
+            Closed(showing.Menu);
+        }
+    });
+
+    // runs an action on this thread, after everything posted before it
+    public static void Post(Action action)
+    {
+        lock (startLock)
+        {
+            if (thread is null)
+            {
+                thread = new Thread(Run) { IsBackground = true, Name = "EditSharp-Menus" };
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+            }
         }
 
-        requests.Add(showing);
+        work.Enqueue(action);
+        if (helper != 0) PostMessageW(helper, WM_APP_WORK, 0, 0);
     }
+
+    // a window's messages first go through here, so a dialog gets tab, enter and escape
+    public static Func<MSG, bool> PreTranslate;
 
     static void Run()
     {
         threadId = GetCurrentThreadId();
         CreateHelperWindow();
 
-        foreach (Showing showing in requests.GetConsumingEnumerable())
+        // whatever was posted before the window existed
+        PostMessageW(helper, WM_APP_WORK, 0, 0);
+
+        while (GetMessageW(out MSG msg, 0, 0, 0) > 0)
         {
-            try
+            if (PreTranslate?.Invoke(msg) == true) continue;
+            TranslateMessage(ref msg);
+            DispatchMessageW(ref msg);
+        }
+    }
+
+    static void RunWork()
+    {
+        // a menu tracking now got here through its own message loop: it goes on, and so does this afterwards
+        if (working) return;
+        working = true;
+
+        try
+        {
+            while (work.TryDequeue(out Action action))
             {
-                Track(showing);
+                try { action(); }
+                catch (Exception e) { GD.PushError($"Menu thread work failed: {e}"); }
             }
-            catch (Exception e)
-            {
-                GD.PushError($"Context menu failed: {e}");
-                Closed(showing.Menu);
-            }
+        }
+        finally
+        {
+            working = false;
         }
     }
 
@@ -120,13 +165,24 @@ static class MenuThread
                     mouseHook ??= Hook;
                     nint hook = SetWindowsHookExW(WH_MOUSE_LL, mouseHook, GetModuleHandleW(null), 0);
 
-                    AttachThreadInput(threadId, mainThread, true);
-                    SetForegroundWindow(helper);
+                    // a menu with no window showing (the tray's) only borrows the foreground in TakeForeground:
+                    // joined to a hidden window's thread, its input waits behind that window's forever
+                    bool attached = IsWindowVisible(showing.MainWindow);
+                    if (attached) AttachThreadInput(threadId, mainThread, true);
+                    TakeForeground(mainThread);
                     long opened = System.Environment.TickCount64;
                     uint id = TrackPopupMenuEx(built.Menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, showing.At.X, showing.At.Y, helper, 0);
                     if (Debug) GD.Print($"MENU track returned id={id} after {System.Environment.TickCount64 - opened}ms error={Marshal.GetLastWin32Error()} at={showing.At} pressSeen={pressSeen}");
-                    SetForegroundWindow(showing.MainWindow);
-                    AttachThreadInput(threadId, mainThread, false);
+
+                    // the menu loop has to see one more message to wind down fully (TrackPopupMenu docs)
+                    PostMessageW(helper, WM_NULL, 0, 0);
+
+                    // a hidden main window (the tray's) is never handed the foreground
+                    if (attached)
+                    {
+                        SetForegroundWindow(showing.MainWindow);
+                        AttachThreadInput(threadId, mainThread, false);
+                    }
                     if (hook != 0) UnhookWindowsHookEx(hook);
                     if (filter != 0) UnhookWindowsHookEx(filter);
                     currentBuilt = null;
@@ -252,6 +308,21 @@ static class MenuThread
         }
 
         return CallNextHookEx(0, code, wParam, lParam);
+    }
+
+    // the helper to the front; when another app has it (a tray click leaves the
+    // taskbar there) its thread is joined for the moment it takes to switch
+    static void TakeForeground(uint mainThread)
+    {
+        nint front = GetForegroundWindow();
+        uint frontThread = front != 0 ? GetWindowThreadProcessId(front, 0) : 0;
+        bool borrow = frontThread != 0 && frontThread != mainThread && frontThread != threadId;
+
+        if (borrow) AttachThreadInput(threadId, frontThread, true);
+        bool taken = SetForegroundWindow(helper);
+        if (borrow) AttachThreadInput(threadId, frontThread, false);
+
+        if (Debug) GD.Print($"MENU foreground taken={taken} borrowed={borrow} now={GetForegroundWindow() == helper}");
     }
 
     static bool StaysOpen(MenuEntry entry, Showing showing)
@@ -412,6 +483,12 @@ static class MenuThread
     {
         try
         {
+            if (msg == WM_APP_WORK)
+            {
+                RunWork();
+                return 0;
+            }
+
             if (msg == WM_MENUSELECT)
             {
                 uint flags = (uint)((long)wParam >> 16) & 0xFFFF;
@@ -483,7 +560,7 @@ static class MenuThread
     const nint MK_LBUTTON = 0x1, MK_RBUTTON = 0x2;
 
     [StructLayout(LayoutKind.Sequential)]
-    struct MSG
+    internal struct MSG
     {
         public nint hwnd;
         public uint message;
@@ -523,16 +600,19 @@ static class MenuThread
     [DllImport("user32.dll")] static extern nint CallNextHookEx(nint hook, int code, nint wParam, nint lParam);
     [DllImport("user32.dll")] static extern bool PeekMessageW(out MSG msg, nint hwnd, uint min, uint max, uint remove);
     [DllImport("user32.dll")] static extern bool TranslateMessage(ref MSG msg);
+    [DllImport("user32.dll")] static extern int GetMessageW(out MSG msg, nint hwnd, uint min, uint max);
     [DllImport("user32.dll")] static extern nint DispatchMessageW(ref MSG msg);
 
     [StructLayout(LayoutKind.Sequential)]
-    struct POINT
+    internal struct POINT
     {
         public int x;
         public int y;
     }
 
     [DllImport("user32.dll")] static extern short GetAsyncKeyState(int key);
+    [DllImport("user32.dll")] static extern nint GetForegroundWindow();
+    const uint WM_NULL = 0x0000;
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
     [DllImport("user32.dll")] static extern nint WindowFromPoint(POINT point);
     [DllImport("user32.dll")] static extern bool ScreenToClient(nint window, ref POINT point);

@@ -50,12 +50,12 @@ public class MacOSProcessHandler : PlatformHandler
 
     sealed record Showing(long Id, ContextMenu Menu, Dictionary<long, MenuEntry> Entries);
 
-    public override void HandleMenu(ContextMenu menu, Vector2? position = null)
+    public override void HandleMenu(ContextMenu menu, Window owner, Vector2I? at)
     {
         Trace("HandleMenu");
         if (!Ensure()) { GD.PushWarning("The macOS menu helper is not available; the menu was not shown."); menu.EmitSignal(ContextMenu.SignalName.Closed); return; }
 
-        ObjC.NSPoint at = position is Vector2 p ? MacOSHandler.ScreenPointOf(p) : ObjC.SendPoint(ObjC.Class("NSEvent"), ObjC.Sel("mouseLocation"));
+        ObjC.NSPoint point = at is Vector2I screen ? MacOSHandler.ScreenPointOf(screen) : ObjC.SendPoint(ObjC.Class("NSEvent"), ObjC.Sel("mouseLocation"));
         bool dark = (ThemeDB.GetProjectTheme() as EditSharpTheme)?.Palette?.Dark ?? false;
 
         // a menu still up is replaced: it closes as far as its owner knows
@@ -73,7 +73,7 @@ public class MacOSProcessHandler : PlatformHandler
         Trace("yielding");
         YieldActivation();
         Trace("sending show");
-        Send(new JsonObject { ["cmd"] = "show", ["id"] = showing.Id, ["x"] = at.X, ["y"] = at.Y, ["dark"] = dark, ["items"] = items });
+        Send(new JsonObject { ["cmd"] = "show", ["id"] = showing.Id, ["x"] = point.X, ["y"] = point.Y, ["dark"] = dark, ["items"] = items });
     }
 
     // macOS 14 on: an app only becomes active when the active one yields to it, so the

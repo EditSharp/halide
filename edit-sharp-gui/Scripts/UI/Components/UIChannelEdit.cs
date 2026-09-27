@@ -18,6 +18,13 @@ public partial class UIChannelEdit : PanelContainer
 
 	[Export] ContextMenu menu;
 
+	// the grip on the left, coloured by the channel's kind; dragging it reorders the channel
+	[Export] Control dragHandle;
+	[Export] ColorRect kindColor;
+
+	// the copy that follows the pointer while this channel is dragged: shown, never touched
+	public bool Lifted;
+
 	// reference to actual channel data under the hood
 	public Channel Channel;
 	public UITimeline UITimeline;
@@ -33,7 +40,49 @@ public partial class UIChannelEdit : PanelContainer
 
 		if (muteOrHide is Button toggle) toggle.Text = Channel is VideoChannel ? "Hide" : "Mute";
 
+		if (dragHandle is not null)
+		{
+			dragHandle.MouseDefaultCursorShape = CursorShape.Vsize;
+			dragHandle.GuiInput += OnHandleInput;
+		}
+
+		if (Lifted) foreach (Control control in FindChildren("*", "Control", true, false)) control.MouseFilter = MouseFilterEnum.Ignore;
+
+		ApplyKindColor();
 		Refresh();
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationThemeChanged) ApplyKindColor();
+	}
+
+	// the colour clips of this kind fall back to
+	void ApplyKindColor()
+	{
+		if (kindColor is not null && Channel is not null) kindColor.Color = GetThemeColor(Channel is VideoChannel ? "video" : "audio", "Clip");
+	}
+
+	void OnHandleInput(InputEvent e)
+	{
+		if (Lifted || UITimeline is null || Channel.Timeline is null) return;
+
+		switch (e)
+		{
+			case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true }:
+				UITimeline.BeginChannelDrag(this, dragHandle.GetGlobalMousePosition().Y);
+				dragHandle.AcceptEvent();
+				break;
+
+			case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when UITimeline.DraggingChannel:
+				UITimeline.FinishChannelDrag();
+				dragHandle.AcceptEvent();
+				break;
+
+			case InputEventMouseMotion when UITimeline.DraggingChannel:
+				UITimeline.UpdateChannelDrag(dragHandle.GetGlobalMousePosition().Y);
+				break;
+		}
 	}
 
 	public override void _GuiInput(InputEvent _)
@@ -95,7 +144,7 @@ public partial class UIChannelEdit : PanelContainer
 		Wire(shown, "channel.insertBelow", true, () => Insert(above: false));
 		Wire(shown, "channel.remove", count > 1, () => Edit("Remove channel", () => timeline.RemoveChannel(Channel)));
 
-		ContextMenus.ShowContextMenu(shown, at);
+		ContextMenus.ShowContextMenu(shown, this, at);
 	}
 
 	// a new channel of this kind next to this one. a channel is added at the

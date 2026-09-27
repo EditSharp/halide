@@ -159,8 +159,8 @@ public partial class TabsView : VBoxContainer
 			if (open.Elements.Count == 0) open.Elements.Add(new ContextText("Every view is open"));
 		}
 
-		if (anchor is not null) ContextMenus.ShowContextMenu(shown, anchor);
-		else ContextMenus.ShowContextMenu(shown);
+		if (anchor is not null) ContextMenus.ShowContextMenuBelow(shown, anchor);
+		else ContextMenus.ShowContextMenu(shown, this);
 	}
 
 	static void Wire(ContextMenu menu, string id, bool enabled, Action action)

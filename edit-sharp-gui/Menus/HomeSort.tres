@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://b1pmqmfq84y1x" path="res://Scripts/UI/ContextMenu/Elements/ContextRadioList.cs" id="radio"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Last Opened"
+
+[sub_resource type="Resource" id="button_1"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "home.sort.opened"
+
+[sub_resource type="Resource" id="text_2"]
+script = ExtResource("text")
+Text = "Name"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_2")
+Id = "home.sort.name"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "Date Created"
+
+[sub_resource type="Resource" id="button_3"]
+script = ExtResource("button")
+Text = SubResource("text_3")
+Id = "home.sort.created"
+
+[sub_resource type="Resource" id="radio_4"]
+script = ExtResource("radio")
+Buttons = Array[ExtResource("button")]([SubResource("button_1"), SubResource("button_2"), SubResource("button_3")])
+Id = "home.sort"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("radio_4")])
+HideOnCheckableItemSelect = true

@@ -19,6 +19,8 @@ public partial class MenuProbe : Node
 	public override async void _Ready()
 	{
 		GetWindow().Size = new Vector2I(1600, 900);
+		// the test project, as a project window would hold it
+		if (ProjectSession.Of(this) is null) ProjectSession.Attach(this, Project.FromBlueprint(Tests.TestBlueprint));
 		Node editor = GD.Load<PackedScene>("res://Scenes/Views/Editor.tscn").Instantiate();
 		AddChild(editor);
 		await Frames(60);
