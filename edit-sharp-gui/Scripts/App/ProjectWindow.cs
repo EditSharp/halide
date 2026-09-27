@@ -15,9 +15,9 @@ public partial class ProjectWindow : Window
 		ProjectWindow window = new()
 		{
 			Title = WindowTitle(filePath),
-			Size = Screens.Sized(new Vector2I(1600, 900)),
+			Size = new Vector2I(1600, 900),
 			// small enough for every snap zone, thirds included
-			MinSize = Screens.Sized(new Vector2I(640, 360)),
+			MinSize = new Vector2I(640, 360),
 			WrapControls = false,
 			// popups stay inside the window, as they did in the one-window app
 			GuiEmbedSubwindows = true,

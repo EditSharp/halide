@@ -765,6 +765,12 @@ public partial class UITimeline : Control
 	public Vector2 ViewScroll => new(clipsViewContainer.ScrollHorizontal, clipsViewContainer.ScrollVertical);
 	public Vector2 ViewSize => clipsViewContainer.Size;
 
+	// the exact global-space X a click lands on to be read back as `t` -- the inverse of ToViewContent's
+	// X axis, against the same clipsViewContainer.GlobalPosition reference CursorTime uses. the ruler sits
+	// in its own row above the clips and isn't guaranteed to share the container's global X, so a test (or
+	// anything else) clicking a precise moment needs this rather than the ruler's own GlobalPosition
+	public float GlobalXOfTime(Time t) => clipsViewContainer.GlobalPosition.X + (float)(TimeSpanToPixels(t) - ViewScroll.X);
+
 	// the slice of content the view is actually showing, top and bottom, in
 	// content pixels. taken from the scrollbar page rather than the container
 	// size, so the strip a visible horizontal scrollbar covers is not counted as

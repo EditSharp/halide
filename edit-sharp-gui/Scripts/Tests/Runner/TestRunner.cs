@@ -18,6 +18,7 @@ public partial class TestRunner : Node
 {
 	readonly List<TestResult> results = [];
 	string artifacts;
+	string recordingScratch;
 
 	public override async void _Ready()
 	{
@@ -64,6 +65,7 @@ public partial class TestRunner : Node
 		Report(all.Elapsed.TotalSeconds, Arg("junit"));
 		await TestApp.ResetAsync();
 		try { Directory.Delete(root, true); } catch (Exception) { }
+		if (recordingScratch is not null) try { Directory.Delete(recordingScratch, true); } catch (Exception) { }
 
 		int code = results.Any(r => r.Outcome == TestOutcome.Failed) ? 1 : 0;
 		GD.Print($"TEST RUN EXIT {code}");
@@ -99,6 +101,8 @@ public partial class TestRunner : Node
 		Watch($"running {fixture.Name}.{test.Name}", timeout + 60);
 		TestResult result;
 
+		TestRecorder recorder = artifacts is null || TestApp.Headless ? null : TestRecorder.Start(GetTree(), recordingScratch ??= Path.Combine(Path.GetTempPath(), $"editsharp-recordings-{Guid.NewGuid():N}"));
+
 		try
 		{
 			await Invoke(fixture, instance, typeof(SetUpAttribute));
@@ -117,9 +121,9 @@ public partial class TestRunner : Node
 					cause is AssertionException ? cause.Message : $"{cause.GetType().Name}: {cause.Message}\n{cause.StackTrace}");
 		}
 
-		// a screenshot per window, whatever the outcome -- not just on failure, so a report shows what
-		// passing looked like too
-		Shoot($"{fixture.Name}.{test.Name}");
+		// only a failure gets a recording -- the last several seconds of what was on screen, not a
+		// screenshot of every test whatever the outcome
+		if (recorder is not null) await recorder.FinishAsync(result.Outcome == TestOutcome.Failed, artifacts, $"{fixture.Name}.{test.Name}");
 
 		// a known bug still failing is reported, not counted against the run
 		if (result.Outcome == TestOutcome.Failed && Known(fixture, test) is string issue)
@@ -195,19 +199,6 @@ public partial class TestRunner : Node
 		results.Add(result);
 		string mark = result.Outcome switch { TestOutcome.Passed => "PASS", TestOutcome.Failed => "FAIL", TestOutcome.Known => "KNOWN", _ => "SKIP" };
 		GD.Print($"{mark} {result.Fixture}.{result.Test} ({result.Seconds:0.00}s){(result.Message is null ? "" : $" - {result.Message}")}");
-	}
-
-	// what each open window showed when a test failed
-	void Shoot(string name)
-	{
-		if (artifacts is null || TestApp.Headless) return;
-
-		int n = 0;
-		foreach (Window window in GetTree().Root.FindChildren("*", "Window", true, false).OfType<Window>().Where(w => w.Visible && !w.IsEmbedded()))
-		{
-			try { window.GetTexture().GetImage().SavePng(Path.Combine(artifacts, $"{name}-{n++}.png")); }
-			catch (Exception) { }
-		}
 	}
 
 	void Report(double seconds, string junit)

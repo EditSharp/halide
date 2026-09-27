@@ -82,7 +82,7 @@ public partial class DockProbe : Node
 		await Wait(0.4);
 		Check("close glyph back at rest", !close.GetThemeColor("font_color").IsEqualApprox(close.GetThemeColor("glyph_hot")));
 
-		Check("small enough for snap thirds", window.MinSize.X <= Screens.Sized(new Vector2I(640, 360)).X);
+		Check("small enough for snap thirds", window.MinSize.X <= 640);
 
 		// the inspector onto the program's left tile: a new pane left of it
 		await Drag("inspector", async () => await ToTile(window, "program", DockSide.Left), "compass");

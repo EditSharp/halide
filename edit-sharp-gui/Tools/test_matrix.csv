@@ -1,0 +1,208 @@
+Area,Fixture,Test,API-only by design,Windows real input,Linux real input,macOS real input,Notes
+Bar menus,MenuTests,AViewIdCantBeTakenTwice,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ClipItemsNeedASelection,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,EveryBarMenuGoesToTheHandlerSoTheLayoutsOneCanBeReachedToo,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,EveryMenuBuildsWithTitledItems,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ExtensionItemsCanFollowAnItem,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ExtensionItemsJoinTheirMenu,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ExtensionViewsAreListedAndOpen,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ItemsShowTheirKeys,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,LoopIsATickedToggle,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,MenusOpenAfterTheLastClickedViewIsFreed,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,OpenRecentListsProjects,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,PickingALayoutFromTheMenuAppliesItAndUnticksTheRest,no,todo,todo,blocked (no VM),
+Bar menus,MenuTests,RunningAViewItemTogglesIt,no,todo,todo,blocked (no VM),
+Bar menus,MenuTests,TheLayoutsSubmenuListsThemWithTheActiveOneTicked,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,UndoNamesWhatItUndoes,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,MenuTests,ViewItemsTickOpenViews,yes,n/a,n/a,n/a,data-shape check on the ContextMenu model; the real open/click path is covered by NativeBarMenuTests
+Bar menus,NativeBarMenuTests,EachMenuOpensUnderItsButtonAndCloses,no,done,todo,blocked (no VM),real input
+Bar menus,NativeBarMenuTests,HoveringBackAndForthSwitchesReliablyIncludingTheLayoutSwitcher,no,done,todo,blocked (no VM),real input
+Command registry,CommandRegistryTests,DisposingARegistrationRemovesOnlyItsOwnCommand,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,EveryBarMenuItemIsACommand,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,EveryBuiltInViewHasAToggleCommand,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,EveryCommandHasAnIdAndTitle,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,EveryShortcutActionIsACommand,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,NoTwoActionsShareADefaultKey,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,RegisteringReplacesAndUnregisterRemoves,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,RunReportsMissingDisabledAndFailingCommands,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,TheCatalogueListsEveryCommand,yes,n/a,n/a,n/a,pure data structure
+Command registry,CommandRegistryTests,TheServiceThrowsCommandExceptions,yes,n/a,n/a,n/a,pure data structure
+Dock dragging,DockDragTests,AFloatsTabsSitInItsBarAndItSplits,no,done,todo,blocked (no VM),same scenario covered via real input by NativeDockDragTests.AFloatsTabsSitInItsBarAndItSplits
+Dock dragging,DockDragTests,DroppingOnASideTileSplitsThatPane,no,done,todo,blocked (no VM),same scenario covered via real input by NativeDockDragTests.DroppingOnASideTileSplitsThatPane
+Dock dragging,DockDragTests,DroppingOnATabStripJoinsTheTabs,no,done,todo,blocked (no VM),same scenario covered via real input by NativeDockDragTests.DroppingOnATabStripJoinsTheTabs
+Dock dragging,DockDragTests,DroppingOutsideEveryWindowFloats,no,done,todo,blocked (no VM),same scenario covered via real input by NativeDockDragTests.DroppingOutsideEveryWindowFloats
+Dock dragging,DockDragTests,EscapeOrReleasingOverNothingChangesNothing,no,done,todo,blocked (no VM),same scenario covered via real input by NativeDockDragTests.EscapeOrReleasingOverNothingChangesNothing
+Dock dragging,DockDragTests,MediaDragsCrossIntoAnotherWindow,no,todo,todo,blocked (no VM),
+Dock dragging,NativeDockDragTests,AFloatsTabsSitInItsBarAndItSplits,no,done,todo,blocked (no VM),real input
+Dock dragging,NativeDockDragTests,DroppingOnASideTileSplitsThatPane,no,done,todo,blocked (no VM),real input
+Dock dragging,NativeDockDragTests,DroppingOnATabStripJoinsTheTabs,no,done,todo,blocked (no VM),real input
+Dock dragging,NativeDockDragTests,DroppingOutsideEveryWindowFloats,no,done,todo,blocked (no VM),real input
+Dock dragging,NativeDockDragTests,EscapeOrReleasingOverNothingChangesNothing,no,done,todo,blocked (no VM),real input
+Dock tree model,DockTreeTests,AViewCantGoBackWhenWhatItSatBesideIsGone,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,AViewGoesBackWhereItWas,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,CenterInsertHonoursTheIndex,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,CenterInsertJoinsTheTabsAndBecomesCurrent,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,CommonFindsTheSmallestPartHoldingViews,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,EmptyTreeTakesFirstViewAsItsRoot,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,JsonDropsEmptyStacksAndBadInput,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,JsonRoundTripsExactly,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,RemovingALonePaneCollapsesItsSplit,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,RemovingATabKeepsThePaneAndPicksANeighbour,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,RemovingAnUnknownViewDoesNothing,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,RemovingTheLastViewEmptiesTheTree,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,SideInsertsSplitThePaneTheRightWay,yes,n/a,n/a,n/a,pure data structure
+Dock tree model,DockTreeTests,ViewsAndStacksReadInOrder,yes,n/a,n/a,n/a,pure data structure
+Extensions,ExtensionTests,AContextTakesBackEverythingItAdded,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,AFailingCommandReportsTheExtensionAndDoesntCrash,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,AFailingViewOrImporterIsCaught,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,BrokenAndIncompatibleExtensionsAreReportedNotRun,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,CompatibilityFollowsTheApiVersion,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,EnablingRunsItAndDisablingTakesEverythingBack,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,ItsCommandRunsAndItsViewOpens,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,ManifestsNeedTheirFields,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,NewExtensionsWaitForTrust,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,ReloadingRestartsIt,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Extensions,ExtensionTests,TheChoiceIsRememberedUntilTheExtensionChanges,yes,n/a,n/a,n/a,"extension loading is code-level, not UI"
+Keyboard shortcuts,KeyboardChainTests,AnActionNobodyTakesReportsFalse,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,CopyAndPasteClips,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,DuplicateThroughTheMenu,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,FloatFocusedViewFloatsIt,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,GoToStartAndEnd,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,LayoutShortcutsSwitchLayouts,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,SelectAllFollowsTheFocusedView,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,TimelineCommandsReachTheTimeline,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,UndoAndRedoGoThroughTheEditor,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,KeyboardChainTests,ZoomCommandsChangeTheScale,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,BadCombosDontParse,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,BindingUnbindingAndLookingUp,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,CombosParseLeniently,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,CombosReadAndWriteTheSameWay,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,ExtraShortcutsAreListedAfterTheCatalogue,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,TheMapSavesAndLoads,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,ShortcutTests,TheMapStartsWithTheDefaults,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Layout persistence format,LayoutStoreTests,ABrokenFileIsIgnored,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,AddRejectsEmptyTakenAndPresetNames,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,ChangedFiresForAddRenameDelete,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,CurrentIsACopy,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,LayoutsSurviveARestart,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,NamesStartWithThePresetsInOrder,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,PresetsAreValidLayoutsOfKnownViews,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,PresetsCantBeRenamedOrDeleted,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,PresetsDifferFromEachOther,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,RememberingAPresetAndResettingIt,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,RememberingAUserLayoutAndResettingIt,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,RenameAndDeleteUserLayouts,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layout persistence format,LayoutStoreTests,UnknownLayoutsHaveNoState,yes,n/a,n/a,n/a,"JSON format, not interaction"
+Layouts,LayoutServiceTests,AFloatsOnlyViewCantFloatAgain,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,ANewProjectOpensInEditing,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,ApplyingEachPreset,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,ChangedFires,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,DockingBesideEveryWay,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,EveryViewIsKnown,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,FloatingAndClosingTheFloatDocksBack,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,FloatsAreCapturedRelativeToTheWindow,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,LayoutNumbersFollowTheSwitcher,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,OpeningAndClosingViews,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,PresetsRefuseRenameAndDelete,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,RearrangingIsRememberedAndResettable,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,SavingRenamingAndDeletingUserLayouts,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Layouts,LayoutServiceTests,TheSourceOpensLeftOfTheProgram,yes,n/a,n/a,n/a,mostly persistence/capture semantics; API-only in spirit
+Media library,MediaServiceTests,AnImporterThatDeclinesOrThrowsFallsBack,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,AnUnregisteredImporterStops,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,AudioFilesBecomeAudioMedia,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,ChangedFires,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,FindingIgnoresCase,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,ImportersTakeTheirExtensionsLatestFirst,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,ImportingAddsOnceAsOneEntry,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,RemovingIsUndoable,yes,n/a,n/a,n/a,
+Media library,MediaServiceTests,RemovingWhatIsntThereDoesNothing,yes,n/a,n/a,n/a,
+NEW - classify me,NativeKeyboardChainTests,ClickingAMediaTileFocusesMediaOverTheTimeline,no,done,todo,blocked (no VM),real input
+Playback,RenderingTests,PlaybackPlaysAndPauses,yes,n/a,n/a,n/a,
+Playback,RenderingTests,SeekingMovesThePicture,yes,n/a,n/a,n/a,
+Playback,RenderingTests,WaveformsAppearAfterLoad,yes,n/a,n/a,n/a,
+Playback,RenderingTests,WaveformsSurviveMovingTheTimeline,yes,n/a,n/a,n/a,
+Projects,ProjectTests,AnEditMakesItDirtyAndSavingCleansIt,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,ClosingDropsTheHandle,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,ClosingWithUnsavedChangesCanBeKeptOpen,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,CreatingAProjectOpensItClean,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,OpenedFiresForEveryNewProject,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,OpeningARecentProjectPutsItFirst,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,OpeningAnOpenProjectFocusesTheSameWindow,yes,n/a,n/a,n/a,native dialogs
+Projects,ProjectTests,SaveAsMovesTheProjectToItsNewFile,yes,n/a,n/a,n/a,native dialogs
+Projects,ReopenLoopTests,AnEmptyProjectReopensTwentyTimes,yes,n/a,n/a,n/a,native dialogs
+Projects,ReopenTests,ClosingAProjectFreesItsGpuContexts,yes,n/a,n/a,n/a,native dialogs
+Projects,ReopenTests,ClosingWhilePlayingThenReopening,yes,n/a,n/a,n/a,native dialogs
+Projects,ReopenTests,ReopeningRestoresLayoutAndPlayhead,yes,n/a,n/a,n/a,native dialogs
+Remote/JSON-RPC,RemoteTests,ABatchOfCommandsIsOneEntry,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,APipeClientCanTalkToTheApp,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,CommandsRunWithArgumentsAndResults,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,ErrorsCarryTheirCodes,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,EventsReachSubscribers,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,EveryStatePathReads,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,NotificationsGetNoAnswer,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,ProjectsOpenedAfterSubscribingAreFollowed,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,ScriptsRunAndReportFailure,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,TheServerWritesItsAddress,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,TheTimelineStateMatchesTheProject,yes,n/a,n/a,n/a,protocol framing
+Remote/JSON-RPC,RemoteTests,VersionAnswers,yes,n/a,n/a,n/a,protocol framing
+Scene smoke tests,SceneTests,EverySceneInstantiates,yes,n/a,n/a,n/a,"infra, not a feature"
+Scene smoke tests,SceneTests,EverySceneLoads,yes,n/a,n/a,n/a,"infra, not a feature"
+Scene smoke tests,SceneTests,StandaloneScenesEnterTheTree,yes,n/a,n/a,n/a,"infra, not a feature"
+Settings window,SettingsTests,OpeningSettingsTwiceBringsTheSameWindow,yes,n/a,n/a,n/a,
+Settings window,SettingsTests,SettingsSaveAndLoad,yes,n/a,n/a,n/a,
+Settings window,SettingsTests,TheInterfaceScaleIsHonoured,yes,n/a,n/a,n/a,
+Settings window,SettingsTests,TheSettingsWindowListsEveryPageAndExtensionPages,yes,n/a,n/a,n/a,
+Settings window,SettingsTests,UserDataKeepsEverythingInItsFolder,yes,n/a,n/a,n/a,
+Themes,ThemeTests,BothPalettesDefineEveryColour,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,EveryVariationTheCodeSetsExists,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,EveryVariationTheScenesUseExists,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,SwitchingPalettesRecolours,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,TheBarUsesOneOsFont,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,TheDockLooksHaveTheirPanels,yes,n/a,n/a,n/a,resource/asset validation
+Themes,ThemeTests,TheProjectThemeIsOurs,yes,n/a,n/a,n/a,resource/asset validation
+Timeline editing,NativeTimelineTests,ClickingAClipSelectsItAndSelectAllShortcutSelectsEvery,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,ClickingTheRulerMovesThePlayhead,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,DeletingASelectedClipViaTheShortcut,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,DuplicatingASelectedClipViaTheShortcut,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,MovingAClipViaARealDrag,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,RippleDeletingASelectedClipViaTheShortcut,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,SplittingAtThePlayheadViaTheShortcut,no,done,todo,blocked (no VM),real input
+Timeline editing,NativeTimelineTests,ZoomToFitViaTheShortcut,no,done,todo,blocked (no VM),real input
+Timeline editing,TimelineServiceTests,ABatchIsOneEntry,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,ABatchThatThrowsRollsBack,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,ACancelledBatchChangesNothing,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,AddingChannels,no,todo,todo,blocked (no VM),
+Timeline editing,TimelineServiceTests,BatchesNestIntoTheOuterEntry,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,ChangedFiresOnEdits,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,DeletingLeavesTheGap,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.DeletingASelectedClipViaTheShortcut
+Timeline editing,TimelineServiceTests,DuplicatingPutsCopiesAfter,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.DuplicatingASelectedClipViaTheShortcut
+Timeline editing,TimelineServiceTests,FindingClipsById,yes,n/a,n/a,n/a,
+Timeline editing,TimelineServiceTests,LinkingClips,no,todo,todo,blocked (no VM),
+Timeline editing,TimelineServiceTests,MovingAClip,no,done,todo,blocked (no VM),covered via real input by NativeTimelineTests.MovingAClipViaARealDrag
+Timeline editing,TimelineServiceTests,PlacingMediaAddsClipsAsOneEntry,yes,n/a,n/a,n/a,exercises TimelineService.Place with a specific channel/time argument; not a single clean UI gesture
+Timeline editing,TimelineServiceTests,RippleDeletingClosesTheGap,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.RippleDeletingASelectedClipViaTheShortcut
+Timeline editing,TimelineServiceTests,SelectingAndDeselecting,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.ClickingAClipSelectsItAndSelectAllShortcutSelectsEvery
+Timeline editing,TimelineServiceTests,SplittingEveryClipAtATime,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.SplittingAtThePlayheadViaTheShortcut
+Timeline editing,TimelineServiceTests,SplittingOnlyTheClipsGiven,yes,n/a,n/a,n/a,"edge case of Split(time, clips) with an explicit clip subset -- an API parameter, not something a click expresses"
+Timeline editing,TimelineServiceTests,SplittingOutsideAClipDoesNothing,yes,n/a,n/a,n/a,"boundary condition on Split(time, clips) -- same as above"
+Timeline editing,TimelineServiceTests,TheBlueprintHasClipsOnBothKinds,yes,n/a,n/a,n/a,"a sanity check on the blueprint fixture itself, not a feature"
+Timeline editing,TimelineServiceTests,ThePlayheadMoves,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.ClickingTheRulerMovesThePlayhead
+Timeline editing,TimelineServiceTests,TrimmingBothEnds,no,todo,todo,blocked (no VM),
+Timeline editing,TimelineServiceTests,ZoomingToFitShowsTheWholeTimeline,no,done,todo,blocked (no VM),same behavior covered via real input by NativeTimelineTests.ZoomToFitViaTheShortcut
+Window chrome,ChromeTests,AProjectWindowHasMenusAndItsLayout,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,AnInertLogoIsntClickable,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,ButtonsAreClickableNotCaption,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,EmptySpaceDragsTheWindow,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,HeldTabsAreClickableButTheSpacePastThemDrags,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,HomesLocalAndCloudTabsSitInItsBar,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,MaximizeIsItsOwnRegion,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,TextIsRasterizedAtTheBarsScale,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,TheBarHasARealHeight,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,ChromeTests,TheLayoutSwitcherShowsItsName,yes,n/a,n/a,n/a,hit-testing logic; real drag/resize not yet tested
+Window chrome,WindowsChromeTests,TheBarIgnoresTheInterfaceScale,no,done,todo,blocked (no VM),"sends real WM_NCHITTEST via SendMessageW to a real win32 window -- exercises the actual OS message dispatch, not an in-process function call"
+Window chrome,WindowsChromeTests,TheBarKeepsItsHeightWhenMaximized,no,done,todo,blocked (no VM),"sends real WM_NCHITTEST via SendMessageW to a real win32 window -- exercises the actual OS message dispatch, not an in-process function call"
+Window chrome,WindowsChromeTests,TheOsKnowsTheCaptionTheButtonsAndTheContent,no,done,todo,blocked (no VM),"sends real WM_NCHITTEST via SendMessageW to a real win32 window -- exercises the actual OS message dispatch, not an in-process function call"
+Window state,WindowStateTests,AnOversizedSaveOpensOnAScreen,no,done,todo,blocked (no VM),"drives the real OS window (WindowChrome.Place, real WM_MOVE/WM_SIZE) -- not a literal mouse drag-resize, same fidelity level as WindowsChromeTests"
+Window state,WindowStateTests,ClosedFullscreenItReopensWindowedWhereItWasBefore,no,done,todo,blocked (no VM),"drives the real OS window (WindowChrome.Place, real WM_MOVE/WM_SIZE) -- not a literal mouse drag-resize, same fidelity level as WindowsChromeTests"
+Window state,WindowStateTests,ClosedMaximizedItReopensMaximizedAndRestoresWhereItWas,no,done,todo,blocked (no VM),"drives the real OS window (WindowChrome.Place, real WM_MOVE/WM_SIZE) -- not a literal mouse drag-resize, same fidelity level as WindowsChromeTests"
+Window state,WindowStateTests,ReopeningDoesntMoveOrGrowTheWindow,no,done,todo,blocked (no VM),"drives the real OS window (WindowChrome.Place, real WM_MOVE/WM_SIZE) -- not a literal mouse drag-resize, same fidelity level as WindowsChromeTests"

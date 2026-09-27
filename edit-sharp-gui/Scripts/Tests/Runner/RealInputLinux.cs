@@ -10,11 +10,15 @@ namespace EditSharpGUI.Tests;
 // OS reader, so a test using this and never overriding those hooks runs the production code path
 public static class RealInputLinux
 {
-	public static Vector2I ScreenCenterOf(Control c) =>
-		DisplayServer.WindowGetPosition(c.GetWindow().GetWindowId()) + (Vector2I)(c.GetViewport().GetScreenTransform() * c.GetGlobalRect().GetCenter()).Round();
+	// the scale comes from ContentScaleFactor, not GetViewport().GetScreenTransform() -- the Windows
+	// counterpart (RealInput.cs) had the same GetScreenTransform()-based formula and it was found to
+	// disagree with how godot reads a real click's position back by a few percent, landing clicks
+	// several pixels short. ContentScaleFactor is what a real click gets divided by on the way back
+	// into viewport space, so it round-trips correctly; unverified here since no Linux box has run this yet
+	public static Vector2I ScreenCenterOf(Control c) => ScreenPointIn(c.GetWindow(), c.GetGlobalRect().GetCenter());
 
 	public static Vector2I ScreenPointIn(Window window, Vector2 viewportPoint) =>
-		DisplayServer.WindowGetPosition(window.GetWindowId()) + (Vector2I)(window.GetViewport().GetScreenTransform() * viewportPoint).Round();
+		DisplayServer.WindowGetPosition(window.GetWindowId()) + (Vector2I)(viewportPoint * window.ContentScaleFactor).Round();
 
 	public static async Task MoveTo(Vector2I to, int steps = 8)
 	{

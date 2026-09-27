@@ -87,4 +87,32 @@ public sealed class NativeDockDragTests
 		await Release();
 		Assert.True(project.Layout.IsFloating("media"));
 	}
+
+	[Test(Timeout = 30)]
+	public async Task EscapeOrReleasingOverNothingChangesNothing()
+	{
+		string before = project.Layout.Capture().ToJsonString();
+		await Pick("inspector");
+		await RealInput.MoveTo(RealInput.ScreenPointIn(Main, PaneOf(Main, "program").GetGlobalRect().GetCenter() + new Vector2(200, 100)));
+		await TestApp.Frames(3);
+		await Release();
+		Assert.Equal(before, project.Layout.Capture().ToJsonString());
+	}
+
+	[Test(Timeout = 30)]
+	public async Task AFloatsTabsSitInItsBarAndItSplits()
+	{
+		project.Layout.Float("media");
+		await TestApp.Seconds(0.5);
+		DockFloatWindow floating = Main.GetChildren().OfType<DockFloatWindow>().Single();
+		TabBar barTabs = floating.Frame.Bar.FindChildren("*", "TabBar", true, false).OfType<TabBar>().SingleOrDefault();
+		Assert.NotNull(barTabs, "a lone pane's tabs are in the bar");
+		Assert.True(barTabs.Size.X > floating.Frame.Bar.Size.X / 2, "taking the free space");
+
+		await Pick("inspector");
+		await OntoTile(floating, "media", DockSide.Right);
+		await Release();
+		Assert.True(project.Layout.IsFloating("inspector"), "it joined the float");
+		Assert.Count(0, floating.Frame.Bar.FindChildren("*", "TabBar", true, false), "a split float keeps tabs on its panes");
+	}
 }

@@ -8,8 +8,8 @@ public partial class HomeWindow : Window
 		HomeWindow window = new()
 		{
 			Title = "EditSharp",
-			Size = Screens.Sized(new Vector2I(1280, 800)),
-			MinSize = Screens.Sized(new Vector2I(720, 480)),
+			Size = new Vector2I(1280, 800),
+			MinSize = new Vector2I(720, 480),
 			WrapControls = false,
 			// popups stay inside the window, as they did in the one-window app
 			GuiEmbedSubwindows = true,

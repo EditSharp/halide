@@ -44,9 +44,6 @@ public static class Screens
 		if (!Mathf.IsEqualApprox(window.ContentScaleFactor, factor)) window.ContentScaleFactor = factor;
 	}
 
-	// a window's default size, grown with the interface scale
-	public static Vector2I Sized(Vector2I size) => (Vector2I)(new Vector2(size.X, size.Y) * AppSettings.Current.ScaleFor(null)).Round();
-
 	// `rect` moved and shrunk to fit the usable area of the screen holding most of it, the primary when none does
 	public static Rect2I Fit(Rect2I rect)
 	{

@@ -1,12 +1,11 @@
-"""Builds a self-contained HTML report from a run_tests.py results folder (results.xml + screenshots/).
-Screenshots are embedded as base64 data URIs, so the single .html file is everything -- safe to copy
-or send anywhere on its own, no screenshots/ folder needed alongside it.
+"""Builds a self-contained HTML report from a run_tests.py results folder (results.xml + a video per
+failed test in screenshots/). Videos are embedded as base64 data URIs, so the single .html file is
+everything -- safe to copy or send anywhere on its own, no screenshots/ folder needed alongside it.
 
 Usage: python Tools/test_report.py <results-dir> [--out FILE.html]
 """
 import argparse
 import base64
-import glob
 import html
 import os
 import sys
@@ -35,17 +34,14 @@ def read_results(results_dir):
     return suites
 
 
-def data_uri(png_path):
-    with open(png_path, "rb") as f:
-        return "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
+def data_uri(path, mime):
+    with open(path, "rb") as f:
+        return f"data:{mime};base64," + base64.b64encode(f.read()).decode("ascii")
 
 
-def find_screenshots(results_dir, fixture, test):
-    shots_dir = os.path.join(results_dir, "screenshots")
-    if not os.path.isdir(shots_dir):
-        return []
-    prefix = f"{fixture}.{test}-"
-    return sorted(glob.glob(os.path.join(shots_dir, prefix + "*.png")))
+def find_recording(results_dir, fixture, test):
+    path = os.path.join(results_dir, "screenshots", f"{fixture}.{test}.mp4")
+    return path if os.path.exists(path) else None
 
 
 def build(results_dir, out_path):
@@ -55,11 +51,11 @@ def build(results_dir, out_path):
     for suite in suites:
         for case in suite["cases"]:
             total[case["outcome"]] += 1
-            shots = find_screenshots(results_dir, suite["name"], case["name"])
-            shot_tags = "".join(
-                f'<a href="{uri}" target="_blank"><img class="shot" src="{uri}"></a>'
-                for uri in (data_uri(s) for s in shots)
-            )
+            recording = find_recording(results_dir, suite["name"], case["name"])
+            video_tag = ""
+            if recording:
+                uri = data_uri(recording, "video/mp4")
+                video_tag = f'<video class="clip" src="{uri}" muted loop onclick="lightbox(this.src)" onmouseover="this.play()" onmouseout="this.pause()"></video>'
             rows.append(f"""
             <tr class="{case['outcome']}">
               <td>{html.escape(suite['name'])}</td>
@@ -67,7 +63,7 @@ def build(results_dir, out_path):
               <td class="badge">{case['outcome']}</td>
               <td>{case['time']}s</td>
               <td>{html.escape(case['message'])}</td>
-              <td>{shot_tags}</td>
+              <td>{video_tag}</td>
             </tr>""")
 
     page = f"""<!doctype html><html><head><meta charset="utf-8">
@@ -83,8 +79,11 @@ th, td {{ text-align: left; padding: 6px 10px; border-bottom: 1px solid #2b313c;
 tr.fail {{ background: #2a1a1a; }}
 .badge {{ text-transform: uppercase; font-size: 11px; font-weight: 600; }}
 tr.pass .badge {{ color: #63c08a; }} tr.fail .badge {{ color: #e06c6c; }} tr.skip .badge {{ color: #9aa3b2; }}
-.shot {{ height: 60px; border: 1px solid #2b313c; border-radius: 3px; margin-right: 4px; }}
+.clip {{ height: 60px; border: 1px solid #2b313c; border-radius: 3px; margin-right: 4px; cursor: zoom-in; background: #000; }}
 input {{ margin-bottom: 12px; padding: 6px 10px; width: 300px; background: #1b1f27; color: #e5e8ee; border: 1px solid #2b313c; border-radius: 4px; }}
+#lightbox {{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10; cursor: zoom-out; align-items: center; justify-content: center; }}
+#lightbox.open {{ display: flex; }}
+#lightbox video {{ max-width: 96vw; max-height: 96vh; box-shadow: 0 0 40px rgba(0,0,0,0.6); }}
 </style></head><body>
 <h1>EditSharp test results</h1>
 <div class="summary">
@@ -93,14 +92,26 @@ input {{ margin-bottom: 12px; padding: 6px 10px; width: 300px; background: #1b1f
   <div class="skip">{total['skip']} skipped</div>
 </div>
 <input id="filter" placeholder="filter by name..." oninput="filterRows()">
-<table id="table"><thead><tr><th>Fixture</th><th>Test</th><th>Outcome</th><th>Time</th><th>Message</th><th>Screenshots</th></tr></thead>
+<table id="table"><thead><tr><th>Fixture</th><th>Test</th><th>Outcome</th><th>Time</th><th>Message</th><th>Recording (on failure)</th></tr></thead>
 <tbody>{"".join(rows)}</tbody></table>
+<div id="lightbox" onclick="closeLightbox()"><video id="lightbox-video" controls autoplay loop></video></div>
 <script>
 function filterRows() {{
   const q = document.getElementById('filter').value.toLowerCase();
   for (const row of document.querySelectorAll('#table tbody tr'))
     row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
 }}
+function lightbox(src) {{
+  document.getElementById('lightbox-video').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}}
+function closeLightbox() {{
+  document.getElementById('lightbox').classList.remove('open');
+  const v = document.getElementById('lightbox-video');
+  v.pause();
+  v.src = "";
+}}
+document.addEventListener('keydown', e => {{ if (e.key === 'Escape') closeLightbox(); }});
 </script>
 </body></html>"""
 

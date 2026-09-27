@@ -19,8 +19,8 @@ public partial class SettingsWindow : Window
 		open = new SettingsWindow
 		{
 			Title = "App Settings",
-			Size = Screens.Sized(new Vector2I(960, 660)),
-			MinSize = Screens.Sized(new Vector2I(720, 480)),
+			Size = new Vector2I(960, 660),
+			MinSize = new Vector2I(720, 480),
 			WrapControls = false,
 			// popups stay inside the window
 			GuiEmbedSubwindows = true,
