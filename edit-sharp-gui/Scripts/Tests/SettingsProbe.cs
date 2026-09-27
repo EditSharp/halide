@@ -112,6 +112,60 @@ public partial class SettingsProbe : Node
 		AppSettings.Current.Save();
 		await Frames(3);
 
+		// Follow system after an explicit pick lands on the OS's own
+		bool osDark = DisplayServer.IsDarkMode();
+		theme?.ChoosePalette(osDark ? EditSharpTheme.LightPalette : EditSharpTheme.DarkPalette);
+		await Frames(3);
+		theme?.ChoosePalette(EditSharpTheme.SystemPalette);
+		await Frames(3);
+		string expected = osDark ? EditSharpTheme.DarkPalette : EditSharpTheme.LightPalette;
+		Check(theme?.Palette?.ResourcePath == expected, $"Follow system after {(osDark ? "Light" : "Dark")} switches to {expected}: os dark {osDark}, now {theme?.Palette?.ResourcePath}");
+
+		// the same through the Theme dropdown
+		Section("Appearance").EmitSignal(BaseButton.SignalName.Pressed);
+		await Frames(5);
+		OptionButton ThemeDropdown() => Descendants(view).OfType<OptionButton>().First(o => o.IsVisibleInTree() && Enumerable.Range(0, o.ItemCount).Any(i => o.GetItemText(i) == "Dark"));
+		ThemeDropdown().EmitSignal(OptionButton.SignalName.ItemSelected, osDark ? 2 : 1);
+		await Frames(5);
+		GD.Print($"PROBE after picking explicit: {theme?.Palette?.ResourcePath}, choice {theme?.PaletteChoice}, shown {ThemeDropdown().Text}");
+		ThemeDropdown().EmitSignal(OptionButton.SignalName.ItemSelected, 0);
+		await Frames(5);
+		GD.Print($"PROBE after picking follow: {theme?.Palette?.ResourcePath}, choice {theme?.PaletteChoice}, shown {ThemeDropdown().Text}");
+		Check(theme?.Palette?.ResourcePath == expected, "and through the dropdown");
+
+		// and with the real mouse and keys: open the dropdown, arrow to an item, Enter
+		async Task Pick(int index)
+		{
+			OptionButton dropdown = ThemeDropdown();
+			Vector2I at = EditSharpGUI.Scripts.UI.ContextMenu.ContextMenus.ToScreen(dropdown.GetViewport(), dropdown.GetGlobalRect().GetCenter());
+			GetCursorPos(out POINT now);
+			Vector2I offset = new Vector2I(now.x, now.y) - DisplayServer.MouseGetPosition();
+			window.GrabFocus();
+			await Frames(3);
+			SetCursorPos(at.X + offset.X, at.Y + offset.Y);
+			await Frames(3);
+			mouse_event(2, 0, 0, 0, 0); await Frames(3); mouse_event(4, 0, 0, 0, 0);
+			await Frames(10);
+			// the open list: items share its height evenly
+			PopupMenu popup = dropdown.GetPopup();
+			float row = popup.Size.Y / (float)popup.ItemCount;
+			Vector2 item = new(popup.Position.X + popup.Size.X / 2f, popup.Position.Y + row * (index + 0.5f));
+			Vector2I itemAt = EditSharpGUI.Scripts.UI.ContextMenu.ContextMenus.ToScreen(window, item / window.ContentScaleFactor);
+			GD.Print($"PROBE popup visible {popup.Visible} at {popup.Position} size {popup.Size}, clicking {index} at {itemAt}");
+			SetCursorPos(itemAt.X + offset.X, itemAt.Y + offset.Y);
+			await Frames(3);
+			mouse_event(2, 0, 0, 0, 0); await Frames(3); mouse_event(4, 0, 0, 0, 0);
+			await Frames(10);
+			GD.Print($"PROBE real pick {index}: {theme?.Palette?.ResourcePath}, choice {theme?.PaletteChoice}, shown {ThemeDropdown().Text}");
+		}
+		await Pick(osDark ? 2 : 1);
+		await Settle();
+		Shot(window, "picked-explicit");
+		await Pick(0);
+		await Settle();
+		Shot(window, "picked-follow");
+		Check(theme?.Palette?.ResourcePath == expected, "and with the real mouse and keys");
+
 		// the light theme, for the eye
 		Section("Appearance").EmitSignal(BaseButton.SignalName.Pressed);
 		theme?.ChoosePalette(EditSharpTheme.LightPalette);
@@ -131,6 +185,12 @@ public partial class SettingsProbe : Node
 		GD.Print(ok ? "SETTINGS OK" : "SETTINGS FAILED");
 		GetTree().Quit();
 	}
+
+	[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] struct POINT { public int x, y; }
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, nuint extra);
+	[System.Runtime.InteropServices.DllImport("user32.dll")] static extern void keybd_event(byte key, byte scan, uint flags, nuint extra);
 
 	static ShortcutKeyButton AddButton(ShortcutRow row) => Descendants(row).OfType<ShortcutKeyButton>().Last();
 

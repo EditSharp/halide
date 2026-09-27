@@ -11,7 +11,7 @@ public partial class ShortcutRow : VBoxContainer
 {
 	[ExportGroup("Parts")]
 	[Export] Label label;
-	[Export] HBoxContainer keys;
+	[Export] VBoxContainer keys;
 	[Export] ShortcutKeyButton add;
 	[Export] Button reset;
 	[Export] Control conflict;

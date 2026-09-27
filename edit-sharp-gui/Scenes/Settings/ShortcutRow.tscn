@@ -25,17 +25,20 @@ theme_override_constants/separation = 9
 custom_minimum_size = Vector2(0, 27)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 0
 theme_type_variation = &"InspectorLabel"
 vertical_alignment = 1
 clip_text = true
 
-[node name="Keys" type="HBoxContainer" parent="Top"]
+[node name="Keys" type="VBoxContainer" parent="Top"]
 layout_mode = 2
+size_flags_vertical = 0
 theme_override_constants/separation = 6
 
 [node name="Add" type="Button" parent="Top"]
 custom_minimum_size = Vector2(27, 27)
 layout_mode = 2
+size_flags_vertical = 0
 tooltip_text = "Add a shortcut"
 theme_type_variation = &"InspectorButton"
 script = ExtResource("2_key")
@@ -43,6 +46,7 @@ script = ExtResource("2_key")
 [node name="Reset" type="Button" parent="Top"]
 custom_minimum_size = Vector2(60, 27)
 layout_mode = 2
+size_flags_vertical = 0
 tooltip_text = "Back to the default keys"
 theme_type_variation = &"InspectorButton"
 text = "Reset"
