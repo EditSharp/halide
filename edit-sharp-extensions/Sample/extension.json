@@ -1,0 +1,9 @@
+{
+  "id": "editsharp.sample",
+  "name": "Sample Extension",
+  "version": "1.0.0",
+  "assembly": "SampleExtension.dll",
+  "entry": "SampleExtension.Sample",
+  "api": "1.0",
+  "description": "Shows every way an extension can add to EditSharp: a command, menu item, shortcut, view, settings page and importer."
+}

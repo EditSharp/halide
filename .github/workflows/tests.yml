@@ -1,0 +1,157 @@
+# Runs the EditSharp library's unit tests and the app's API-driven suite (headless, then windowed) on each OS.
+# Driven by edit-sharp-gui/Tools/run_tests.py; results.xml, logs and failure screenshots are uploaded per OS.
+name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [tests-ci]
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            zip: Godot_v4.7.2-stable_mono_win64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe
+            extra: --rendering-method gl_compatibility --rendering-driver opengl3_angle
+          - name: macos
+            os: macos-latest
+            zip: Godot_v4.7.2-stable_mono_macos.universal.zip
+            bin: godot/Godot_mono.app/Contents/MacOS/Godot
+            extra: --rendering-method gl_compatibility
+          - name: linux
+            os: ubuntu-latest
+            zip: Godot_v4.7.2-stable_mono_linux_x86_64.zip
+            bin: godot/Godot_v4.7.2-stable_mono_linux_x86_64/Godot_v4.7.2-stable_mono_linux.x86_64
+            extra: --rendering-method gl_compatibility --rendering-driver opengl3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick the EditSharp branch
+        id: editsharp
+        shell: bash
+        run: |
+          branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          if git ls-remote --exit-code --heads https://github.com/EditSharp/EditSharp.git "$branch" > /dev/null; then
+            echo "ref=$branch" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          repository: EditSharp/EditSharp
+          ref: ${{ steps.editsharp.outputs.ref }}
+          path: EditSharp
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Unit tests
+        shell: bash
+        run: >
+          dotnet test edit-sharp-tests -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+          --logger "junit;LogFilePath=$GITHUB_WORKSPACE/results/unit/results.xml"
+
+      - name: Fetch Godot
+        shell: bash
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${{ matrix.zip }}"
+          mkdir godot && unzip -q godot.zip -d godot
+          chmod +x "${{ matrix.bin }}"
+          "${{ matrix.bin }}" --version
+
+      - name: Linux display and ffmpeg
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils openbox ffmpeg
+
+      - name: macOS ffmpeg
+        if: matrix.name == 'macos'
+        run: brew install ffmpeg
+
+      - name: Windows ffmpeg
+        if: matrix.name == 'windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg -y --no-progress
+          ffprobe -version | Select-Object -First 1
+
+      - name: Build the macOS natives
+        if: matrix.name == 'macos'
+        run: sh edit-sharp-gui/Tools/MacOS/build.sh
+
+      - name: Build the app
+        shell: bash
+        run: dotnet build "edit-sharp-gui/EditSharp GUI.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+
+      - name: Build the sample extension
+        shell: bash
+        run: dotnet build edit-sharp-extensions/Sample
+
+      - name: Import project
+        shell: bash
+        run: |
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import || true
+          "${{ matrix.bin }}" --headless --path edit-sharp-gui --import
+
+      # a hung test prints every thread's stack through it
+      - name: Stack tool
+        shell: bash
+        run: |
+          dotnet tool install -g dotnet-stack
+          echo "ES_HANG_STACKS=$HOME/.dotnet/tools/dotnet-stack" >> "$GITHUB_ENV"
+
+      - name: Headless suite
+        shell: bash
+        run: |
+          PY=python3; if [ "${{ matrix.name }}" = "windows" ]; then PY=python; fi
+          $PY edit-sharp-gui/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --out "$GITHUB_WORKSPACE/results/headless"
+
+      - name: Windowed suite
+        if: always()
+        shell: bash
+        run: |
+          PY=python3; if [ "${{ matrix.name }}" = "windows" ]; then PY=python; fi
+          if [ "${{ matrix.name }}" = "linux" ]; then
+            Xvfb :99 -screen 0 1920x1080x24 &
+            export DISPLAY=:99
+            sleep 2
+            openbox &
+            sleep 1
+          fi
+          $PY edit-sharp-gui/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --windowed --extra "${{ matrix.extra }}" --out "$GITHUB_WORKSPACE/results/windowed"
+
+      # Home, Settings and a project window in each preset layout, to look at
+      - name: Screenshots
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ matrix.name }}" = "linux" ]; then
+            Xvfb :98 -screen 0 1920x1080x24 &
+            export DISPLAY=:98
+            sleep 2
+            openbox &
+            sleep 1
+          fi
+          "$GITHUB_WORKSPACE/${{ matrix.bin }}" ${{ matrix.extra }} --path edit-sharp-gui res://Tools/Scenes/Tests/ChromeShotsProbe.tscn -- "--shots=$GITHUB_WORKSPACE/results/shots" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.name }}
+          path: results/
+          if-no-files-found: warn

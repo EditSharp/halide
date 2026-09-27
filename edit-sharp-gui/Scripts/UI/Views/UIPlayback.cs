@@ -28,9 +28,6 @@ public partial class UIPlayback : Control
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		audioStreamPlayer.Play();
-		_generatorPlayback = (AudioStreamGeneratorPlayback)audioStreamPlayer.GetStreamPlayback();
-
 		playButton.Pressed += PlayButton_Pressed;
 
 		slider.DragStarted += Slider_DragStarted;
@@ -68,6 +65,13 @@ public partial class UIPlayback : Control
 		if (what == NotificationPredelete) SetPlayback(null);
 	}
 
+	// sound stops before the player leaves the tree; after a move _Process starts it again
+	public override void _ExitTree()
+	{
+		_generatorPlayback = null;
+		if (IsInstanceValid(audioStreamPlayer)) audioStreamPlayer.Stop();
+	}
+
 	// where playback is, as far as anything watching from outside should know -
 	// a timeline playhead, say. raised on the main thread only: from _Process
 	// while playing, and from a scrub as it is requested. never from the
@@ -84,6 +88,7 @@ public partial class UIPlayback : Control
 
 	public override void _Process(double delta)
 	{
+		SyncAudio();
 		if (playback is null) return;
 
 		if (playback.State == PlaybackState.Playing)
@@ -111,6 +116,9 @@ public partial class UIPlayback : Control
 
 	// what the play button does, for whoever else wants to do it - a shortcut, say
 	public void TogglePlayback() => PlayButton_Pressed();
+
+	// playback goes round to the other end instead of stopping there
+	public bool Loop { get; set; }
 
 	// pause while playing at any speed; otherwise play forward at normal speed
 	void PlayButton_Pressed()
@@ -154,6 +162,7 @@ public partial class UIPlayback : Control
 			playback.Play(start);
 		}
 		else playback.Play();
+		SyncAudio();
 
 		SetPlayButtonText("Pause");
 	}
@@ -307,6 +316,7 @@ public partial class UIPlayback : Control
 			Debug.WriteLine("attempting to restart playback after scrub");
 			restartOnScrubEnd = false;
 			playback.Play();
+			SyncAudio();
 			SetPlayButtonText("Pause");
 		}
 	}
@@ -351,33 +361,81 @@ public partial class UIPlayback : Control
 		if (_frame is null || _frame.GetWidth() != width || _frame.GetHeight() != height)
 		{
 			_frame = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
-			videoTexture.CallDeferred("set_image", _frame);
+			videoTexture.SetImage(_frame);
 		}
 	}
 
 	Image _frame = null;
-	void OnVideoFrame(object sender, VideoFrameEventArgs e)
-    {
-		//if frame is the wrong size, skip drawing
-		if (e.Length == (int)playback.RenderSettings.Resolution.X * (int)playback.RenderSettings.Resolution.Y * 4)
-		{
-			_frame.SetData(e.Width, e.Height, false, Image.Format.Rgba8, e.Buffer[..e.Length]);
 
-			DrawImage(_frame);
+	// playback threads: the pixels are copied here and Godot objects are only touched on the main thread
+	void OnVideoFrame(object sender, VideoFrameEventArgs e)
+	{
+		Playback source = playback;
+		if (source is null) return;
+
+		bool fits = e.Length == (int)source.RenderSettings.Resolution.X * (int)source.RenderSettings.Resolution.Y * 4;
+		byte[] pixels = fits ? e.Buffer[..e.Length] : null;
+		int width = e.Width, height = e.Height;
+		Time position = e.Position;
+
+		Callable.From(() =>
+		{
+			if (!IsInstanceValid(this) || playback != source) return;
+			if (pixels is not null) ShowFrame(pixels, width, height);
+			SetTimestamp(position, source.Timeline.Duration, source.RenderSettings.Framerate);
+		}).CallDeferred();
+	}
+
+	// main thread
+	void ShowFrame(byte[] pixels, int width, int height)
+	{
+		if (_frame is null || _frame.GetWidth() != width || _frame.GetHeight() != height)
+		{
+			_frame = Image.CreateFromData(width, height, false, Image.Format.Rgba8, pixels);
+			videoTexture.SetImage(_frame);
+			return;
 		}
-		
-		SetTimestamp(e.Position, playback.Timeline.Duration, playback.RenderSettings.Framerate);
-    }
+
+		_frame.SetData(width, height, false, Image.Format.Rgba8, pixels);
+		videoTexture.Update(_frame);
+	}
 
 	AudioStreamGeneratorPlayback _generatorPlayback;
-    void OnAudioSample(object sender, AudioSampleEventArgs e)
-    {
-        if (audioStreamPlayer.Stream is AudioStreamGenerator generator)
+	int _mixRate;
+
+	// the player runs only while playback does: a generator left playing as its window closes crashes the engine
+	void SyncAudio()
+	{
+		bool playing = playback is not null && playback.State == PlaybackState.Playing;
+		if (playing == audioStreamPlayer.Playing) return;
+
+		if (playing)
 		{
-			generator.MixRate = e.SampleRate;
-			_generatorPlayback.PushBuffer(ToVector2Buffer(e.Buffer, e.Length, e.ChannelCount));
+			audioStreamPlayer.Play();
+			_generatorPlayback = (AudioStreamGeneratorPlayback)audioStreamPlayer.GetStreamPlayback();
 		}
-    }
+		else
+		{
+			_generatorPlayback = null;
+			audioStreamPlayer.Stop();
+		}
+	}
+
+	// playback threads: pushing to the generator is thread-safe, changing its rate is left to the main thread
+	void OnAudioSample(object sender, AudioSampleEventArgs e)
+	{
+		AudioStreamGeneratorPlayback generator = _generatorPlayback;
+		if (generator is null) return;
+
+		if (e.SampleRate != _mixRate)
+		{
+			_mixRate = e.SampleRate;
+			int rate = e.SampleRate;
+			Callable.From(() => { if (IsInstanceValid(this) && audioStreamPlayer.Stream is AudioStreamGenerator stream) stream.MixRate = rate; }).CallDeferred();
+		}
+
+		generator.PushBuffer(ToVector2Buffer(e.Buffer, e.Length, e.ChannelCount));
+	}
 
 	void OnEndReached(object sender, EventArgs e)
 	{
@@ -385,23 +443,16 @@ public partial class UIPlayback : Control
 		endReached = true;
 		SetPlayButtonText("Play");
 		SetTimestamp(Speed < 0f ? Time.Zero : playback.Timeline.Duration, playback.Timeline.Duration, playback.RenderSettings.Framerate);
+
+		// round again at the same speed; playing from the far end starts at the other
+		if (Loop)
+		{
+			float speed = Speed;
+			Callable.From(() => { if (Loop && playback is not null) PlayAt(speed); }).CallDeferred();
+		}
 	}
 
 	
-
-	void DrawImage(Image image)
-	{
-		try
-		{
-			videoTexture.CallDeferred("update", image);
-		}
-		catch
-		{
-			InitializeFramebuffer(image.GetWidth(), image.GetHeight());
-			videoTexture.CallDeferred("update", image);
-		}
-		
-	}
 
 	void SetPlayButtonText(string t)
 	{

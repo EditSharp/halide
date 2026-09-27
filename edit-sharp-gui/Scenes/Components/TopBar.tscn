@@ -11,6 +11,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 36.0
 grow_horizontal = 2
+oversampling_with_scale = 2
 theme_type_variation = &"TopBar"
 script = ExtResource("1_bar")
 leading = NodePath("Row/Leading")
@@ -32,6 +33,7 @@ mouse_filter = 2
 
 [node name="Title" type="Label" parent="TitleCenter"]
 layout_mode = 2
+theme_type_variation = &"TopBarTitle"
 
 [node name="Row" type="HBoxContainer" parent="."]
 layout_mode = 2

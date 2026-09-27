@@ -6,12 +6,25 @@ namespace EditSharpGUI.Scripts.App.Chrome;
 // gives a window's title bar to a drawn UITopBar: Windows keeps its frame, macOS extends into its title, Linux goes borderless
 public static class WindowChrome
 {
-	// the bar's height and caption button width in its own units, and the scale it's drawn at
+	// the bar's height and caption button width in its own units, and the scale it's drawn at: the system's, never the interface scale
 	public static (float Height, float CaptionWidth, float Scale) Metrics(Window window) => OS.GetName() switch
 	{
 		"Windows" => WindowsChrome.Metrics(window),
-		_ => (36f, 48f, 1f),
+		"macOS" => (28f, 48f, AppSettings.SystemScale(window) / window.ContentScaleFactor),
+		_ => (36f, 48f, AppSettings.SystemScale(window) / window.ContentScaleFactor),
 	};
+
+	// where a window's content is on screen and how big, as the OS has it
+	public static Rect2I ContentRect(Window window) =>
+		new(OS.GetName() == "Windows" ? WindowsChrome.ContentPosition(window) : window.Position, window.Size);
+
+	// puts a window's content at `rect`, allowing for how the OS's chrome skews the position Godot sets
+	public static void Place(Window window, Rect2I rect)
+	{
+		int inset = OS.GetName() == "Windows" ? WindowsChrome.CaptionInset(window) : 0;
+		window.Position = rect.Position + new Vector2I(0, inset);
+		window.Size = rect.Size;
+	}
 
 	public static void Attach(Window window, UITopBar bar)
 	{
@@ -32,7 +45,7 @@ public static class WindowChrome
 				{
 					if (!GodotObject.IsInstanceValid(window)) return;
 					Vector3I margins = DisplayServer.WindowGetSafeTitleMargins(window.GetWindowId());
-					bar.LeadingInset = margins.X / window.ContentScaleFactor;
+					bar.LeadingInset = margins.X / AppSettings.SystemScale(window);
 				}).CallDeferred();
 				break;
 

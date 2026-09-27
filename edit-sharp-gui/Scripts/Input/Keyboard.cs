@@ -34,6 +34,30 @@ public static class Shortcuts
     public const string SaveAs = "project.saveAs";
     public const string ShowHome = "app.home";
     public const string ShowSettings = "app.settings";
+    public const string NewProject = "project.new";
+    public const string OpenProject = "project.open";
+    public const string CloseProject = "project.close";
+    public const string Quit = "app.quit";
+    public const string Duplicate = "clips.duplicate";
+    public const string Deselect = "selection.none";
+    public const string GoToStart = "playback.start";
+    public const string GoToEnd = "playback.end";
+    public const string Loop = "playback.loop";
+    public const string ZoomIn = "timeline.zoomIn";
+    public const string ZoomOut = "timeline.zoomOut";
+    public const string ZoomFit = "timeline.zoomFit";
+    public const string Fullscreen = "window.fullscreen";
+    public const string FloatFocused = "layout.floatFocused";
+    public const string ResetLayout = "layout.reset";
+
+    // the first nine layouts in the switcher, by position
+    public static string Layout(int number) => $"layout.{number}";
+
+    // actions extensions add, listed after the app's own
+    public static readonly List<(string Action, string Category, string Label)> Extra = [];
+
+    // every action the settings list: the app's, then extensions'
+    public static IEnumerable<(string Action, string Category, string Label)> All => Catalog.Concat(Extra);
 
     // every action as the settings list it: (action, category, label), in order
     public static readonly (string Action, string Category, string Label)[] Catalog =
@@ -44,12 +68,17 @@ public static class Shortcuts
         (PlaybackStop, "Playback", "Stop"),
         (StepForward, "Playback", "Next frame"),
         (StepBack, "Playback", "Previous frame"),
+        (GoToStart, "Playback", "Go to start"),
+        (GoToEnd, "Playback", "Go to end"),
+        (Loop, "Playback", "Loop playback"),
         (Undo, "Edit", "Undo"),
         (Redo, "Edit", "Redo"),
         (Cut, "Edit", "Cut"),
         (Copy, "Edit", "Copy"),
         (Paste, "Edit", "Paste"),
+        (Duplicate, "Edit", "Duplicate"),
         (SelectAll, "Edit", "Select all"),
+        (Deselect, "Edit", "Deselect all"),
         (Delete, "Clips", "Delete"),
         (RippleDelete, "Clips", "Ripple delete"),
         (RippleDeleteAll, "Clips", "Ripple delete on every channel"),
@@ -57,10 +86,29 @@ public static class Shortcuts
         (SplitAll, "Clips", "Split every channel at the playhead"),
         (MediaRename, "Media", "Rename"),
         (MediaImport, "Media", "Import files"),
+        (NewProject, "Project", "New project"),
+        (OpenProject, "Project", "Open project"),
         (Save, "Project", "Save"),
         (SaveAs, "Project", "Save as"),
+        (CloseProject, "Project", "Close project"),
+        (ZoomIn, "View", "Zoom timeline in"),
+        (ZoomOut, "View", "Zoom timeline out"),
+        (ZoomFit, "View", "Fit timeline to view"),
+        (Fullscreen, "View", "Toggle fullscreen"),
+        (FloatFocused, "View", "Float the focused view"),
+        (ResetLayout, "View", "Reset layout"),
+        (Layout(1), "View", "Layout 1"),
+        (Layout(2), "View", "Layout 2"),
+        (Layout(3), "View", "Layout 3"),
+        (Layout(4), "View", "Layout 4"),
+        (Layout(5), "View", "Layout 5"),
+        (Layout(6), "View", "Layout 6"),
+        (Layout(7), "View", "Layout 7"),
+        (Layout(8), "View", "Layout 8"),
+        (Layout(9), "View", "Layout 9"),
         (ShowHome, "App", "Show Home"),
         (ShowSettings, "App", "App Settings"),
+        (Quit, "App", "Quit"),
     ];
 }
 
@@ -159,6 +207,28 @@ public sealed class ShortcutMap
         [Shortcuts.SaveAs] = [new(Key.S, Control: true, Shift: true)],
         [Shortcuts.ShowHome] = [new(Key.H, Control: true, Shift: true)],
         [Shortcuts.ShowSettings] = [new(Key.Comma, Control: true)],
+        [Shortcuts.NewProject] = [new(Key.N, Control: true)],
+        [Shortcuts.OpenProject] = [new(Key.O, Control: true)],
+        [Shortcuts.CloseProject] = [new(Key.W, Control: true)],
+        [Shortcuts.Quit] = [new(Key.Q, Control: true)],
+        [Shortcuts.Duplicate] = [new(Key.D, Control: true)],
+        [Shortcuts.Deselect] = [new(Key.A, Control: true, Shift: true)],
+        [Shortcuts.GoToStart] = [new(Key.Home)],
+        [Shortcuts.GoToEnd] = [new(Key.End)],
+        [Shortcuts.Loop] = [new(Key.L, Control: true)],
+        [Shortcuts.ZoomIn] = [new(Key.Equal)],
+        [Shortcuts.ZoomOut] = [new(Key.Minus)],
+        [Shortcuts.ZoomFit] = [new(Key.Backslash)],
+        [Shortcuts.Fullscreen] = [new(Key.F11)],
+        [Shortcuts.Layout(1)] = [new(Key.Key1, Shift: true, Alt: true)],
+        [Shortcuts.Layout(2)] = [new(Key.Key2, Shift: true, Alt: true)],
+        [Shortcuts.Layout(3)] = [new(Key.Key3, Shift: true, Alt: true)],
+        [Shortcuts.Layout(4)] = [new(Key.Key4, Shift: true, Alt: true)],
+        [Shortcuts.Layout(5)] = [new(Key.Key5, Shift: true, Alt: true)],
+        [Shortcuts.Layout(6)] = [new(Key.Key6, Shift: true, Alt: true)],
+        [Shortcuts.Layout(7)] = [new(Key.Key7, Shift: true, Alt: true)],
+        [Shortcuts.Layout(8)] = [new(Key.Key8, Shift: true, Alt: true)],
+        [Shortcuts.Layout(9)] = [new(Key.Key9, Shift: true, Alt: true)],
     };
 
     readonly Dictionary<string, List<KeyCombo>> bindings = Defaults.ToDictionary(d => d.Key, d => d.Value.ToList());
@@ -272,7 +342,14 @@ public sealed class ShortcutEventArgs(string action, KeyCombo combo) : EventArgs
 // the space bar
 public class Keyboard
 {
-    public Node Captor { get; private set; }
+    // null once the node that claimed the keyboard has been freed, such as a closed window
+    public Node Captor
+    {
+        get => GodotObject.IsInstanceValid(captor) ? captor : null;
+        private set => captor = value;
+    }
+
+    Node captor;
 
     public ShortcutMap Shortcuts { get; } = new();
 
@@ -297,6 +374,27 @@ public class Keyboard
     }
 
     public bool HasCapture(Node node) => GodotObject.IsInstanceValid(Captor) && Captor == node;
+
+    // runs an action as its key would, without one: offered from the focus in `from`'s window, the captor
+    // when it's in that window, then `from` and its ancestors. returns whether something took it
+    public bool Invoke(string action, Node from)
+    {
+        if (from is null || !from.IsInsideTree()) return false;
+
+        Viewport viewport = from.GetViewport();
+        Node captor = GodotObject.IsInstanceValid(Captor) && Captor.IsInsideTree() && Captor.GetWindow() == from.GetWindow() ? Captor : null;
+        ShortcutEventArgs args = new(action, default);
+
+        foreach (Node node in Chain(viewport.GuiGetFocusOwner(), captor, from, viewport.GetTree()?.Root))
+        {
+            if (!handlers.TryGetValue(node, out Action<ShortcutEventArgs> handler)) continue;
+
+            handler(args);
+            if (args.Handled) return true;
+        }
+
+        return false;
+    }
 
     // whether a key bound to the action is down right now, whatever the modifiers
     public bool IsHeld(string action) => Shortcuts.Get(action).Any(c => Godot.Input.IsKeyPressed(c.Key));

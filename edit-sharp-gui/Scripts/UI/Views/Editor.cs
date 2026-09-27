@@ -5,6 +5,7 @@ using EditSharp.Components.Media;
 using EditSharp.History;
 using EditSharp.Playback;
 using EditSharpGUI.Scripts.Input;
+using EditSharpGUI.Scripts.App.Layouts;
 using EditSharpGUI.Scripts.UI.Docking;
 using EditSharpGUI.Scripts.UI.DragDrop;
 using EditSharpGUI.Scripts.UI.Thumbnails;
@@ -59,7 +60,16 @@ public partial class Editor : Control
 		Dock.Register("program", "Program", UIPlayback);
 		Dock.Register("timeline", "Timeline", UITimeline);
 		Dock.DefaultLayout = DefaultLayout;
-		Dock.DefaultSpot = id => id == "source" ? ("program", DockSide.Left) : null;
+		Layouts = new LayoutController(Dock);
+		Dock.ResetOverride = Layouts.ResetActive;
+		Dock.DefaultSpot = id => id == "source" ? ("program", DockSide.Left)
+			: EditSharpGUI.Api.EditSharpApp.Instance.Views.FromExtensions.FirstOrDefault(v => v.Id == id) is { Beside: string beside } view ? (beside, view.Side)
+			: null;
+
+		// views extensions add, now and while this window is open
+		foreach (EditSharpGUI.Api.ViewDefinition view in EditSharpGUI.Api.EditSharpApp.Instance.Views.FromExtensions) AddExtensionView(view);
+		EditSharpGUI.Api.EditSharpApp.Instance.Views.Added += AddExtensionView;
+		EditSharpGUI.Api.EditSharpApp.Instance.Views.Removed += RemoveExtensionView;
 		Dock.FloatOpened += WireFloat;
 
 		thumbnails = new ThumbnailCache(project.Timeline, project.RenderSettings, project.History);
@@ -96,14 +106,7 @@ public partial class Editor : Control
 		inspector.FrameSize = new((int)project.RenderSettings.Resolution.X, (int)project.RenderSettings.Resolution.Y);
 		inspector.Playhead = UITimeline.PlayheadTime;
 		UITimeline.SelectionChanged += (_, _) => inspector.ShowClips(UITimeline.SelectedClips);
-		inspector.SeekRequested += (_, time) =>
-		{
-			UIPlayback.BeginScrub();
-			UIPlayback.ScrubTo(time);
-			UIPlayback.EndScrub();
-			UITimeline.PlayheadTime = time;
-			inspector.Playhead = time;
-		};
+		inspector.SeekRequested += (_, time) => Seek(time);
 
 		// the media viewer: its selection goes to the inspector, its media go
 		// to the timeline, and a double-click opens a media in the source viewer
@@ -174,16 +177,19 @@ public partial class Editor : Control
 			["timeline"] = UITimeline.SaveState(),
 			["media"] = mediaViewer.SaveState(),
 			["dock"] = Dock.Save(),
+			["layout"] = Layouts.Active,
 		};
 
-		if (GetWindow() is ProjectWindow window)
+		// a window never seen windowed has no size worth keeping; it reopens at the default
+		if (GetWindow() is ProjectWindow window && window.RestoredRect is { } restored && restored.HasArea())
 		{
 			state["window"] = new System.Text.Json.Nodes.JsonObject
 			{
-				["x"] = window.Position.X,
-				["y"] = window.Position.Y,
-				["width"] = window.Size.X,
-				["height"] = window.Size.Y,
+				["x"] = restored.Position.X,
+				["y"] = restored.Position.Y,
+				["width"] = restored.Size.X,
+				["height"] = restored.Size.Y,
+				// a fullscreen window reopens windowed, at its size from before
 				["maximized"] = window.Mode == Window.ModeEnum.Maximized,
 			};
 		}
@@ -193,14 +199,22 @@ public partial class Editor : Control
 
 	void RestoreState(System.Text.Json.Nodes.JsonObject state)
 	{
-		Dock.Restore(state?["dock"]?.AsObject());
+		// the arrangement the project was left in, under the layout it was in; a new project opens in Editing as it's remembered
+		if (state?["dock"] is System.Text.Json.Nodes.JsonObject dock)
+		{
+			Dock.Restore(dock);
+			Layouts.Resume((string)state["layout"]);
+		}
+		else Layouts.Apply(LayoutPresets.Editing);
+
 		if (state is null || state.Count == 0) return;
 
 		if (state["window"] is System.Text.Json.Nodes.JsonObject w && GetWindow() is ProjectWindow window)
 		{
-			window.Position = new(w["x"]?.GetValue<int>() ?? window.Position.X, w["y"]?.GetValue<int>() ?? window.Position.Y);
-			window.Size = new(w["width"]?.GetValue<int>() ?? window.Size.X, w["height"]?.GetValue<int>() ?? window.Size.Y);
-			if (w["maximized"]?.GetValue<bool>() == true) window.Mode = Window.ModeEnum.Maximized;
+			Rect2I saved = new(
+				w["x"]?.GetValue<int>() ?? window.Position.X, w["y"]?.GetValue<int>() ?? window.Position.Y,
+				w["width"]?.GetValue<int>() ?? window.Size.X, w["height"]?.GetValue<int>() ?? window.Size.Y);
+			window.Restore(saved, w["maximized"]?.GetValue<bool>() == true);
 		}
 
 		mediaViewer.RestoreState(state["media"]?.AsObject());
@@ -216,13 +230,11 @@ public partial class Editor : Control
 
 	// ---- the layout ----
 
-	// media on the left, the program and inspector beside it, the timeline under them all
-	static DockTree DefaultLayout()
-	{
-		DockSplit viewers = new(false, 0.7f, new DockStack(["program"]), new DockStack(["inspector"]));
-		DockSplit top = new(false, 0.25f, new DockStack(["media"]), viewers);
-		return new DockTree(new DockSplit(true, 0.55f, top, new DockStack(["timeline"])));
-	}
+	// the window's layouts: the active one, applying others, remembering rearrangements
+	public LayoutController Layouts { get; private set; }
+
+	// the Editing preset as it ships
+	static DockTree DefaultLayout() => new(DockNode.FromJson(LayoutPresets.State(LayoutPresets.Editing)["main"]));
 
 	// a float takes the page's shortcuts and dropped files, and makes this project the one in use
 	void WireFloat(DockFloatWindow window)
@@ -303,6 +315,9 @@ public partial class Editor : Control
 	{
 		EditSharpGUI.Scripts.UI.DragDrop.Platform.Windows.OleDragHover.Uninstall(GetWindow());
 		InputManager.Singleton.Keyboard.Unregister(this);
+		Layouts?.Dispose();
+		EditSharpGUI.Api.EditSharpApp.Instance.Views.Added -= AddExtensionView;
+		EditSharpGUI.Api.EditSharpApp.Instance.Views.Removed -= RemoveExtensionView;
 		if (History.Active == project.History) History.Active = null;
 
 		thumbnails?.Dispose();
@@ -345,6 +360,9 @@ public partial class Editor : Control
 
 	void OnShortcut(ShortcutEventArgs e)
 	{
+		// nothing closer took it: the timeline counts as focused until another view is clicked, so it's the timeline's to try
+		if (FocusedView == "timeline" && Dock.IsOpen("timeline") && UITimeline.TakeShortcut(e)) return;
+
 		switch (e.Action)
 		{
 			case Shortcuts.PlaybackToggle:
@@ -370,6 +388,52 @@ public partial class Editor : Control
 
 			case Shortcuts.ShowSettings:
 				ProjectManager.Singleton.ShowSettings();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.GoToStart:
+				Seek(Time.Zero);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.GoToEnd:
+				Seek(UITimeline.Timeline.Duration);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Loop:
+				UIPlayback.Loop = !UIPlayback.Loop;
+				e.Handled = true;
+				break;
+
+			// the media viewer imports when it has the keyboard; from anywhere else, here
+			case Shortcuts.MediaImport:
+				mediaViewer.ImportDialog();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.FloatFocused:
+				if (FocusedView is string floated && Dock.IsOpen(floated)) Dock.Float(floated);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.ResetLayout:
+				Layouts.ResetActive();
+				e.Handled = true;
+				break;
+
+			case string layout when layout.StartsWith("layout.") && int.TryParse(layout["layout.".Length..], out int number):
+				Layouts.ApplyNumber(number);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Fullscreen:
+				ToggleFullscreen();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.CloseProject:
+				if (GetWindow() is ProjectWindow window) _ = window.CloseAsync();
 				e.Handled = true;
 				break;
 
@@ -414,6 +478,86 @@ public partial class Editor : Control
 				break;
 		}
 	}
+
+	// the playhead, the picture and the inspector all at `time`
+	void Seek(Time time)
+	{
+		UIPlayback.BeginScrub();
+		UIPlayback.ScrubTo(time);
+		UIPlayback.EndScrub();
+		UITimeline.PlayheadTime = time;
+		inspector.Playhead = time;
+	}
+
+	// the focused one of this project's windows in or out of fullscreen
+	void ToggleFullscreen()
+	{
+		Window window = GetWindow().GetChildren().OfType<DockFloatWindow>().FirstOrDefault(f => f.HasFocus()) ?? GetWindow();
+		window.Mode = window.Mode == Window.ModeEnum.Fullscreen ? Window.ModeEnum.Windowed : Window.ModeEnum.Fullscreen;
+	}
+
+	// an extension's view made for this window; one that fails to build is left out
+	void AddExtensionView(EditSharpGUI.Api.ViewDefinition view)
+	{
+		if (GetWindow() is not ProjectWindow window) return;
+
+		try
+		{
+			Control made = view.Create(EditSharpGUI.Api.EditSharpApp.Instance.Projects.Handle(window));
+			if (made is null) return;
+			made.Name = view.Title;
+			Dock.Register(view.Id, view.Title, made);
+		}
+		catch (Exception e)
+		{
+			GD.PushError($"The view '{view.Id}' failed to build: {e.Message}");
+		}
+	}
+
+	void RemoveExtensionView(EditSharpGUI.Api.ViewDefinition view) => Dock.Unregister(view.Id);
+
+	// ---- for the API's services ----
+
+	internal UITimeline TimelineView => UITimeline;
+	internal UIPlayback ProgramView => UIPlayback;
+	internal UIPlayback SourceView => SourceViewer;
+	internal MediaViewer MediaView => mediaViewer;
+	internal Inspector InspectorView => inspector;
+	internal DockManager Docks => Dock;
+	internal void SeekTo(Time time) => Seek(time);
+	internal void OpenSource(object subject) => ShowSource(subject);
+
+	// ---- for the menus: what applies right now ----
+
+	// the view the keyboard is with, by id; the timeline when no view has claimed it
+	public string FocusedView => Dock.ViewHolding(InputManager.Singleton.Keyboard.Captor) ?? "timeline";
+
+	public bool Looping => UIPlayback.Loop;
+
+	// whether an action would do anything from here, so a menu can grey it out
+	public bool CanRun(string action)
+	{
+		string view = FocusedView;
+		bool timeline = view == "timeline" && Dock.IsOpen("timeline");
+		bool media = view == "media" && Dock.IsOpen("media");
+
+		return action switch
+		{
+			Shortcuts.Undo => project.History.CanUndo,
+			Shortcuts.Redo => project.History.CanRedo,
+			Shortcuts.Cut or Shortcuts.Copy or Shortcuts.Duplicate => timeline && UITimeline.HasSelection,
+			Shortcuts.Delete => timeline && UITimeline.HasSelection || media && mediaViewer.Selected.Count > 0,
+			Shortcuts.Paste => timeline && EditSharpGUI.Scripts.Clipboard.Shared.TryGet(out EditSharpGUI.Scripts.ClipsItem _),
+			Shortcuts.SelectAll or Shortcuts.Deselect => timeline || media,
+			Shortcuts.ZoomIn or Shortcuts.ZoomOut or Shortcuts.ZoomFit => Dock.IsOpen("timeline"),
+			Shortcuts.FloatFocused => Dock.IsOpen(view) && Dock.CanFloat(view),
+			_ => true,
+		};
+	}
+
+	// the name of what undo or redo would take back, for the menu
+	public string UndoName => project.History.UndoDescription;
+	public string RedoName => project.History.RedoDescription;
 
 	static bool MouseDragging => InputManager.Singleton.Mouse.LeftButton.ClickState == MouseButtonClickState.Dragging;
 }

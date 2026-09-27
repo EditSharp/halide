@@ -18,7 +18,7 @@ public partial class Dialog : Resource
 	public Func<Dialog, string> Validate;
 
 	// an element changed, by code or by the user; a showing dialog listens
-	public event Action<DialogElement> Changed;
+	public new event Action<DialogElement> Changed;
 
 	// any value the user changed, after the element has taken it
 	public event Action<DialogElement> Edited;

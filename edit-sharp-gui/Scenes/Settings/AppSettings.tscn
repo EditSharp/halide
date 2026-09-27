@@ -3,11 +3,13 @@
 [ext_resource type="Script" path="res://Scripts/UI/Views/AppSettingsView.cs" id="1_view"]
 [ext_resource type="PackedScene" path="res://Scenes/Views/Inspector.tscn" id="2_inspector"]
 [ext_resource type="PackedScene" path="res://Scenes/Settings/ShortcutsPage.tscn" id="3_shortcuts"]
+[ext_resource type="PackedScene" path="res://Scenes/Settings/ExtensionsPage.tscn" id="4_extensions"]
+[ext_resource type="PackedScene" path="res://Scenes/Settings/SettingsSectionButton.tscn" id="5_section"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_sections"]
 allow_unpress = false
 
-[node name="AppSettings" type="PanelContainer" node_paths=PackedStringArray("search", "appearance", "shortcuts", "media", "projects", "advanced", "noMatches", "inspector", "shortcutsPage")]
+[node name="AppSettings" type="PanelContainer" node_paths=PackedStringArray("search", "sections", "appearance", "shortcuts", "media", "projects", "extensions", "advanced", "noMatches", "inspector", "shortcutsPage", "extensionsPage")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -16,14 +18,18 @@ grow_vertical = 2
 theme_type_variation = &"ViewBackground"
 script = ExtResource("1_view")
 search = NodePath("Columns/Sidebar/Column/Search")
+sections = NodePath("Columns/Sidebar/Column/Sections")
 appearance = NodePath("Columns/Sidebar/Column/Sections/Appearance")
 shortcuts = NodePath("Columns/Sidebar/Column/Sections/Shortcuts")
 media = NodePath("Columns/Sidebar/Column/Sections/Media")
 projects = NodePath("Columns/Sidebar/Column/Sections/Projects")
+extensions = NodePath("Columns/Sidebar/Column/Sections/Extensions")
+sectionScene = ExtResource("5_section")
 advanced = NodePath("Columns/Sidebar/Column/Advanced")
 noMatches = NodePath("Columns/Page/Content/NoMatches")
 inspector = NodePath("Columns/Page/Content/Inspector")
 shortcutsPage = NodePath("Columns/Page/Content/ShortcutsPage")
+extensionsPage = NodePath("Columns/Page/Content/ExtensionsPage")
 
 [node name="Columns" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -90,6 +96,15 @@ button_group = SubResource("ButtonGroup_sections")
 text = "Projects & Autosave"
 alignment = 0
 
+[node name="Extensions" type="Button" parent="Columns/Sidebar/Column/Sections"]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_sections")
+text = "Extensions"
+alignment = 0
+
 [node name="Advanced" type="CheckButton" parent="Columns/Sidebar/Column"]
 layout_mode = 2
 focus_mode = 0
@@ -125,5 +140,9 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="ShortcutsPage" parent="Columns/Page/Content" instance=ExtResource("3_shortcuts")]
+visible = false
+layout_mode = 2
+
+[node name="ExtensionsPage" parent="Columns/Page/Content" instance=ExtResource("4_extensions")]
 visible = false
 layout_mode = 2

@@ -47,6 +47,24 @@ public static class Screens
 	// a window's default size, grown with the interface scale
 	public static Vector2I Sized(Vector2I size) => (Vector2I)(new Vector2(size.X, size.Y) * AppSettings.Current.ScaleFor(null)).Round();
 
+	// `rect` moved and shrunk to fit the usable area of the screen holding most of it, the primary when none does
+	public static Rect2I Fit(Rect2I rect)
+	{
+		int best = DisplayServer.GetPrimaryScreen();
+		int overlap = 0;
+		for (int i = 0; i < DisplayServer.GetScreenCount(); i++)
+		{
+			Rect2I shared = DisplayServer.ScreenGetUsableRect(i).Intersection(rect);
+			if (shared.Area > overlap) (best, overlap) = (i, shared.Area);
+		}
+
+		Rect2I usable = DisplayServer.ScreenGetUsableRect(best);
+		if (!usable.HasArea()) return rect;
+		Vector2I size = rect.Size.Min(usable.Size);
+		Vector2I position = rect.Position.Clamp(usable.Position, usable.End - size);
+		return new Rect2I(position, size);
+	}
+
 	// moves an already showing window to the middle of the preferred screen
 	public static void Move(Window window)
 	{

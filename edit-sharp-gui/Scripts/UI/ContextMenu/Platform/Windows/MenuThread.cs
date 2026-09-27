@@ -20,7 +20,25 @@ namespace EditSharpGUI.Scripts.UI.ContextMenu.Platform.Windows;
 static class MenuThread
 {
     // what one showing needs from the main thread, gathered there
-    public sealed record Showing(ContextMenu Menu, Snapshot Snapshot, Vector2I At, bool Dark, uint Dpi, nint MainWindow, bool HideOnItem, bool HideOnCheckable);
+    public sealed record Showing(ContextMenu Menu, Snapshot Snapshot, Vector2I At, bool Dark, uint Dpi, nint MainWindow, bool HideOnItem, bool HideOnCheckable, bool Fade)
+    {
+        // a menu bar's menus, when this is one of them: the pointer moving onto another's button opens that one
+        public IReadOnlyList<BarItem> Bar { get; init; }
+        public int BarIndex { get; init; }
+    }
+
+    // one of a menu bar's menus: its latest snapshot, where it opens and its button, in win32 screen pixels
+    public sealed class BarItem(ContextMenu menu, Snapshot snapshot, Vector2I at, Rect2I button)
+    {
+        public ContextMenu Menu => menu;
+        public Snapshot Snapshot { get; set; } = snapshot;
+        public Vector2I At => at;
+        public Rect2I Button => button;
+    }
+
+    // set by the filter: the bar menu to open once this one has closed, or that its own button closed it
+    static int barSwitch = -1;
+    static bool barClosed;
 
     // work for the thread, run from its message loop in order. a menu tracks
     // modally, so work that arrives meanwhile waits until the menu closes
@@ -138,6 +156,8 @@ static class MenuThread
         using MenuPainter menuPainter = new(helper, showing.Dpi, showing.Dark);
         painter = menuPainter;
         current = showing;
+        barSwitch = -1;
+        barClosed = false;
 
         try
         {
@@ -171,7 +191,8 @@ static class MenuThread
                     if (attached) AttachThreadInput(threadId, mainThread, true);
                     TakeForeground(mainThread);
                     long opened = System.Environment.TickCount64;
-                    uint id = TrackPopupMenuEx(built.Menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, showing.At.X, showing.At.Y, helper, 0);
+                    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON | (showing.Fade ? 0 : TPM_NOANIMATION);
+                    uint id = TrackPopupMenuEx(built.Menu, flags, showing.At.X, showing.At.Y, helper, 0);
                     if (Debug) GD.Print($"MENU track returned id={id} after {System.Environment.TickCount64 - opened}ms error={Marshal.GetLastWin32Error()} at={showing.At} pressSeen={pressSeen}");
 
                     // the menu loop has to see one more message to wind down fully (TrackPopupMenu docs)
@@ -187,12 +208,36 @@ static class MenuThread
                     if (filter != 0) UnhookWindowsHookEx(filter);
                     currentBuilt = null;
 
+                    // the pointer went onto another bar menu: it opens in this same loop, without a trip through godot
+                    if (id == 0 && barSwitch >= 0 && showing.Bar is { } bar)
+                    {
+                        BarItem item = bar[barSwitch];
+                        showing = showing with
+                        {
+                            Menu = item.Menu, Snapshot = item.Snapshot, At = item.At, BarIndex = barSwitch,
+                            HideOnItem = item.Menu.HideOnItemSelect, HideOnCheckable = item.Menu.HideOnCheckableItemSelect,
+                        };
+                        current = showing;
+                        snapshot = item.Snapshot;
+                        barSwitch = -1;
+                        continue;
+                    }
+
+                    // its own button was clicked: that click only closes it, as a menu bar's does
+                    if (id == 0 && barClosed)
+                    {
+                        Drain(showing.MainWindow, forwardReleases: false, out _);
+                        Closed(showing.Menu);
+                        return;
+                    }
+
                     // a pick handled inside the loop that could not update the menu in
                     // place closed it; the snapshot it left is built again
                     if (id == 0 && rebuildWith is not null)
                     {
                         snapshot = rebuildWith;
                         rebuildWith = null;
+                        Keep(showing, snapshot);
                         continue;
                     }
 
@@ -204,7 +249,7 @@ static class MenuThread
                     }
                 }
 
-                snapshot.Dispose();
+                if (showing.Bar is null) snapshot.Dispose();
 
                 // the pick lands on godot's thread; when the menu stays open, a fresh
                 // snapshot comes back once the pick has been applied
@@ -232,6 +277,7 @@ static class MenuThread
 
                 snapshot = next.Task.GetAwaiter().GetResult();
                 if (snapshot is null) return;
+                Keep(showing, snapshot);
             }
         }
         finally
@@ -240,7 +286,23 @@ static class MenuThread
             current = null;
             currentSnapshot = null;
             snapshot?.Dispose();
+            if (showing.Bar is { } bar) foreach (BarItem item in bar) item.Snapshot.Dispose();
         }
+    }
+
+    // a bar menu's newest snapshot, so switching back to it later shows it as it is now
+    static void Keep(Showing showing, Snapshot snapshot)
+    {
+        if (showing.Bar is { } bar) bar[showing.BarIndex].Snapshot = snapshot;
+    }
+
+    // the bar menu whose button holds the point; -1 for none
+    static int BarAt(Showing showing, POINT pt)
+    {
+        if (showing.Bar is not { } bar) return -1;
+        for (int i = 0; i < bar.Count; i++)
+            if (bar[i].Button.HasPoint(new Vector2I(pt.x, pt.y))) return i;
+        return -1;
     }
 
     // ---- picks that keep the menu open, handled inside the menu loop ----
@@ -289,6 +351,10 @@ static class MenuThread
         if (code == MSGF_MENU && currentBuilt is Built built && current is Showing showing)
         {
             MSG msg = Marshal.PtrToStructure<MSG>(lParam);
+
+            // bar switching/closing is handled from the low-level mouse hook, not here (see Hook):
+            // calling EndMenu() from this filter, while AttachThreadInput is active and a WH_MOUSE_LL
+            // hook is also firing for every system mouse move, could hang the whole app
 
             if (RowOf(msg, out nint menu, out uint item, out bool byPosition))
             {
@@ -392,10 +458,40 @@ static class MenuThread
 
     static nint Hook(int code, nint wParam, nint lParam)
     {
-        if (code >= 0 && (uint)wParam is WM_LBUTTONDOWN or WM_RBUTTONDOWN)
+        if (code < 0) return CallNextHookEx(0, code, wParam, lParam);
+
+        uint msg = (uint)wParam;
+
+        if (msg is WM_LBUTTONDOWN or WM_RBUTTONDOWN)
         {
-            pressSeen = (uint)wParam;
-            pressPoint = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt;
+            POINT pt = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt;
+
+            // a click on one of the bar's own buttons: handled entirely here (switch or close), by
+            // posting the same cancel the menu loop already listens for. never treated as a plain
+            // dismissing click, so it can't reopen the menu through a replay
+            if (msg == WM_LBUTTONDOWN && current is Showing showing && BarAt(showing, pt) is int over and >= 0)
+            {
+                if (over == showing.BarIndex) barClosed = true;
+                else barSwitch = over;
+                PostMessageW(helper, WM_CANCELMODE, 0, 0);
+                return 1;
+            }
+
+            pressSeen = msg;
+            pressPoint = pt;
+        }
+        else if (msg == WM_MOUSEMOVE && current is Showing showing && showing.Bar is not null)
+        {
+            POINT pt = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt;
+            int over = BarAt(showing, pt);
+
+            // asked for at most once per target: posting the cancel again while it's still winding down would
+            // just queue up redundant switches
+            if (over >= 0 && over != showing.BarIndex && barSwitch != over)
+            {
+                barSwitch = over;
+                PostMessageW(helper, WM_CANCELMODE, 0, 0);
+            }
         }
 
         return CallNextHookEx(0, code, wParam, lParam);
@@ -474,8 +570,12 @@ static class MenuThread
 
             uint corner = DWMWCP_ROUNDSMALL;
             uint border = painter.BorderColor;
+            uint noTransitions = 1;
             DwmSetWindowAttribute(popup, DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(uint));
             DwmSetWindowAttribute(popup, DWMWA_BORDER_COLOR, ref border, sizeof(uint));
+            // stops dwm's own fade for this window's shadow, on top of TPM_NOANIMATION, so
+            // switching bar menus (destroy one popup, create the next) doesn't flash the shadow
+            DwmSetWindowAttribute(popup, DWMWA_TRANSITIONS_FORCEDISABLED, ref noTransitions, sizeof(uint));
         }
     }
 
@@ -554,6 +654,7 @@ static class MenuThread
     }
 
     const int VK_LBUTTON = 0x01, VK_RBUTTON = 0x02;
+    const uint WM_MOUSEMOVE = 0x200;
     const uint WM_LBUTTONDOWN = 0x201, WM_LBUTTONUP = 0x202, WM_LBUTTONDBLCLK = 0x203, WM_RBUTTONDOWN = 0x204, WM_RBUTTONUP = 0x205, WM_RBUTTONDBLCLK = 0x206;
     const uint WM_MOUSEFIRST = 0x200, WM_MOUSELAST = 0x20D, WM_KEYFIRST = 0x100, WM_KEYLAST = 0x109;
     const uint PM_REMOVE = 0x1;

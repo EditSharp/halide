@@ -28,8 +28,10 @@ public partial class SettingsWindow : Window
 		Screens.Place(open);
 
 		Control page = GD.Load<PackedScene>(Scene).Instantiate<Control>();
-		page.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		open.AddChild(page);
+		EditSharpGUI.Scripts.App.Chrome.WindowFrame frame = EditSharpGUI.Scripts.App.Chrome.WindowFrame.Wrap(page);
+		open.AddChild(frame);
+		frame.Bar.ShowsLogo = false;
+		frame.Bar.Title = "Settings";
 
 		((SceneTree)Engine.GetMainLoop()).Root.AddChild(open);
 		Screens.Scale(open);

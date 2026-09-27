@@ -124,6 +124,7 @@ public partial class DockPane : VBoxContainer
 		strip.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		strip.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		tabBar.TabAlignment = TabBar.AlignmentMode.Left;
+		tabBar.ThemeTypeVariation = "TopBarTabs";
 		return strip;
 	}
 

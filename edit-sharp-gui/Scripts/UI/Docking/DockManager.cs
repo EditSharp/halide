@@ -18,10 +18,16 @@ public partial class DockManager : Node
 	// the layout a reset goes back to
 	public Func<DockTree> DefaultLayout;
 
+	// what a pane's "Reset Layout" does instead of going back to the default, when set
+	public Action ResetOverride;
+
 	// where a view with no home opens: beside a view, or null for the largest pane
 	public Func<string, (string Beside, DockSide Side)?> DefaultSpot;
 
 	public event Action<DockFloatWindow> FloatOpened;
+
+	// the arrangement changed: views moved, opened or closed, a split dragged, a float moved or resized
+	public event Action Changed;
 
 	readonly Dictionary<string, (string Title, Control View)> views = [];
 	readonly List<(DockTree Tree, DockFloatWindow Window)> floats = [];
@@ -36,7 +42,30 @@ public partial class DockManager : Node
 		Park(view);
 	}
 
+	// a view gone for good: closed, forgotten and freed
+	public void Unregister(string id)
+	{
+		if (!views.Remove(id, out (string Title, Control View) gone)) return;
+
+		if (TreeOf(id) is DockTree from) from.Remove(id);
+		homes.Remove(id);
+		Refresh();
+		gone.View.QueueFree();
+	}
+
 	public bool IsOpen(string id) => TreeOf(id) is not null;
+
+	// the view holding `node`, by id; null when it's in none
+	public string ViewHolding(Node node)
+	{
+		if (node is null) return null;
+		foreach ((string id, (string _, Control view)) in views)
+			if (view == node || view.IsAncestorOf(node)) return id;
+		return null;
+	}
+
+	// the views, by id and title, in the order they were registered
+	public IEnumerable<(string Id, string Title)> Views => views.Select(v => (v.Key, v.Value.Title));
 
 	// anything but a float's only view, which is floating already
 	public bool CanFloat(string id) => TreeOf(id) is not DockTree from || from == tree || from.Views.Count() > 1;
@@ -76,10 +105,26 @@ public partial class DockManager : Node
 		DockTree floating = new(new DockStack([id]));
 		floats.Add((floating, window));
 		Wire(window.Area);
+		window.Moved += () => Changed?.Invoke();
 		window.Closing += DockBack;
 		FloatOpened?.Invoke(window);
 		Refresh();
 	}
+
+	// docked beside another view: among its tabs, or split off to one side of its pane
+	public bool DockBeside(string id, string beside, DockSide side)
+	{
+		if (id == beside || !views.ContainsKey(id) || TreeOf(beside) is not DockTree target) return false;
+
+		Leave(id);
+		if (target.StackOf(beside) is not DockStack stack) return false;
+		target.Insert(id, stack, side);
+		Refresh();
+		return true;
+	}
+
+	// whether an open view is in a float rather than this window
+	public bool IsFloating(string id) => TreeOf(id) is DockTree t && t != tree;
 
 	public void Reset()
 	{
@@ -105,9 +150,10 @@ public partial class DockManager : Node
 		};
 		area.FloatRequested += id => Float(id);
 		area.OpenRequested += (stack, id) => Open(id, stack);
-		area.ResetRequested += Reset;
+		area.ResetRequested += () => { if (ResetOverride is not null) ResetOverride(); else Reset(); };
 		area.TabSelected += (_, _) => Retitle();
 		area.TabDragStarted += BeginDrag;
+		area.LayoutEdited += () => Changed?.Invoke();
 	}
 
 	// a view's tab picked up; the drag follows the pointer until it's let go
@@ -219,12 +265,13 @@ public partial class DockManager : Node
 			if (!IsOpen(id)) Park(view);
 
 		Retitle();
+		Changed?.Invoke();
 	}
 
 	void Retitle()
 	{
 		foreach ((DockTree floating, DockFloatWindow window) in floats)
-			window.SetTitle(string.Join(", ", floating.Views.Select(v => views[v].Title)));
+			window.ShowTitle(string.Join(", ", floating.Views.Select(v => views[v].Title)));
 	}
 
 	void Park(Control view)
@@ -253,13 +300,20 @@ public partial class DockManager : Node
 
 	// ---- remembered with the project ----
 
-	public JsonObject Save() => new()
+	public JsonObject Save() => Save(Vector2I.Zero);
+
+	// as a layout: floats placed relative to this window, so the layout fits wherever the window is
+	public JsonObject Capture() => Save(main.GetWindow().Position);
+
+	public void Apply(JsonObject layout) => Restore(layout, main.GetWindow().Position);
+
+	JsonObject Save(Vector2I origin) => new()
 	{
 		["main"] = tree.Root?.ToJson(),
 		["floats"] = new JsonArray([.. floats.Select(f => (JsonNode)new JsonObject
 		{
-			["x"] = f.Window.Position.X,
-			["y"] = f.Window.Position.Y,
+			["x"] = f.Window.Position.X - origin.X,
+			["y"] = f.Window.Position.Y - origin.Y,
 			["width"] = f.Window.Size.X,
 			["height"] = f.Window.Size.Y,
 			["layout"] = f.Tree.Root?.ToJson(),
@@ -273,7 +327,9 @@ public partial class DockManager : Node
 	};
 
 	// the saved layout, or the default when there's none
-	public void Restore(JsonObject state)
+	public void Restore(JsonObject state) => Restore(state, Vector2I.Zero);
+
+	void Restore(JsonObject state, Vector2I origin)
 	{
 		if (state?["main"] is null)
 		{
@@ -293,10 +349,11 @@ public partial class DockManager : Node
 			DockTree floating = Known(new DockTree(DockNode.FromJson(saved?["layout"])), seen);
 			if (floating.Empty) continue;
 
-			Rect2I rect = new((int?)saved["x"] ?? 0, (int?)saved["y"] ?? 0, (int?)saved["width"] ?? 480, (int?)saved["height"] ?? 360);
+			Rect2I rect = new(origin.X + ((int?)saved["x"] ?? 0), origin.Y + ((int?)saved["y"] ?? 0), (int?)saved["width"] ?? 480, (int?)saved["height"] ?? 360);
 			DockFloatWindow window = DockFloatWindow.Create(main.GetWindow(), rect);
 			floats.Add((floating, window));
 			Wire(window.Area);
+			window.Moved += () => Changed?.Invoke();
 			window.Closing += DockBack;
 			FloatOpened?.Invoke(window);
 		}

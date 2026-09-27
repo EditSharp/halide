@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Settings/ExtensionRow.cs" id="1_row"]
+
+[node name="ExtensionRow" type="VBoxContainer" node_paths=PackedStringArray("title", "details", "description", "status", "enabled", "reload")]
+theme_override_constants/separation = 3
+script = ExtResource("1_row")
+title = NodePath("Top/Text/Title")
+details = NodePath("Top/Text/Details")
+description = NodePath("Description")
+status = NodePath("Status")
+enabled = NodePath("Top/Enabled")
+reload = NodePath("Top/Reload")
+
+[node name="Top" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Text" type="HBoxContainer" parent="Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 9
+
+[node name="Title" type="Label" parent="Top/Text"]
+layout_mode = 2
+vertical_alignment = 1
+
+[node name="Details" type="Label" parent="Top/Text"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectorLabel"
+vertical_alignment = 1
+clip_text = true
+
+[node name="Enabled" type="CheckButton" parent="Top"]
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Run this extension"
+
+[node name="Reload" type="Button" parent="Top"]
+custom_minimum_size = Vector2(66, 27)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Read the extension's folder again and restart it"
+theme_type_variation = &"InspectorButton"
+text = "Reload"
+
+[node name="Description" type="Label" parent="."]
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+autowrap_mode = 3
+
+[node name="Status" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+autowrap_mode = 3

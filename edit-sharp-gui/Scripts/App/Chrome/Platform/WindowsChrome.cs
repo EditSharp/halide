@@ -20,6 +20,21 @@ static class WindowsChrome
 	static readonly Dictionary<nint, (Window Window, UITopBar Bar)> windows = [];
 	static readonly SubclassProc proc = Proc;
 
+	// per window, how far the native caption and top border reach into what is now client area
+	static readonly Dictionary<nint, int> captionInsets = [];
+
+	// where the content really is on screen: Godot's Position keeps what was asked for until the window next moves
+	public static Vector2I ContentPosition(Window window)
+	{
+		nint hwnd = (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId());
+		POINT corner = new();
+		return hwnd != 0 && ClientToScreen(hwnd, ref corner) ? new Vector2I(corner.x, corner.y) : window.Position;
+	}
+
+	// Godot still places the window as if the caption sat above the content, so content lands this much higher than asked
+	public static int CaptionInset(Window window) =>
+		captionInsets.TryGetValue((nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId()), out int inset) ? inset : 0;
+
 	public static void Attach(Window window, UITopBar bar)
 	{
 		nint hwnd = (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId());
@@ -28,13 +43,18 @@ static class WindowsChrome
 		windows[hwnd] = (window, bar);
 		SetWindowSubclass(hwnd, proc, 1, 0);
 
-		// the frame is worked out again without the caption
+		// the frame is worked out again without the caption, keeping the content where it was
+		bool normal = window.Mode == Window.ModeEnum.Windowed;
+		GetWindowRect(hwnd, out RECT outer);
 		SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+		if (normal && captionInsets.TryGetValue(hwnd, out int inset) && inset > 0)
+			SetWindowPos(hwnd, 0, outer.left, outer.top + inset, outer.right - outer.left, outer.bottom - outer.top - inset, SWP_NOZORDER | SWP_NOACTIVATE);
 
 		window.TreeExiting += () =>
 		{
 			RemoveWindowSubclass(hwnd, proc, 1);
 			windows.Remove(hwnd);
+			captionInsets.Remove(hwnd);
 		};
 	}
 
@@ -51,6 +71,7 @@ static class WindowsChrome
 				RECT before = Marshal.PtrToStructure<RECT>(lParam);
 				nint result = DefSubclassProc(hwnd, msg, wParam, lParam);
 				RECT after = Marshal.PtrToStructure<RECT>(lParam);
+				if (!IsZoomed(hwnd)) captionInsets[hwnd] = after.top - before.top;
 				after.top = before.top + (IsZoomed(hwnd) ? Frame(hwnd) : 0);
 				Marshal.StructureToPtr(after, lParam, false);
 				return result;
@@ -100,7 +121,7 @@ static class WindowsChrome
 		return DefSubclassProc(hwnd, msg, wParam, lParam);
 	}
 
-	// the caption as Windows draws it: its height restored or maximized and the 46-wide buttons, in 96-dpi units, drawn at the window's DPI
+	// the caption as Windows draws it restored, kept when maximized so the tabs and menus in it keep their room, and the 46-wide buttons; in 96-dpi units, drawn at the window's DPI
 	public static (float Height, float CaptionWidth, float Scale) Metrics(Window window)
 	{
 		nint hwnd = (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, window.GetWindowId());
@@ -109,11 +130,10 @@ static class WindowsChrome
 
 		int caption = GetSystemMetricsForDpi(SM_CYCAPTION, 96);
 		int frame = GetSystemMetricsForDpi(SM_CYSIZEFRAME, 96) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, 96);
-		bool maximized = hwnd != 0 && IsZoomed(hwnd);
 
 		// window units are the interface scale's; the bar answers to the monitor's alone
 		float scale = dpi / 96f / window.ContentScaleFactor;
-		return (maximized ? caption : caption + frame, 46f, scale);
+		return (caption + frame, 46f, scale);
 	}
 
 	// what's under a screen point: the OS's frame, our caption and maximize button, or the client
@@ -167,6 +187,7 @@ static class WindowsChrome
 	struct TRACKMOUSEEVENT { public uint cbSize, dwFlags; public nint hwndTrack; public uint dwHoverTime; }
 
 	[DllImport("user32.dll")] static extern bool IsZoomed(nint hwnd);
+	[DllImport("user32.dll")] static extern bool GetWindowRect(nint hwnd, out RECT rect);
 	[DllImport("user32.dll")] static extern bool ScreenToClient(nint hwnd, ref POINT point);
 	[DllImport("user32.dll")] static extern bool SetWindowPos(nint hwnd, nint after, int x, int y, int width, int height, uint flags);
 	[DllImport("user32.dll")] static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT track);

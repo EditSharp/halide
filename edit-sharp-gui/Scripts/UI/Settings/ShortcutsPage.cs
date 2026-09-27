@@ -7,7 +7,7 @@ namespace EditSharpGUI.Scripts.UI.Settings;
 
 // App Settings' Keyboard Shortcuts page: every action by category, rebound by pressing keys; saved as it changes
 [GlobalClass]
-public partial class ShortcutsPage : VBoxContainer
+public partial class ShortcutsPage : VBoxContainer, ISettingsPage
 {
 	[ExportGroup("Parts")]
 	[Export] Button resetAll;
@@ -27,7 +27,7 @@ public partial class ShortcutsPage : VBoxContainer
 	{
 		resetAll.Pressed += ResetAll;
 
-		foreach ((string action, string category, string text) in Shortcuts.Catalog)
+		foreach ((string action, string category, string text) in Shortcuts.All)
 		{
 			if (!categories.ContainsKey(category))
 			{
@@ -80,7 +80,7 @@ public partial class ShortcutsPage : VBoxContainer
 		string other = Map.ActionsFor(combo).FirstOrDefault(a => a != row.Action);
 		if (other is null) { Bind(row.Action, index, combo); return; }
 
-		string name = Shortcuts.Catalog.FirstOrDefault(c => c.Action == other).Label ?? other;
+		string name = Shortcuts.All.FirstOrDefault(c => c.Action == other).Label ?? other;
 		row.AskConflict($"{combo} is used by {name}.", () =>
 		{
 			Map.Bind(other, [.. Map.Get(other).Where(c => c != combo)]);

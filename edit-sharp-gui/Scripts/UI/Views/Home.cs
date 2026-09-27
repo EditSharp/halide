@@ -12,6 +12,7 @@ public partial class Home : Control
 {
 	[ExportGroup("Controls")]
 
+	[Export] Control sources;
 	[Export] TabBar tabs;
 	[Export] LineEdit search;
 	[Export] Button sortButton;
@@ -23,6 +24,9 @@ public partial class Home : Control
 	[ExportGroup("Scenes")]
 
 	[Export] PackedScene tileScene;
+
+	// the Local and Cloud tabs, for the window to show in its bar
+	public Control Sources => sources;
 
 	readonly Dictionary<string, UIProjectItem> tiles = new(StringComparer.OrdinalIgnoreCase);
 	readonly HashSet<string> selected = new(StringComparer.OrdinalIgnoreCase);

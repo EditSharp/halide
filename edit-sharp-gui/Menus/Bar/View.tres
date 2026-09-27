@@ -1,0 +1,138 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Media"
+
+[sub_resource type="Resource" id="button_1"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "view.media"
+
+[sub_resource type="Resource" id="text_2"]
+script = ExtResource("text")
+Text = "Source"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_2")
+Id = "view.source"
+
+[sub_resource type="Resource" id="text_3"]
+script = ExtResource("text")
+Text = "Program"
+
+[sub_resource type="Resource" id="button_3"]
+script = ExtResource("button")
+Text = SubResource("text_3")
+Id = "view.program"
+
+[sub_resource type="Resource" id="text_4"]
+script = ExtResource("text")
+Text = "Inspector"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Text = SubResource("text_4")
+Id = "view.inspector"
+
+[sub_resource type="Resource" id="text_5"]
+script = ExtResource("text")
+Text = "Timeline"
+
+[sub_resource type="Resource" id="button_5"]
+script = ExtResource("button")
+Text = SubResource("text_5")
+Id = "view.timeline"
+
+[sub_resource type="Resource" id="text_6"]
+script = ExtResource("text")
+Text = "Graph Editor"
+
+[sub_resource type="Resource" id="button_6"]
+script = ExtResource("button")
+Text = SubResource("text_6")
+Id = "view.graph"
+
+[sub_resource type="Resource" id="divider_7"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_8"]
+script = ExtResource("text")
+Text = "Layouts"
+
+[sub_resource type="Resource" id="submenu_8"]
+script = ExtResource("submenu")
+Text = SubResource("text_8")
+Id = "view.layouts"
+
+[sub_resource type="Resource" id="text_9"]
+script = ExtResource("text")
+Text = "Reset Layout"
+
+[sub_resource type="Resource" id="button_9"]
+script = ExtResource("button")
+Text = SubResource("text_9")
+Id = "layout.reset"
+
+[sub_resource type="Resource" id="text_10"]
+script = ExtResource("text")
+Text = "Float Focused View"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_10")
+Id = "layout.floatFocused"
+
+[sub_resource type="Resource" id="divider_11"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_12"]
+script = ExtResource("text")
+Text = "Toggle Fullscreen"
+
+[sub_resource type="Resource" id="button_12"]
+script = ExtResource("button")
+Text = SubResource("text_12")
+Id = "window.fullscreen"
+
+[sub_resource type="Resource" id="divider_13"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_14"]
+script = ExtResource("text")
+Text = "Zoom In"
+
+[sub_resource type="Resource" id="button_14"]
+script = ExtResource("button")
+Text = SubResource("text_14")
+Id = "timeline.zoomIn"
+
+[sub_resource type="Resource" id="text_15"]
+script = ExtResource("text")
+Text = "Zoom Out"
+
+[sub_resource type="Resource" id="button_15"]
+script = ExtResource("button")
+Text = SubResource("text_15")
+Id = "timeline.zoomOut"
+
+[sub_resource type="Resource" id="text_16"]
+script = ExtResource("text")
+Text = "Zoom to Fit"
+
+[sub_resource type="Resource" id="button_16"]
+script = ExtResource("button")
+Text = SubResource("text_16")
+Id = "timeline.zoomFit"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_1"), SubResource("button_2"), SubResource("button_3"), SubResource("button_4"), SubResource("button_5"), SubResource("button_6"), SubResource("divider_7"), SubResource("submenu_8"), SubResource("button_9"), SubResource("button_10"), SubResource("divider_11"), SubResource("button_12"), SubResource("divider_13"), SubResource("button_14"), SubResource("button_15"), SubResource("button_16")])

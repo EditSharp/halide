@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- unit tests for the EditSharp library: run with `dotnet test edit-sharp-tests` -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>EditSharp.Tests</RootNamespace>
+    <!-- EditSharp from ../EditSharp or nuget.org; see Directory.Build.targets -->
+    <UsesEditSharp>true</UsesEditSharp>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="JunitXml.TestLogger" Version="4.1.0" />
+  </ItemGroup>
+</Project>

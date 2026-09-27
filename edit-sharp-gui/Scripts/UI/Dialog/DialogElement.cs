@@ -17,7 +17,7 @@ public partial class DialogElement : Resource
 	[Export] public bool Enabled { get; set { field = value; Touch(); } } = true;
 
 	// fires when code changes the element, or the user does
-	public event Action<DialogElement> Changed;
+	public new event Action<DialogElement> Changed;
 
 	protected void Touch() => Changed?.Invoke(this);
 

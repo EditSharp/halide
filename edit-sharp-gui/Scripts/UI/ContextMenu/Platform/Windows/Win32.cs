@@ -8,7 +8,7 @@ static class Win32
 {
     public const int SM_CXSMICON = 49;
 
-    public const uint TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100;
+    public const uint TPM_RIGHTBUTTON = 0x2, TPM_RETURNCMD = 0x100, TPM_NOANIMATION = 0x4000;
 
     public const uint MIIM_STATE = 0x1, MIIM_ID = 0x2, MIIM_SUBMENU = 0x4, MIIM_DATA = 0x20, MIIM_FTYPE = 0x100;
     public const uint MFT_OWNERDRAW = 0x100, MFT_RADIOCHECK = 0x200, MFT_SEPARATOR = 0x800;
@@ -188,7 +188,7 @@ static class Win32
 
     // ---- dwm (windows 11) ----
 
-    public const uint DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34;
+    public const uint DWMWA_TRANSITIONS_FORCEDISABLED = 3, DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34;
     public const uint DWMWCP_ROUNDSMALL = 3;
 
     [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(nint window, uint attribute, ref uint value, uint size);

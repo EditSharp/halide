@@ -15,6 +15,10 @@
     <Folder Include="Scripts\Tests\" />
   </ItemGroup>
   <ItemGroup>
+    <!-- SkiaSharp ships Windows and macOS natives itself; Linux needs this -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.152.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Media\Example\Video\video3.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

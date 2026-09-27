@@ -1,0 +1,105 @@
+[gd_resource type="Resource" script_class="ContextMenu" format=3]
+
+[ext_resource type="Script" uid="uid://dtijxaqwwjoeo" path="res://Scripts/UI/ContextMenu/Elements/ContextButton.cs" id="button"]
+[ext_resource type="Script" uid="uid://ukpypwxfbgnv" path="res://Scripts/UI/ContextMenu/Elements/ContextDivider.cs" id="divider"]
+[ext_resource type="Script" uid="uid://cpnj2t77ea8vt" path="res://Scripts/UI/ContextMenu/Elements/ContextElement.cs" id="element"]
+[ext_resource type="Script" uid="uid://ce2x0x6d8yp2n" path="res://Scripts/UI/ContextMenu/ContextMenu.cs" id="menu"]
+[ext_resource type="Script" uid="uid://bddqp37xsw1cm" path="res://Scripts/UI/ContextMenu/Elements/ContextSubmenu.cs" id="submenu"]
+[ext_resource type="Script" uid="uid://dm8txjndldkki" path="res://Scripts/UI/ContextMenu/Elements/ContextText.cs" id="text"]
+
+[sub_resource type="Resource" id="text_1"]
+script = ExtResource("text")
+Text = "Play / Pause"
+
+[sub_resource type="Resource" id="button_1"]
+script = ExtResource("button")
+Text = SubResource("text_1")
+Id = "playback.toggle"
+
+[sub_resource type="Resource" id="text_2"]
+script = ExtResource("text")
+Text = "Stop"
+
+[sub_resource type="Resource" id="button_2"]
+script = ExtResource("button")
+Text = SubResource("text_2")
+Id = "playback.stop"
+
+[sub_resource type="Resource" id="divider_3"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_4"]
+script = ExtResource("text")
+Text = "Shuttle Forward"
+
+[sub_resource type="Resource" id="button_4"]
+script = ExtResource("button")
+Text = SubResource("text_4")
+Id = "playback.forward"
+
+[sub_resource type="Resource" id="text_5"]
+script = ExtResource("text")
+Text = "Shuttle Reverse"
+
+[sub_resource type="Resource" id="button_5"]
+script = ExtResource("button")
+Text = SubResource("text_5")
+Id = "playback.reverse"
+
+[sub_resource type="Resource" id="divider_6"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_7"]
+script = ExtResource("text")
+Text = "Step Forward"
+
+[sub_resource type="Resource" id="button_7"]
+script = ExtResource("button")
+Text = SubResource("text_7")
+Id = "playback.stepForward"
+
+[sub_resource type="Resource" id="text_8"]
+script = ExtResource("text")
+Text = "Step Back"
+
+[sub_resource type="Resource" id="button_8"]
+script = ExtResource("button")
+Text = SubResource("text_8")
+Id = "playback.stepBack"
+
+[sub_resource type="Resource" id="divider_9"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_10"]
+script = ExtResource("text")
+Text = "Go to Start"
+
+[sub_resource type="Resource" id="button_10"]
+script = ExtResource("button")
+Text = SubResource("text_10")
+Id = "playback.start"
+
+[sub_resource type="Resource" id="text_11"]
+script = ExtResource("text")
+Text = "Go to End"
+
+[sub_resource type="Resource" id="button_11"]
+script = ExtResource("button")
+Text = SubResource("text_11")
+Id = "playback.end"
+
+[sub_resource type="Resource" id="divider_12"]
+script = ExtResource("divider")
+
+[sub_resource type="Resource" id="text_13"]
+script = ExtResource("text")
+Text = "Loop Playback"
+
+[sub_resource type="Resource" id="button_13"]
+script = ExtResource("button")
+Text = SubResource("text_13")
+Id = "playback.loop"
+
+[resource]
+script = ExtResource("menu")
+Elements = Array[ExtResource("element")]([SubResource("button_1"), SubResource("button_2"), SubResource("divider_3"), SubResource("button_4"), SubResource("button_5"), SubResource("divider_6"), SubResource("button_7"), SubResource("button_8"), SubResource("divider_9"), SubResource("button_10"), SubResource("button_11"), SubResource("divider_12"), SubResource("button_13")])

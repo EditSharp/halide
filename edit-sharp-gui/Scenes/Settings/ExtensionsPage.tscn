@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/Settings/ExtensionsPage.cs" id="1_page"]
+[ext_resource type="PackedScene" path="res://Scenes/Settings/ExtensionRow.tscn" id="2_row"]
+
+[node name="ExtensionsPage" type="VBoxContainer" node_paths=PackedStringArray("list", "empty", "openFolder", "reloadAll")]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+script = ExtResource("1_page")
+list = NodePath("Scroll/Margin/List")
+empty = NodePath("Empty")
+openFolder = NodePath("Header/OpenFolder")
+reloadAll = NodePath("Header/ReloadAll")
+rowScene = ExtResource("2_row")
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 9
+alignment = 2
+
+[node name="OpenFolder" type="Button" parent="Header"]
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+tooltip_text = "Where extensions go: one folder each, holding extension.json and its DLLs"
+theme_type_variation = &"InspectorButton"
+text = "Open Extensions Folder"
+
+[node name="ReloadAll" type="Button" parent="Header"]
+custom_minimum_size = Vector2(90, 27)
+layout_mode = 2
+tooltip_text = "Look for extensions again and restart them"
+theme_type_variation = &"InspectorButton"
+text = "Reload All"
+
+[node name="Empty" type="Label" parent="."]
+visible = false
+layout_mode = 2
+theme_type_variation = &"InspectorLabel"
+text = "No extensions yet. Put an extension's folder in the extensions folder, then Reload All."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 12
+
+[node name="List" type="VBoxContainer" parent="Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18

@@ -16,15 +16,22 @@ public partial class HomeWindow : Window
 		};
 		Screens.Place(window);
 
-		Control home = homeScene.Instantiate<Control>();
-		home.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		window.AddChild(home);
+		window.home = homeScene.Instantiate<Home>();
+		window.frame = EditSharpGUI.Scripts.App.Chrome.WindowFrame.Wrap(window.home);
+		window.AddChild(window.frame);
 
 		return window;
 	}
 
+	EditSharpGUI.Scripts.App.Chrome.WindowFrame frame;
+	Home home;
+
 	public override void _Ready()
 	{
+		frame.Bar.Title = "EditSharp";
+		frame.Bar.LogoInert = true;
+		frame.Bar.Hold(home.Sources);
+
 		CloseRequested += () =>
 		{
 			ProjectManager.Singleton.Closed(this);

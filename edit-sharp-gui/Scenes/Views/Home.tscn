@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cq446xk6os5i2" path="res://Images/Icons/Add.png" id="2_add"]
 [ext_resource type="PackedScene" uid="uid://c73t3qeow7o8d" path="res://Scenes/Components/ProjectItem.tscn" id="3_tile"]
 
-[node name="Home" type="Control" node_paths=PackedStringArray("tabs", "search", "sortButton", "settingsButton", "flow", "addTile", "empty")]
+[node name="Home" type="Control" node_paths=PackedStringArray("sources", "tabs", "search", "sortButton", "settingsButton", "flow", "addTile", "empty")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_home")
-tabs = NodePath("VBoxContainer/Temporary Fake Top Bar/TabBar")
+sources = NodePath("VBoxContainer/Sources")
+tabs = NodePath("VBoxContainer/Sources/TabBar")
 search = NodePath("VBoxContainer/Toolbar/HBoxContainer/Search")
 sortButton = NodePath("VBoxContainer/Toolbar/HBoxContainer/Sort")
 settingsButton = NodePath("VBoxContainer/Toolbar/HBoxContainer/Settings")
@@ -41,28 +42,21 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"TightVBox"
 
-[node name="Temporary Fake Top Bar" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Sources" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
 
-[node name="TabBar" type="TabBar" parent="VBoxContainer/Temporary Fake Top Bar"]
+[node name="TabBar" type="TabBar" parent="VBoxContainer/Sources"]
 layout_mode = 2
-size_flags_horizontal = 0
+theme_type_variation = &"TopBarTabs"
+size_flags_horizontal = 3
+tab_alignment = 1
 current_tab = 0
 clip_tabs = false
 tab_count = 2
 tab_0/title = "Local"
 tab_1/title = "Cloud"
-
-[node name="Label" type="Label" parent="VBoxContainer/Temporary Fake Top Bar"]
-layout_mode = 2
-size_flags_horizontal = 6
-theme_override_font_sizes/font_size = 32
-text = "EditSharp"
-vertical_alignment = 1
-
-[node name="Button" type="Button" parent="VBoxContainer/Temporary Fake Top Bar"]
-layout_mode = 2
-text = "Minimize - Maximize - Close lol"
 
 [node name="Toolbar" type="Control" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 30)

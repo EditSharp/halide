@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using EditSharpGUI.Scripts.UI.Theming;
 using Godot;
@@ -16,7 +17,25 @@ public class WindowsHandler : PlatformHandler
         nint hwnd = owner is not null ? (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, owner.GetWindowId()) : MainHwnd;
         bool dark = ApplyTheme();
 
-        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), ToWin32(at ?? DisplayServer.MouseGetPosition()), dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect));
+        MenuThread.Show(new MenuThread.Showing(menu, Snapshot.Of(menu), ToWin32(at ?? DisplayServer.MouseGetPosition()), dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect, menu.FadeAnimations));
+    }
+
+    public override bool SwitchesBarMenus => true;
+
+    // every menu is snapshotted now, so the menu thread can switch between them without asking godot
+    public override void HandleBar(IReadOnlyList<BarMenu> menus, int index, Window owner)
+    {
+        nint hwnd = owner is not null ? (nint)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle, owner.GetWindowId()) : MainHwnd;
+        bool dark = ApplyTheme();
+
+        List<MenuThread.BarItem> items = [.. menus.Select(m => new MenuThread.BarItem(m.Menu, Snapshot.Of(m.Menu), ToWin32(m.At), new Rect2I(ToWin32(m.Button.Position), m.Button.Size)))];
+        MenuThread.BarItem first = items[index];
+        ContextMenu menu = first.Menu;
+        MenuThread.Show(new MenuThread.Showing(menu, first.Snapshot, first.At, dark, GetDpiForWindow(hwnd), hwnd, menu.HideOnItemSelect, menu.HideOnCheckableItemSelect, menu.FadeAnimations)
+        {
+            Bar = items,
+            BarIndex = index,
+        });
     }
 
     // godot's screen pixels start at the top-left of all screens together; win32's at the primary's

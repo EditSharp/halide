@@ -77,7 +77,7 @@ public sealed class AppSettings
 	};
 
 	// the OS scale of the screen a window is on; windows reports it as DPI
-	static float SystemScale(Window window)
+	public static float SystemScale(Window window)
 	{
 		int screen = window is not null && window.IsInsideTree() ? window.CurrentScreen : DisplayServer.GetPrimaryScreen();
 		return OS.GetName() == "Windows" ? DisplayServer.ScreenGetDpi(screen) / 96f : DisplayServer.ScreenGetScale(screen);

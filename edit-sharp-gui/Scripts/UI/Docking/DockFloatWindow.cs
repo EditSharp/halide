@@ -39,7 +39,15 @@ public partial class DockFloatWindow : Window
 		CloseRequested += () => Closing?.Invoke(this);
 	}
 
-	public void SetTitle(string title)
+	// the float was moved or resized, which a layout remembers
+	public event Action Moved;
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationWMSizeChanged || what == NotificationWMPositionChanged) Moved?.Invoke();
+	}
+
+	public void ShowTitle(string title)
 	{
 		Title = title;
 		Frame.Bar.Title = title;

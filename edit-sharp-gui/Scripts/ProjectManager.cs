@@ -25,6 +25,16 @@ public partial class ProjectManager : Node
 		if (Singleton != this) return;
 
 		EditSharpConfig.Logger = new ConsoleLogger();
+
+		// --user-data=DIR: every file the app keeps goes there instead of the user's own
+		UserData.ApplyCommandLine();
+
+		// every menu item and shortcut, by name
+		EditSharpGUI.Scripts.App.Commands.AppCommands.RegisterAll();
+		EditSharpGUI.Api.ApiCommands.RegisterAll();
+
+		// --api serves the remote API; --script runs one and quits
+		EditSharpGUI.Api.Remote.RemoteApi.StartFromCommandLine();
 		AppSettings.Current.Apply();
 
 		// the interface scale follows the setting in every window, including ones opened later
@@ -87,6 +97,20 @@ public partial class ProjectManager : Node
 	public IReadOnlyList<ProjectWindow> OpenProjects => projects;
 
 	public event Action OpenProjectsChanged;
+
+	// extensions start once the first window is up, so a question about one has somewhere to appear.
+	// --extensions=DIR looks elsewhere; --trust-extensions enables new ones without asking
+	public async Task LoadExtensionsAsync()
+	{
+		EditSharpGUI.Api.Extensions.ExtensionManager extensions = EditSharpGUI.Api.EditSharpApp.Instance.Extensions;
+		string[] args = OS.GetCmdlineUserArgs();
+		if (args.FirstOrDefault(a => a.StartsWith("--extensions=")) is string dir) extensions.Folder = dir["--extensions=".Length..];
+		extensions.TrustAll = args.Contains("--trust-extensions");
+
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		GetTree().Root.TreeExiting += extensions.StopAll;
+		await extensions.LoadAllAsync((Node)home ?? projects.FirstOrDefault());
+	}
 
 	// what the app shows first, as the settings say
 	public void Start()
@@ -329,7 +353,7 @@ public partial class ProjectManager : Node
 		OpenProjectsChanged?.Invoke();
 
 		if (projects.Count == 0 && home is null && AppSettings.Current.OnLastWindowClosed == LastWindowAction.Quit)
-			Callable.From(() => GetTree().Quit()).CallDeferred();
+			Callable.From(() => { _ = QuitAsync(); }).CallDeferred();
 	}
 
 	// App Settings: comes with its own window later in this step
@@ -396,15 +420,25 @@ public partial class ProjectManager : Node
 			DisplayServer.FileDialogMode.SaveFile, [$"*{ProjectFile.Extension};EditSharp projects"],
 			Callable.From((bool ok, string[] paths, long _) =>
 			{
-				if (!ok || paths.Length == 0) return;
-
-				string path = paths[0].EndsWith(ProjectFile.Extension, StringComparison.OrdinalIgnoreCase) ? paths[0] : paths[0] + ProjectFile.Extension;
-				string previous = session.FilePath;
-				session.FilePath = path;
-
-				if (!Save(session)) session.FilePath = previous;
-				else if (session.GetParent() is ProjectWindow window) window.UpdateTitle();
+				if (ok && paths.Length > 0) SaveTo(session, paths[0]);
 			}));
+	}
+
+	// the project written to `path`, the extension added when missing; the window follows it there
+	public bool SaveTo(ProjectSession session, string path)
+	{
+		path = path.EndsWith(ProjectFile.Extension, StringComparison.OrdinalIgnoreCase) ? path : path + ProjectFile.Extension;
+		string previous = session.FilePath;
+		session.FilePath = path;
+
+		if (!Save(session))
+		{
+			session.FilePath = previous;
+			return false;
+		}
+
+		if (session.GetParent() is ProjectWindow window) window.UpdateTitle();
+		return true;
 	}
 
 	// the Home tile's pictures, rendered in the background after a save: the
@@ -415,7 +449,26 @@ public partial class ProjectManager : Node
 		Guid timelineId = Guid.TryParse(gui?["timelineId"]?.GetValue<string>(), out Guid id) ? id : Guid.Empty;
 		Timeline timeline = project.Timelines.FirstOrDefault(t => t.Id == timelineId) ?? project.Timeline;
 
-		_ = ProjectThumbnails.CaptureAsync(project, timeline, playhead, Path.GetDirectoryName(path));
+		ProjectThumbnails.Start(project, timeline, playhead, Path.GetDirectoryName(path));
+	}
+
+	// the app gone, once background work has stopped: nothing may be rendering as the process ends
+	public async Task QuitAsync(int code = 0)
+	{
+		EditSharpGUI.Api.EditSharpApp.Instance.Extensions.StopAll();
+		await ProjectThumbnails.StopAllAsync();
+		GetTree().Quit(code);
+	}
+
+	// a project picked from disk, opened in its own window
+	public void BrowseToOpen(Node asker)
+	{
+		DisplayServer.FileDialogShow("Open project", AppSettings.Current.ProjectsFolder ?? "", "", false,
+			DisplayServer.FileDialogMode.OpenFile, [$"*{ProjectFile.Extension};EditSharp projects"],
+			Callable.From((bool ok, string[] paths, long filter) =>
+			{
+				if (ok && paths.Length > 0) _ = OpenProjectAsync(paths[0], asker);
+			}));
 	}
 
 	// every project closed, each asking about unsaved changes; the app goes when they all have
@@ -427,7 +480,7 @@ public partial class ProjectManager : Node
 		foreach (ProjectWindow window in projects.ToList())
 			if (!await window.CloseAsync()) return;
 
-		GetTree().Quit();
+		await QuitAsync();
 	}
 
 	// ---- autosave ----

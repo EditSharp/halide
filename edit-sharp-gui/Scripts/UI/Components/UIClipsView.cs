@@ -87,6 +87,36 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		Clipboard.Shared.Copy(ClipsItem.From(Selection.Select(s => s.Clip), anchor));
 	}
 
+	// copies of the selected clips straight after the selection, on the same channels; the clipboard is left alone
+	public void DuplicateSelection()
+	{
+		if (Selection.Count == 0) return;
+
+		List<ClipsItem.Entry> entries = ClipsItem.From(Selection.Select(s => s.Clip)).Materialize();
+		Time at = Selection.Max(s => s.Clip.End);
+		List<Clip> made = [];
+
+		using (Transaction.Scope change = UITimeline.History.Begin(entries.Count == 1 ? "Duplicate clip" : $"Duplicate {entries.Count} clips"))
+		{
+			foreach (ClipsItem.Entry e in entries)
+			{
+				e.Clip.Start = at + e.Offset;
+				EnsureChannel(e.Video, e.ChannelIndex).AddClip(e.Clip);
+				made.Add(e.Clip);
+			}
+
+			foreach (IGrouping<Guid?, ClipsItem.Entry> group in entries.Where(e => e.LinkGroup is not null).GroupBy(e => e.LinkGroup))
+			{
+				if (group.Count() > 1) UITimeline.Timeline.Link(group.Select(e => e.Clip));
+			}
+
+			change.Commit();
+		}
+
+		Reconcile();
+		SelectClips(made);
+	}
+
 	// copy, then a plain delete - the gap stays
 	public void CutSelection()
 	{

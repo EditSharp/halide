@@ -198,6 +198,13 @@ public partial class MediaViewer : Control, IDropTarget
 		ProxyCache.StatusChanged -= OnProxyStatus;
 	}
 
+	// tiles outlive dock moves, so media stop calling back only when the viewer is freed
+	public override void _Notification(int what)
+	{
+		if (what != NotificationPredelete) return;
+		foreach (object subject in tiles.Keys) if (subject is IMedia media) media.InfoAvailable -= OnInfo;
+	}
+
 	void OnLibraryChanged() => Rebuild();
 
 	void OnThumbnail(object subject)
@@ -318,6 +325,7 @@ public partial class MediaViewer : Control, IDropTarget
 			selection.Remove(tile);
 			box?.Forget(tile);
 			tiles.Remove(gone);
+			if (gone is IMedia media) media.InfoAvailable -= OnInfo;
 			tile.QueueFree();
 		}
 
@@ -364,11 +372,14 @@ public partial class MediaViewer : Control, IDropTarget
 		foreach (Timeline t in project.Timelines) yield return t;
 	}
 
+	// runs on the main thread next idle frame, unless the viewer has been freed by then
+	void Later(Action action) => Callable.From(() => { if (IsInstanceValid(this)) action(); }).CallDeferred();
+
 	// a probe finished, on another thread: kinds and details may have changed
-	void OnInfo(IMedia media) => Callable.From(() =>
+	void OnInfo(IMedia media) => Later(() =>
 	{
 		if (IsInsideTree()) { Rebuild(); StartProxyIfVideo(media); }
-	}).CallDeferred();
+	});
 
 	// the project's aspect on a 120 pixel long side
 	Vector2 PictureSize()
@@ -424,7 +435,9 @@ public partial class MediaViewer : Control, IDropTarget
 				string extension = Path.GetExtension(path).ToLowerInvariant();
 				if (project.Media.Any(m => string.Equals(m.Path, path, StringComparison.OrdinalIgnoreCase))) continue;
 
-				IMedia media = Transaction.Suppressed<IMedia>(() => AudioExtensions.Contains(extension) ? new AudioMedia { Path = path } : new VideoMedia { Path = path });
+				// an extension's importer first, then the built-in kinds
+				IMedia media = Transaction.Suppressed<IMedia>(() => EditSharpGUI.Api.EditSharpApp.Instance.Importers.Create(path)
+					?? (AudioExtensions.Contains(extension) ? new AudioMedia { Path = path } : new VideoMedia { Path = path }));
 				project.Media.Add(media);
 				added.Add(media);
 			}
@@ -444,7 +457,7 @@ public partial class MediaViewer : Control, IDropTarget
 	}
 
 	// a file of unknown extension that turned out to be audio only
-	void CorrectKind(IMedia media) => Callable.From(() =>
+	void CorrectKind(IMedia media) => Later(() =>
 	{
 		media.InfoAvailable -= CorrectKind;
 		if (project is null || media is not VideoMedia || !media.TryGetInfo(out MediaInfo info) || info.HasVideo || !info.HasAudio) return;
@@ -453,7 +466,7 @@ public partial class MediaViewer : Control, IDropTarget
 		project.Media.Remove(media);
 		project.Media.Add(Transaction.Suppressed<IMedia>(() => new AudioMedia { Path = media.Path }));
 		change.Commit();
-	}).CallDeferred();
+	});
 
 	// ---- proxies ----
 
@@ -471,7 +484,7 @@ public partial class MediaViewer : Control, IDropTarget
 		if (File.Exists(media.Path) && !proxyAsked.Add(media.Path)) return ProxyState.NotCached;
 		if (File.Exists(media.Path)) _ = ProxyCache.GetStatusAsync(media.Path).ContinueWith(t =>
 		{
-			if (t.IsCompletedSuccessfully) Callable.From(() => { proxyStatus[media.Path] = t.Result; Rebuild(); }).CallDeferred();
+			if (t.IsCompletedSuccessfully) Later(() => { proxyStatus[media.Path] = t.Result; Rebuild(); });
 		}, TaskScheduler.Default);
 
 		return ProxyState.NotCached;
@@ -479,12 +492,12 @@ public partial class MediaViewer : Control, IDropTarget
 
 	readonly HashSet<string> proxyAsked = [];
 
-	void OnProxyStatus(object sender, ProxyStatusChangedEventArgs e) => Callable.From(() =>
+	void OnProxyStatus(object sender, ProxyStatusChangedEventArgs e) => Later(() =>
 	{
 		proxyStatus[e.SourcePath] = e.Status;
 		if (e.Status.State is ProxyState.Complete or ProxyState.Failed or ProxyState.NotCached) { proxyProgress.Remove(e.SourcePath); proxyBuilds.Remove(e.SourcePath); }
 		if (IsInsideTree()) Rebuild();
-	}).CallDeferred();
+	});
 
 	void StartProxyIfVideo(IMedia media)
 	{
@@ -514,16 +527,16 @@ public partial class MediaViewer : Control, IDropTarget
 		proxyBuilds[path] = cts;
 		proxyProgress[path] = 0d;
 
-		Progress<double> progress = new(p => Callable.From(() =>
+		Progress<double> progress = new(p => Later(() =>
 		{
 			proxyProgress[path] = p;
 			foreach (UIMediaItem tile in shown) if (tile.Media?.Path == path) tile.SetProxyProgress(p);
-		}).CallDeferred());
+		}));
 
 		_ = ProxyCache.BuildAsync(path, null, progress, ct: cts.Token).ContinueWith(t =>
 		{
 			_ = t.Exception;
-			Callable.From(() =>
+			Later(() =>
 			{
 				proxyBuilds.Remove(path);
 				proxyProgress.Remove(path);
@@ -531,7 +544,7 @@ public partial class MediaViewer : Control, IDropTarget
 				proxyStatus.Remove(path);
 				proxyAsked.Remove(path);
 				if (IsInsideTree()) Rebuild();
-			}).CallDeferred();
+			});
 		}, TaskScheduler.Default);
 
 		Rebuild();
@@ -710,6 +723,11 @@ public partial class MediaViewer : Control, IDropTarget
 		{
 			case Shortcuts.SelectAll:
 				SelectAll();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Deselect:
+				DeselectAll();
 				e.Handled = true;
 				break;
 

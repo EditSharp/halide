@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- an example EditSharp extension; its build output folder is an extension folder -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <AssemblyName>SampleExtension</AssemblyName>
+    <RootNamespace>SampleExtension</RootNamespace>
+    <!-- the app's own assemblies, built by Godot; override with -p:EditSharpBin=... -->
+    <EditSharpBin Condition=" '$(EditSharpBin)' == '' ">$(MSBuildThisFileDirectory)../../edit-sharp-gui/.godot/mono/temp/bin/Debug</EditSharpBin>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- the app provides these at run time: referenced, never copied -->
+    <Reference Include="EditSharp GUI" HintPath="$(EditSharpBin)/EditSharp GUI.dll" Private="false" />
+    <Reference Include="EditSharp" HintPath="$(EditSharpBin)/EditSharp.dll" Private="false" />
+    <Reference Include="GodotSharp" HintPath="$(EditSharpBin)/GodotSharp.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -39,6 +39,13 @@ public partial class UITopBar : PanelContainer
 
 	public bool ShowsLogo { get => logo.Visible; set => logo.Visible = value; }
 
+	// a logo that's only a mark, where there's no Home to go to
+	public bool LogoInert
+	{
+		get => logo.MouseFilter == MouseFilterEnum.Ignore;
+		set => logo.MouseFilter = value ? MouseFilterEnum.Ignore : MouseFilterEnum.Stop;
+	}
+
 	// the OS's own caption glyphs from its icon font (Windows), rather than drawn ones
 	public bool UseSystemGlyphs { get; set { field = value; ShowGlyphs(); } }
 
@@ -73,6 +80,9 @@ public partial class UITopBar : PanelContainer
 		slot.SizeFlagsHorizontal = content is null ? SizeFlags.Fill : SizeFlags.ExpandFill;
 		spacer.Visible = content is null;
 	}
+
+	// the layout switcher, for a menu to open under
+	public Control LayoutsAnchor => layouts;
 
 	public string LayoutName { get => layouts.Text; set { layouts.Text = value; layouts.Visible = value is not null; } }
 
@@ -179,5 +189,5 @@ public partial class UITopBar : PanelContainer
 	// the OS reports the pointer over maximize and presses on it, since those events never reach the bar
 	public void ShowMaximizeHot(bool hot) => maximize.SetHot(hot);
 
-	public void ShowMaximizePressed(bool pressed) => maximize.SetPressed(pressed);
+	public void ShowMaximizePressed(bool pressed) => maximize.SetHeld(pressed);
 }

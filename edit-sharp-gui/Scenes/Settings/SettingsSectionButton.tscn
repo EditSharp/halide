@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="SettingsSectionButton" type="Button"]
+focus_mode = 0
+theme_type_variation = &"SettingsSection"
+toggle_mode = true
+alignment = 0

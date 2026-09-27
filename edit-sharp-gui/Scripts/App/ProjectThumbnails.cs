@@ -21,6 +21,35 @@ public static class ProjectThumbnails
 	// how long a frame waits for sources still opening before it's taken as it is
 	static readonly TimeSpan Patience = TimeSpan.FromSeconds(4);
 
+	// captures still rendering, and what stops them all when the app quits
+	static readonly List<Task> running = [];
+	static CancellationTokenSource stopping = new();
+
+	// starts a capture that quitting can stop
+	public static void Start(Project project, Timeline timeline, Time playhead, string projectFolder)
+	{
+		Task capture = CaptureAsync(project, timeline, playhead, projectFolder, stopping.Token);
+		lock (running) running.Add(capture);
+		_ = capture.ContinueWith(t => { lock (running) running.Remove(t); }, TaskScheduler.Default);
+	}
+
+	// every capture finished before the process ends: cancelling one mid-render tears its GPU work down under it,
+	// so they're let finish, and only cancelled when they take too long
+	public static async Task StopAllAsync()
+	{
+		Task[] pending;
+		lock (running) pending = [.. running];
+		if (pending.Length == 0) return;
+
+		Task all = Task.WhenAll(pending);
+		if (await Task.WhenAny(all, Task.Delay(15000)) != all)
+		{
+			stopping.Cancel();
+			await Task.WhenAny(all, Task.Delay(3000));
+			stopping = new CancellationTokenSource();
+		}
+	}
+
 	// renders and writes the pictures in the background; a failure keeps the old ones
 	public static async Task CaptureAsync(Project project, Timeline timeline, Time playhead, string projectFolder, CancellationToken ct = default)
 	{

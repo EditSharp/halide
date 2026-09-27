@@ -16,7 +16,8 @@ public static class ContextMenus
     // to tracking in this process when the helper isn't built.
     // EDITSHARP_MENU_HANDLER=godot forces the godot-drawn menu anywhere, and
     // =inprocess the in-process NSMenu on macOS
-    public static PlatformHandler Handler { get; } = Create();
+    // settable so tests can stand in for the OS
+    public static PlatformHandler Handler { get; internal set; } = Create();
 
     static PlatformHandler Create()
     {
@@ -48,6 +49,21 @@ public static class ContextMenus
         ArgumentNullException.ThrowIfNull(button);
         Rect2 rect = button.GetGlobalRect();
         ShowContextMenu(menu, button, new Vector2(rect.Position.X, rect.End.Y));
+    }
+
+    // a menu bar's menus, each dropping down from its button, with `index` opening; the handler may switch between them
+    public static void ShowBar(IReadOnlyList<(ContextMenu Menu, Control Button)> menus, int index)
+    {
+        Window owner = NativeWindowOf(menus[index].Button);
+        List<Platform.BarMenu> bar = [];
+        foreach ((ContextMenu menu, Control button) in menus)
+        {
+            Rect2 rect = button.GetGlobalTransform() * new Rect2(Vector2.Zero, button.Size);
+            Vector2I from = ToScreen(button.GetViewport(), rect.Position);
+            Vector2I to = ToScreen(button.GetViewport(), rect.End);
+            bar.Add(new Platform.BarMenu(menu, new Vector2I(from.X, to.Y), new Rect2I(from, to - from)));
+        }
+        Callable.From(() => Handler.HandleBar(bar, index, owner)).CallDeferred();
     }
 
     // a point in a viewport's pixels, in screen pixels

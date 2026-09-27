@@ -10,6 +10,7 @@ public partial class ContextMenu : Resource
 {
     [Export] public Array<ContextElement> Elements = [];
 
+    [Export] public bool FadeAnimations = false;
     [Export] public bool HideOnItemSelect = true;
     [Export] public bool HideOnCheckableItemSelect = false;
 

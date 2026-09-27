@@ -231,6 +231,21 @@ public partial class UITimeline : Control
 				clipsView.CopySelection();
 				e.Handled = true;
 				break;
+
+			case Shortcuts.Deselect:
+				clipsView.SelectClips([]);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.ZoomIn or Shortcuts.ZoomOut:
+				ZoomStep(e.Action == Shortcuts.ZoomIn);
+				e.Handled = true;
+				break;
+
+			case Shortcuts.ZoomFit:
+				ZoomToFit();
+				e.Handled = true;
+				break;
 		}
 
 		// the rest change the data. not mid-gesture: a drag in flight is
@@ -246,6 +261,11 @@ public partial class UITimeline : Control
 
 			case Shortcuts.Paste:
 				clipsView.Paste();
+				e.Handled = true;
+				break;
+
+			case Shortcuts.Duplicate:
+				clipsView.DuplicateSelection();
 				e.Handled = true;
 				break;
 
@@ -1045,6 +1065,38 @@ public partial class UITimeline : Control
 		widthSlider.Value -= steps;
 		timeAnchorOverride = null;
 	}
+
+	// a quarter in or out, around the playhead when it's in view and the middle otherwise
+	public void ZoomStep(bool zoomIn)
+	{
+		float playhead = (float)TimeSpanToPixels(PlayheadTime) - clipsViewContainer.ScrollHorizontal;
+		timeAnchorOverride = playhead >= 0f && playhead <= clipsViewContainer.Size.X ? playhead : null;
+		widthSlider.Value = widthSlider.Value * (zoomIn ? 1.25 : 0.8);
+		timeAnchorOverride = null;
+	}
+
+	// the whole timeline across the view, from its start
+	public void ZoomToFit()
+	{
+		double seconds = Math.Max(1d, Timeline?.Duration.Seconds ?? 0d);
+		widthSlider.Value = clipsViewContainer.Size.X * 0.95 / seconds;
+		pendingTimeAnchor = (0d, 0f);
+		anchorFrames = ANCHOR_FRAMES;
+	}
+
+	public void SelectClips(IEnumerable<Clip> clips) => clipsView.SelectClips(clips);
+
+	// a shortcut offered straight to the timeline, as if it had the keyboard; whether it took it
+	public bool TakeShortcut(ShortcutEventArgs e)
+	{
+		OnShortcut(e);
+		return e.Handled;
+	}
+
+	public void DuplicateSelection() => clipsView.DuplicateSelection();
+
+	// whether the timeline has clips selected, for greying out what needs them
+	public bool HasSelection => SelectedClips.Count > 0;
 
 	public void ZoomChannelHeight(double steps, float globalAnchorY)
 	{

@@ -24,6 +24,7 @@ public partial class Host : Node
 
 		// once the root has finished setting up, so windows can join it
 		Callable.From(ProjectManager.Singleton.Start).CallDeferred();
+		Callable.From(() => { _ = ProjectManager.Singleton.LoadExtensionsAsync(); }).CallDeferred();
 	}
 
 	// left: Home. right: the tray menu

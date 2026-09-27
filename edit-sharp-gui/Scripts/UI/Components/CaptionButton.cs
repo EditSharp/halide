@@ -13,10 +13,10 @@ public partial class CaptionButton : Button
 
 	public override void _Ready()
 	{
-		MouseEntered += () => { hovered = true; Show(); };
-		MouseExited += () => { hovered = false; Show(); };
-		ButtonDown += () => { pressed = true; Show(); };
-		ButtonUp += () => { pressed = false; Show(); };
+		MouseEntered += () => { hovered = true; Fade(); };
+		MouseExited += () => { hovered = false; Fade(); };
+		ButtonDown += () => { pressed = true; Fade(); };
+		ButtonUp += () => { pressed = false; Fade(); };
 		fill.Modulate = Colors.Transparent;
 	}
 
@@ -25,17 +25,17 @@ public partial class CaptionButton : Button
 	{
 		if (hot == on) return;
 		hot = on;
-		Show();
+		Fade();
 	}
 
-	public void SetPressed(bool on)
+	public void SetHeld(bool on)
 	{
 		if (pressed == on) return;
 		pressed = on;
-		Show();
+		Fade();
 	}
 
-	void Show()
+	void Fade()
 	{
 		bool lit = hovered || hot || pressed;
 		float strength = !lit ? 0f : pressed ? GetThemeConstant("pressed_fill") / 100f : 1f;
