@@ -28,28 +28,15 @@ public sealed class WindowStateTests
 	{
 		ProjectHandle project = await TestApp.NewProjectAsync();
 		await TestApp.Seconds(0.5);
-		Trace("created", project.Window);
-		if (project.Window.Mode != Window.ModeEnum.Windowed)
-		{
-			project.Window.Mode = Window.ModeEnum.Windowed;
-			await TestApp.Seconds(0.5);
-			Trace("normalized", project.Window);
-		}
-		WindowChrome.Place(project.Window, Windowed);
-		Trace("placed", project.Window);
+		project.Window.Restore(Windowed, maximized: false);
 		await TestApp.Seconds(0.8);
-		Trace("settled", project.Window);
 		return project;
 	}
-
-	static void Trace(string step, ProjectWindow window) =>
-		GD.Print($"[WindowStateTest] {step}: mode={window.Mode}, rect={Rect(window)}, remembered={window.RestoredRect}");
 
 	static async Task<ProjectHandle> Reopen(ProjectHandle project)
 	{
 		string path = project.FilePath;
 		project.Save();
-		Trace("saved", project.Window);
 		await project.CloseAsync();
 		ProjectHandle again = await TestApp.App.Projects.OpenAsync(path);
 		await TestApp.Seconds(1);
