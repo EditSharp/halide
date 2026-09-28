@@ -31,6 +31,7 @@ public sealed class TestRunner(TestRunnerHost host)
 
 		host.GetTree().Root.GuiEmbedSubwindows = false;
 		HostWindow.Hide(host.GetTree().Root);
+		ProjectThumbnails.Enabled = false;
 		EditSharp.Compositing.Gpu.GpuDiagnostics.TrackCreation = args.Contains("--gpu-origins");
 		string root = Path.Combine(Path.GetTempPath(), $"editsharp-tests-{Guid.NewGuid():N}");
 

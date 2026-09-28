@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 // Home tile pictures in <folder>/Thumbnails: poster.jpg and a ten-frame strip, 768x432 each
 public static class ProjectThumbnails
 {
+	// Tests exercise the editor's visible thumbnails separately; home-tile captures only add
+	// background renderers that can outlive a short fixture.
+	public static bool Enabled { get; set; } = true;
+
 	public const int Width = 768;
 	public const int Height = 432;
 	public const int FrameCount = 10;
@@ -28,6 +32,8 @@ public static class ProjectThumbnails
 	// starts a capture that quitting can stop
 	public static void Start(Project project, Timeline timeline, Time playhead, string projectFolder)
 	{
+		if (!Enabled) return;
+
 		Task capture = CaptureAsync(project, timeline, playhead, projectFolder, stopping.Token);
 		lock (running) running.Add(capture);
 		_ = capture.ContinueWith(t => { lock (running) running.Remove(t); }, TaskScheduler.Default);
