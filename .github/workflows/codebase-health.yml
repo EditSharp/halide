@@ -3,7 +3,7 @@ name: Codebase map and test inventory
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: ["**"]
 
 jobs:
   generated-files:
