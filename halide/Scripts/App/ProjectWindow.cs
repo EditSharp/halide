@@ -65,6 +65,7 @@ public partial class ProjectWindow : Window
 
 	// set once closing is confirmed, so a stray signal during teardown never asks the OS about a window it has already torn down
 	bool closing;
+	Window.ModeEnum lastMode;
 
 	void RememberRestored()
 	{
@@ -80,6 +81,14 @@ public partial class ProjectWindow : Window
 
 	public override void _Process(double delta)
 	{
+		if (Mode != lastMode)
+		{
+			bool restored = Mode == ModeEnum.Windowed && lastMode != ModeEnum.Windowed;
+			lastMode = Mode;
+			if (restored && OS.GetName() == "macOS" && Godot.Time.GetTicksMsec() >= suppressRememberedUntil)
+				_ = ReapplyRestoredRectAsync(this.restored);
+		}
+
 		if (Godot.Time.GetTicksMsec() < suppressRememberedUntil) { pending = default; return; }
 		if (Mode != ModeEnum.Windowed) { pending = default; return; }
 		if (!pending.HasArea() || Godot.Time.GetTicksMsec() - pendingAt < SettleMs) return;
@@ -132,6 +141,7 @@ public partial class ProjectWindow : Window
 
 	public override void _Ready()
 	{
+		lastMode = Mode;
 		if (Mode == ModeEnum.Windowed && !restored.HasArea()) restored = WindowChrome.ContentRect(this);
 		SizeChanged += RememberRestored;
 		CloseRequested += () => _ = CloseAsync();
