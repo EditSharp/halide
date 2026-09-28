@@ -85,7 +85,7 @@ public partial class ProjectWindow : Window
 		{
 			bool restored = Mode == ModeEnum.Windowed && lastMode != ModeEnum.Windowed;
 			lastMode = Mode;
-			if (restored && OS.GetName() == "macOS" && Godot.Time.GetTicksMsec() >= suppressRememberedUntil)
+			if (restored && OS.GetName() == "macOS")
 				_ = ReapplyRestoredRectAsync(this.restored);
 		}
 
@@ -125,13 +125,20 @@ public partial class ProjectWindow : Window
 
 	// macOS completes title-bar and Space transitions asynchronously. Reapply the saved content
 	// rectangle after the transition so Cocoa's intermediate frame notifications cannot resize it.
+	bool reapplyingRestoredRect;
 	async Task ReapplyRestoredRectAsync(Rect2I rect)
 	{
-		await ToSignal(GetTree().CreateTimer(0.35), SceneTreeTimer.SignalName.Timeout);
-		if (!GodotObject.IsInstanceValid(this)) return;
-		if (Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
-		await ToSignal(GetTree().CreateTimer(0.3), SceneTreeTimer.SignalName.Timeout);
-		if (GodotObject.IsInstanceValid(this) && Mode == ModeEnum.Windowed) WindowChrome.Place(this, rect);
+		if (reapplyingRestoredRect) return;
+		reapplyingRestoredRect = true;
+		try
+		{
+			await ToSignal(GetTree().CreateTimer(0.35), SceneTreeTimer.SignalName.Timeout);
+			if (!GodotObject.IsInstanceValid(this)) return;
+			if (Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
+			await ToSignal(GetTree().CreateTimer(0.3), SceneTreeTimer.SignalName.Timeout);
+			if (GodotObject.IsInstanceValid(this) && Mode == ModeEnum.Windowed) WindowChrome.Place(this, rect);
+		}
+		finally { reapplyingRestoredRect = false; }
 	}
 
 	public override void _Notification(int what)
