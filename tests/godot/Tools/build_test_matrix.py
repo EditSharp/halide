@@ -120,7 +120,7 @@ def main():
 
     import io
     output = io.StringIO(newline="")
-    w = csv.DictWriter(output, fieldnames=["Area", "Fixture", "Test", "API-only by design", "Windows real input", "Linux real input", "macOS real input", "Notes"])
+    w = csv.DictWriter(output, fieldnames=["Area", "Fixture", "Test", "API-only by design", "Windows real input", "Linux real input", "macOS real input", "Notes"], lineterminator="\n")
     w.writeheader()
     w.writerows(rows)
     generated = output.getvalue()
