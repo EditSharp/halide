@@ -12,10 +12,14 @@ public partial class ProjectWindow : Window
 
 	public static ProjectWindow Create(Project project, string filePath, PackedScene editorScene)
 	{
+		// clamped to whatever screen is actually available: a fixed 1600x900 is comfortably smaller than
+		// any real monitor, but not necessarily smaller than a CI runner's virtual display -- found via a
+		// real (much smaller) screen in GitHub Actions, where the unclamped size opened partly off-screen
+		Vector2I size = Screens.Fit(new Rect2I(Vector2I.Zero, new Vector2I(1600, 900))).Size;
 		ProjectWindow window = new()
 		{
 			Title = WindowTitle(filePath),
-			Size = new Vector2I(1600, 900),
+			Size = size,
 			// small enough for every snap zone, thirds included
 			MinSize = new Vector2I(640, 360),
 			WrapControls = false,

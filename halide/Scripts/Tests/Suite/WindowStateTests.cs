@@ -11,7 +11,18 @@ namespace Halide.Tests;
 [Windowed]
 public sealed class WindowStateTests
 {
-	static readonly Rect2I Windowed = new(200, 200, 1000, 700);
+	// computed against the real screen rather than hardcoded: a fixed (200,200,1000,700) assumed a screen
+	// at least 1200x900, true of a real monitor but not of a CI runner's much smaller virtual display,
+	// where Screens.Fit legitimately clamped it and made these tests look broken when the app wasn't
+	static Rect2I Windowed
+	{
+		get
+		{
+			Rect2I usable = DisplayServer.ScreenGetUsableRect(DisplayServer.GetPrimaryScreen());
+			Vector2I size = new(Mathf.Min(1000, usable.Size.X - 40), Mathf.Min(700, usable.Size.Y - 40));
+			return new Rect2I(usable.Position + new Vector2I(20, 20), size);
+		}
+	}
 
 	static async Task<ProjectHandle> Placed()
 	{
