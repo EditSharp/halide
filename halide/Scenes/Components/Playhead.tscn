@@ -12,7 +12,7 @@ theme_type_variation = &"TightVBox"
 script = ExtResource("1_iwkj4")
 
 [node name="Head" type="Panel" parent="." unique_id=2013607080]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 15)
 layout_mode = 2
 offset_transform_enabled = true
 offset_transform_scale = Vector2(3, 1)

@@ -95,9 +95,6 @@ script = ExtResource("themed")
 Style = SubResource("ThemeStyle_Button_normal")
 State = 3
 
-[sub_resource type="SystemFont" id="SystemFont_ui"]
-font_names = PackedStringArray("Segoe UI Variable Text", "Segoe UI", ".AppleSystemUIFont", "SF Pro Text", "Cantarell", "Ubuntu", "Noto Sans", "DejaVu Sans", "sans-serif")
-
 [sub_resource type="SystemFont" id="SystemFont_caption_glyphs"]
 font_names = PackedStringArray("Segoe Fluent Icons", "Segoe MDL2 Assets")
 multichannel_signed_distance_field = true
@@ -2187,6 +2184,128 @@ script = ExtResource("themed")
 Style = SubResource("ThemeStyle_ColorPickerButton_normal")
 State = 3
 
+[sub_resource type="Resource" id="ThemeStyle_ContextMenuItem"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.0
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 9.0
+ContentMarginTop = 3.0
+ContentMarginRight = 9.0
+ContentMarginBottom = 3.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_disabled"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItem")
+State = 3
+
+[sub_resource type="Resource" id="ThemeStyle_ContextMenuItemHover"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 6
+BackgroundAlpha = 0.1
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 9.0
+ContentMarginTop = 3.0
+ContentMarginRight = 9.0
+ContentMarginBottom = 3.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_focus"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItemHover")
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_hover"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItemHover")
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_hover_pressed"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItemHover")
+State = 2
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_normal"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItem")
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_pressed"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuItemHover")
+State = 2
+
+[sub_resource type="Resource" id="ThemeStyle_ContextMenuPanel"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+Background = 4
+Border = 11
+BorderWidthLeft = 1
+BorderWidthTop = 1
+BorderWidthRight = 1
+BorderWidthBottom = 1
+Shadow = 13
+ShadowAlpha = 0.35
+ShadowSize = 9
+CornerRadiusTopLeft = 6
+CornerRadiusTopRight = 6
+CornerRadiusBottomRight = 6
+CornerRadiusBottomLeft = 6
+ContentMarginLeft = 3.0
+ContentMarginTop = 3.0
+ContentMarginRight = 3.0
+ContentMarginBottom = 3.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuPanel_panel"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = -1.0
+content_margin_top = -1.0
+content_margin_right = -1.0
+content_margin_bottom = -1.0
+script = ExtResource("themed")
+Style = SubResource("ThemeStyle_ContextMenuPanel")
+
 [sub_resource type="Resource" id="ThemeStyle_DockCompassFill_panel"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -2327,6 +2446,29 @@ content_margin_right = -1.0
 content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_DockPreview_panel")
+
+[sub_resource type="Resource" id="Resource_fgdli"]
+script = ExtResource("style")
+Palette = ExtResource("palette")
+CornerRadiusTopLeft = 5
+CornerRadiusTopRight = 5
+CornerRadiusBottomRight = 5
+CornerRadiusBottomLeft = 5
+ContentMarginLeft = 5.0
+ContentMarginTop = 5.0
+ContentMarginRight = 5.0
+ContentMarginBottom = 5.0
+
+[sub_resource type="StyleBox" id="ThemedStyleBox_DockTabGhost_panel"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+script = ExtResource("themed")
+Style = SubResource("Resource_fgdli")
+State = 2
 
 [sub_resource type="Resource" id="Resource_gym8p"]
 script = ExtResource("font")
@@ -4125,18 +4267,6 @@ script = ExtResource("themed")
 Style = SubResource("Resource_mmpyb")
 metadata/_custom_type_script = "uid://dv1xorpp4he7j"
 
-[sub_resource type="Resource" id="Resource_fgdli"]
-script = ExtResource("style")
-Palette = ExtResource("palette")
-CornerRadiusTopLeft = 5
-CornerRadiusTopRight = 5
-CornerRadiusBottomRight = 5
-CornerRadiusBottomLeft = 5
-ContentMarginLeft = 5.0
-ContentMarginTop = 5.0
-ContentMarginRight = 5.0
-ContentMarginBottom = 5.0
-
 [sub_resource type="StyleBox" id="StyleBox_ffi10"]
 resource_local_to_scene = false
 resource_name = ""
@@ -4475,6 +4605,9 @@ content_margin_bottom = 0.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_TopBar_panel")
 
+[sub_resource type="SystemFont" id="SystemFont_ui"]
+font_names = PackedStringArray("Segoe UI Variable Text", "Segoe UI", ".AppleSystemUIFont", "SF Pro Text", "Cantarell", "Ubuntu", "Noto Sans", "DejaVu Sans", "sans-serif")
+
 [sub_resource type="Resource" id="ThemeStyle_TopBarButton_normal"]
 script = ExtResource("style")
 Palette = ExtResource("palette")
@@ -4747,99 +4880,6 @@ content_margin_bottom = -1.0
 script = ExtResource("themed")
 Style = SubResource("ThemeStyle_ViewBackground_panel")
 
-[sub_resource type="StyleBox" id="ThemedStyleBox_DockTabGhost_panel"]
-content_margin_left = 9.0
-content_margin_top = 6.0
-content_margin_right = 9.0
-content_margin_bottom = 6.0
-script = ExtResource("themed")
-Style = SubResource("Resource_fgdli")
-State = 2
-
-[sub_resource type="Resource" id="ThemeStyle_ContextMenuPanel"]
-script = ExtResource("style")
-Palette = ExtResource("palette")
-Background = 4
-Border = 11
-BorderWidthLeft = 1
-BorderWidthTop = 1
-BorderWidthRight = 1
-BorderWidthBottom = 1
-Shadow = 13
-ShadowAlpha = 0.35
-ShadowSize = 9
-ContentMarginLeft = 3.0
-ContentMarginTop = 3.0
-ContentMarginRight = 3.0
-ContentMarginBottom = 3.0
-CornerRadiusTopLeft = 6
-CornerRadiusTopRight = 6
-CornerRadiusBottomRight = 6
-CornerRadiusBottomLeft = 6
-
-[sub_resource type="Resource" id="ThemeStyle_ContextMenuItem"]
-script = ExtResource("style")
-Palette = ExtResource("palette")
-Background = 6
-BackgroundAlpha = 0.0
-ContentMarginLeft = 9.0
-ContentMarginTop = 3.0
-ContentMarginRight = 9.0
-ContentMarginBottom = 3.0
-CornerRadiusTopLeft = 6
-CornerRadiusTopRight = 6
-CornerRadiusBottomRight = 6
-CornerRadiusBottomLeft = 6
-
-[sub_resource type="Resource" id="ThemeStyle_ContextMenuItemHover"]
-script = ExtResource("style")
-Palette = ExtResource("palette")
-Background = 6
-BackgroundAlpha = 0.1
-ContentMarginLeft = 9.0
-ContentMarginTop = 3.0
-ContentMarginRight = 9.0
-ContentMarginBottom = 3.0
-CornerRadiusTopLeft = 6
-CornerRadiusTopRight = 6
-CornerRadiusBottomRight = 6
-CornerRadiusBottomLeft = 6
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuPanel_panel"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuPanel")
-State = 0
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_normal"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItem")
-State = 0
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_hover"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItemHover")
-State = 0
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_pressed"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItemHover")
-State = 2
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_hover_pressed"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItemHover")
-State = 2
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_disabled"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItem")
-State = 3
-
-[sub_resource type="StyleBox" id="ThemedStyleBox_ContextMenuItem_focus"]
-script = ExtResource("themed")
-Style = SubResource("ThemeStyle_ContextMenuItemHover")
-State = 0
-
 [resource]
 default_font = ExtResource("7_sxwih")
 default_font_size = 14
@@ -5059,6 +5099,15 @@ ColorPickerButton/styles/hover_pressed = SubResource("ThemedStyleBox_ColorPicker
 ColorPickerButton/styles/normal = SubResource("ThemedStyleBox_ColorPickerButton_normal")
 ColorPickerButton/styles/pressed = SubResource("ThemedStyleBox_ColorPickerButton_pressed")
 ColorPickerButton/styles/read_only = SubResource("ThemedStyleBox_ColorPickerButton_read_only")
+ContextMenuItem/base_type = &"Button"
+ContextMenuItem/styles/disabled = SubResource("ThemedStyleBox_ContextMenuItem_disabled")
+ContextMenuItem/styles/focus = SubResource("ThemedStyleBox_ContextMenuItem_focus")
+ContextMenuItem/styles/hover = SubResource("ThemedStyleBox_ContextMenuItem_hover")
+ContextMenuItem/styles/hover_pressed = SubResource("ThemedStyleBox_ContextMenuItem_hover_pressed")
+ContextMenuItem/styles/normal = SubResource("ThemedStyleBox_ContextMenuItem_normal")
+ContextMenuItem/styles/pressed = SubResource("ThemedStyleBox_ContextMenuItem_pressed")
+ContextMenuPanel/base_type = &"PopupPanel"
+ContextMenuPanel/styles/panel = SubResource("ThemedStyleBox_ContextMenuPanel_panel")
 DockCompassFill/base_type = &"Panel"
 DockCompassFill/styles/panel = SubResource("ThemedStyleBox_DockCompassFill_panel")
 DockCompassPane/base_type = &"Panel"
@@ -5071,6 +5120,8 @@ DockInsertMarker/base_type = &"Panel"
 DockInsertMarker/styles/panel = SubResource("ThemedStyleBox_DockInsertMarker_panel")
 DockPreview/base_type = &"Panel"
 DockPreview/styles/panel = SubResource("ThemedStyleBox_DockPreview_panel")
+DockTabGhost/base_type = &"PanelContainer"
+DockTabGhost/styles/panel = SubResource("ThemedStyleBox_DockTabGhost_panel")
 ErrorLabel/base_type = &"Label"
 ErrorLabel/colors/font_color = Color(1, 0.42, 0.42, 1)
 HScrollBar/styles/grabber = SubResource("ThemedStyleBox_HScrollBar_grabber")
@@ -5425,19 +5476,13 @@ TooltipPanel/styles/panel = SubResource("ThemedStyleBox_TooltipPanel_panel")
 TopBar/base_type = &"PanelContainer"
 TopBar/styles/panel = SubResource("ThemedStyleBox_TopBar_panel")
 TopBarButton/base_type = &"Button"
-TopBarButton/font_sizes/font_size = 12
-TopBarButton/fonts/font = SubResource("SystemFont_ui")
-TopBarTitle/base_type = &"Label"
-TopBarTitle/font_sizes/font_size = 12
-TopBarTitle/fonts/font = SubResource("SystemFont_ui")
-TopBarTabs/base_type = &"TabBar"
-TopBarTabs/font_sizes/font_size = 12
-TopBarTabs/fonts/font = SubResource("SystemFont_ui")
 TopBarButton/colors/font_color = Color(0.92, 0.92, 0.92, 1)
 TopBarButton/colors/font_focus_color = Color(0.92, 0.92, 0.92, 1)
 TopBarButton/colors/font_hover_color = Color(0.92, 0.92, 0.92, 1)
 TopBarButton/colors/font_hover_pressed_color = Color(0.92, 0.92, 0.92, 1)
 TopBarButton/colors/font_pressed_color = Color(0.92, 0.92, 0.92, 1)
+TopBarButton/font_sizes/font_size = 12
+TopBarButton/fonts/font = SubResource("SystemFont_ui")
 TopBarButton/styles/disabled = SubResource("ThemedStyleBox_TopBarButton_disabled")
 TopBarButton/styles/focus = SubResource("ThemedStyleBox_TopBarButton_focus")
 TopBarButton/styles/hover = SubResource("ThemedStyleBox_TopBarButton_hover")
@@ -5445,13 +5490,19 @@ TopBarButton/styles/hover_pressed = SubResource("ThemedStyleBox_TopBarButton_hov
 TopBarButton/styles/normal = SubResource("ThemedStyleBox_TopBarButton_normal")
 TopBarButton/styles/pressed = SubResource("ThemedStyleBox_TopBarButton_pressed")
 TopBarLogo/base_type = &"CaptionButton"
-TopBarLogo/constants/icon_max_width = 16
 TopBarLogo/colors/icon_disabled_color = Color(1, 1, 1, 1)
 TopBarLogo/colors/icon_focus_color = Color(1, 1, 1, 1)
 TopBarLogo/colors/icon_hover_color = Color(1, 1, 1, 1)
 TopBarLogo/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
 TopBarLogo/colors/icon_normal_color = Color(1, 1, 1, 1)
 TopBarLogo/colors/icon_pressed_color = Color(1, 1, 1, 1)
+TopBarLogo/constants/icon_max_width = 16
+TopBarTabs/base_type = &"TabBar"
+TopBarTabs/font_sizes/font_size = 12
+TopBarTabs/fonts/font = SubResource("SystemFont_ui")
+TopBarTitle/base_type = &"Label"
+TopBarTitle/font_sizes/font_size = 12
+TopBarTitle/fonts/font = SubResource("SystemFont_ui")
 VScrollBar/styles/grabber = SubResource("ThemedStyleBox_VScrollBar_grabber")
 VScrollBar/styles/grabber_highlight = SubResource("ThemedStyleBox_VScrollBar_grabber_highlight")
 VScrollBar/styles/grabber_pressed = SubResource("ThemedStyleBox_VScrollBar_grabber_pressed")
@@ -5467,14 +5518,3 @@ script = ExtResource("theme")
 Palette = ExtResource("palette")
 ColorBindings = Array[ExtResource("color")]([SubResource("Resource_tn1lg"), SubResource("Resource_wc7hn"), SubResource("Resource_caist"), SubResource("Resource_tupki"), SubResource("Resource_tq6wv"), SubResource("Resource_lobyy"), SubResource("Resource_3hrxq"), SubResource("Resource_6ybe0"), SubResource("Resource_p041p"), SubResource("Resource_hxaru"), SubResource("Resource_0odu4"), SubResource("Resource_mqm44"), SubResource("Resource_bou2x"), SubResource("Resource_vx1l5"), SubResource("Resource_reyni"), SubResource("Resource_nj22i"), SubResource("Resource_13pc2"), SubResource("Resource_2juqn"), SubResource("Resource_pcabs"), SubResource("Resource_y07y4"), SubResource("Resource_cnc3o"), SubResource("Resource_pos1v"), SubResource("Resource_delxr"), SubResource("Resource_4ksn3"), SubResource("Resource_vxclg"), SubResource("Resource_36vxu"), SubResource("Resource_l04cn"), SubResource("Resource_kopu6"), SubResource("Resource_jv7x1"), SubResource("Resource_s6vy7"), SubResource("Resource_6dtwt"), SubResource("Resource_v7yw4"), SubResource("Resource_3546n"), SubResource("Resource_hae2t"), SubResource("Resource_6qp44"), SubResource("Resource_lh7l0"), SubResource("Resource_pqlse"), SubResource("Resource_dk716"), SubResource("Resource_e6308"), SubResource("Resource_rfw8j"), SubResource("Resource_8rajv"), SubResource("Resource_b27g5"), SubResource("Resource_bwryr"), SubResource("Resource_cee45"), SubResource("Resource_gkq3h"), SubResource("Resource_tl2ix"), SubResource("Resource_xnnqo"), SubResource("Resource_4j4c5"), SubResource("Resource_1omqv"), SubResource("Resource_qmdec"), SubResource("Resource_qa1g8"), SubResource("Resource_kwgp3"), SubResource("Resource_ssdrr"), SubResource("Resource_8l5mh"), SubResource("Resource_oi1a4"), SubResource("Resource_6lq5k"), SubResource("Resource_8jgcx"), SubResource("Resource_bgbfo"), SubResource("Resource_nm078"), SubResource("Resource_mesp4"), SubResource("Resource_n7i6g"), SubResource("Resource_4wbs4"), SubResource("Resource_gq820"), SubResource("Resource_41yd8"), SubResource("Resource_p5e06"), SubResource("Resource_do6sh"), SubResource("Resource_k2ymp"), SubResource("Resource_lacuk"), SubResource("Resource_wiei5"), SubResource("Resource_cjvos"), SubResource("Resource_31qqx"), SubResource("Resource_gkkrh"), SubResource("Resource_iwh2p"), SubResource("Resource_ayyqb"), SubResource("Resource_f6gbg"), SubResource("Resource_8vev5"), SubResource("Resource_mniow"), SubResource("Resource_grscq"), SubResource("Resource_g8eod"), SubResource("Resource_vkpbr"), SubResource("Resource_qw437"), SubResource("Resource_it02q"), SubResource("Resource_cgg46"), SubResource("Resource_r264n"), SubResource("Resource_u70pb"), SubResource("Resource_gk352"), SubResource("Resource_a80uj"), SubResource("Resource_ofxkh"), SubResource("Resource_d3wwh"), SubResource("Resource_0uy7o"), SubResource("Resource_up5gy"), SubResource("Resource_jm17l"), SubResource("Resource_gnv7a"), SubResource("Resource_oojhn"), SubResource("Resource_dcv7k"), SubResource("Resource_l1vqt"), SubResource("Resource_p36an"), SubResource("Resource_wet5q"), SubResource("Resource_08g2a"), SubResource("Resource_2xi4d"), SubResource("Resource_v2gij"), SubResource("Resource_yersq"), SubResource("Resource_lm16h"), SubResource("Resource_xion6"), SubResource("Resource_lhoo5"), SubResource("Resource_vs2if"), SubResource("Resource_5phew"), SubResource("Resource_h6p0o"), SubResource("Resource_h1rxf"), SubResource("Resource_5eu7y"), SubResource("Resource_anqa4"), SubResource("Resource_3r3vc"), SubResource("Resource_bj7e2"), SubResource("Resource_slnpp"), SubResource("Resource_n3yaf"), SubResource("Resource_iht4d"), SubResource("Resource_ottyf"), SubResource("Resource_nsbpn"), SubResource("Resource_h0kbh"), SubResource("Resource_r4x6t"), SubResource("Resource_mu0fg"), SubResource("Resource_akhw3"), SubResource("Resource_x5yke"), SubResource("Resource_w7y03"), SubResource("Resource_efenw"), SubResource("Resource_1i34x"), SubResource("Resource_yhfeq"), SubResource("Resource_0kida"), SubResource("Resource_2u8nx"), SubResource("Resource_nxip8"), SubResource("Resource_qu8em"), SubResource("Resource_ffxfl"), SubResource("Resource_tpkcg"), SubResource("Resource_xxa0j"), SubResource("Resource_70bsv"), SubResource("Resource_hr40q"), SubResource("Resource_a24hu"), SubResource("Resource_dfltk"), SubResource("Resource_kq6f5"), SubResource("Resource_4rll8"), SubResource("Resource_j0ank"), SubResource("Resource_q6oxf"), SubResource("Resource_7upj7"), SubResource("Resource_upq38"), SubResource("Resource_xamq7"), SubResource("Resource_ttg1c"), SubResource("Resource_4duq5"), SubResource("ColorBinding_PlayButton_font_color"), SubResource("ColorBinding_PlayButton_font_hover_color"), SubResource("ColorBinding_PlayButton_font_pressed_color"), SubResource("ColorBinding_PlayButton_font_hover_pressed_color"), SubResource("ColorBinding_PlayButton_font_focus_color"), SubResource("ColorBinding_PlayButton_font_disabled_color"), SubResource("ColorBinding_Clip_poppy"), SubResource("ColorBinding_Clip_red"), SubResource("ColorBinding_Clip_orange"), SubResource("ColorBinding_Clip_mango"), SubResource("ColorBinding_Clip_yellow"), SubResource("ColorBinding_Clip_green"), SubResource("ColorBinding_Clip_turquoise"), SubResource("ColorBinding_Clip_lime"), SubResource("ColorBinding_Clip_cyan"), SubResource("ColorBinding_Clip_purple"), SubResource("ColorBinding_Clip_pink"), SubResource("ColorBinding_Clip_lavender"), SubResource("ColorBinding_Clip_magenta"), SubResource("ColorBinding_Clip_brown"), SubResource("ColorBinding_Clip_tan"), SubResource("ColorBinding_Clip_gray"), SubResource("ColorBinding_Clip_blue"), SubResource("ColorBinding_Clip_navy"), SubResource("ColorBinding_Node_poppy"), SubResource("ColorBinding_Node_red"), SubResource("ColorBinding_Node_orange"), SubResource("ColorBinding_Node_mango"), SubResource("ColorBinding_Node_yellow"), SubResource("ColorBinding_Node_green"), SubResource("ColorBinding_Node_turquoise"), SubResource("ColorBinding_Node_lime"), SubResource("ColorBinding_Node_cyan"), SubResource("ColorBinding_Node_purple"), SubResource("ColorBinding_Node_pink"), SubResource("ColorBinding_Node_lavender"), SubResource("ColorBinding_Node_magenta"), SubResource("ColorBinding_Node_brown"), SubResource("ColorBinding_Node_tan"), SubResource("ColorBinding_Node_gray"), SubResource("ColorBinding_Node_blue"), SubResource("ColorBinding_Node_navy"), SubResource("Resource_errorlabel_color"), SubResource("Resource_settingssection_font_color"), SubResource("Resource_settingssection_font_hover_color"), SubResource("Resource_settingssection_font_pressed_color"), SubResource("Resource_settingssection_font_hover_pressed_color"), SubResource("Resource_settingssection_font_focus_color"), SubResource("Resource_topbarbutton_font_color"), SubResource("Resource_topbarbutton_font_hover_color"), SubResource("Resource_topbarbutton_font_pressed_color"), SubResource("Resource_topbarbutton_font_hover_pressed_color"), SubResource("Resource_topbarbutton_font_focus_color"), SubResource("Resource_captionbutton_font_color"), SubResource("Resource_captionbutton_font_hover_color"), SubResource("Resource_captionbutton_font_pressed_color"), SubResource("Resource_captionbutton_font_hover_pressed_color"), SubResource("Resource_captionbutton_font_focus_color"), SubResource("Resource_captionbutton_icon_normal_color"), SubResource("Resource_captionbutton_icon_hover_color"), SubResource("Resource_captionbutton_icon_pressed_color"), SubResource("Resource_captionbutton_icon_hover_pressed_color"), SubResource("Resource_captionbutton_icon_focus_color"), SubResource("Resource_captionhot_font_color"), SubResource("Resource_captionhot_font_hover_color"), SubResource("Resource_captionhot_font_pressed_color"), SubResource("Resource_captionhot_font_hover_pressed_color"), SubResource("Resource_captionhot_font_focus_color"), SubResource("Resource_captionhot_icon_normal_color"), SubResource("Resource_captionhot_icon_hover_color"), SubResource("Resource_captionhot_icon_pressed_color"), SubResource("Resource_captionhot_icon_hover_pressed_color"), SubResource("Resource_captionhot_icon_focus_color"), SubResource("Resource_captionclose_font_color"), SubResource("Resource_captionclose_font_hover_color"), SubResource("Resource_captionclose_font_pressed_color"), SubResource("Resource_captionclose_font_hover_pressed_color"), SubResource("Resource_captionclose_font_focus_color"), SubResource("Resource_captionclose_icon_normal_color"), SubResource("Resource_captionclose_icon_hover_color"), SubResource("Resource_captionclose_icon_pressed_color"), SubResource("Resource_captionclose_icon_hover_pressed_color"), SubResource("Resource_captionclose_icon_focus_color"), SubResource("Resource_captionclose_glyph_hot")])
 FontBindings = Array[ExtResource("font")]([SubResource("Resource_gym8p"), SubResource("Resource_jw040"), SubResource("Resource_6uy23"), SubResource("Resource_oxqmg"), SubResource("Resource_8qbsu"), SubResource("Resource_2h0kh"), SubResource("Resource_06nl8"), SubResource("Resource_1poed"), SubResource("Resource_52mx2"), SubResource("Resource_py0i1"), SubResource("Resource_sxwih"), SubResource("Resource_7hjjl"), SubResource("Resource_wnmfn"), SubResource("Resource_vi2x8"), SubResource("Resource_lsctt"), SubResource("Resource_ottsx"), SubResource("Resource_0ye0x"), SubResource("Resource_errorlabel_font"), SubResource("Resource_settingssection_font")])
-DockTabGhost/base_type = &"PanelContainer"
-DockTabGhost/styles/panel = SubResource("ThemedStyleBox_DockTabGhost_panel")
-ContextMenuPanel/base_type = &"PopupPanel"
-ContextMenuPanel/styles/panel = SubResource("ThemedStyleBox_ContextMenuPanel_panel")
-ContextMenuItem/base_type = &"Button"
-ContextMenuItem/styles/normal = SubResource("ThemedStyleBox_ContextMenuItem_normal")
-ContextMenuItem/styles/hover = SubResource("ThemedStyleBox_ContextMenuItem_hover")
-ContextMenuItem/styles/pressed = SubResource("ThemedStyleBox_ContextMenuItem_pressed")
-ContextMenuItem/styles/hover_pressed = SubResource("ThemedStyleBox_ContextMenuItem_hover_pressed")
-ContextMenuItem/styles/disabled = SubResource("ThemedStyleBox_ContextMenuItem_disabled")
-ContextMenuItem/styles/focus = SubResource("ThemedStyleBox_ContextMenuItem_focus")
