@@ -90,15 +90,16 @@ public partial class ProjectWindow : Window
 		WindowChrome.Place(this, restored);
 		GD.Print($"[WindowState] Restore({rect}, maximized={maximized}) -> restored={restored}, ModeNow={Mode}");
 		// after the chrome has taken the frame, so the OS keeps the restored size without a caption in it.
-		// the non-maximized branch sets Windowed explicitly rather than assuming it's already the default:
-		// macOS can carry a newly created window into an already-fullscreen Space when the window that just
-		// closed was itself fullscreen, which would otherwise leave a "restored" project reopening fullscreen
+		// diagnostic-only for the non-maximized case for now: an earlier version of this also set Mode =
+		// Windowed explicitly there (on a hunch that macOS might carry a new window into an already-
+		// fullscreen Space), but that runs on every ordinary reopen, not just the fullscreen scenario it
+		// was meant for, and the very next CI run broke on all three platforms -- reverted without real
+		// evidence it was the cause, since a hypothesis this expensive to get wrong needs proof first
 		Callable.From(() =>
 		{
 			if (!IsInstanceValid(this)) return;
-			ModeEnum before = Mode;
-			Mode = maximized ? ModeEnum.Maximized : ModeEnum.Windowed;
-			if (before != Mode) GD.Print($"[WindowState] Restore's deferred mode set: {before} -> {Mode}");
+			if (maximized) Mode = ModeEnum.Maximized;
+			GD.Print($"[WindowState] Restore's deferred callback: maximized={maximized}, Mode={Mode}");
 		}).CallDeferred();
 	}
 
