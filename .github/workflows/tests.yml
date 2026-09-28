@@ -1,12 +1,12 @@
-# Runs the EditSharp library's unit tests and the app's API-driven suite (headless, then windowed) on each OS.
-# Driven by halide/Tools/run_tests.py; results.xml, logs and failure screenshots are uploaded per OS.
+# Runs the library's unit tests and Halide's Godot suite (headless, then windowed) on each OS.
+# Results, logs and failure screenshots are uploaded per OS.
 name: Tests
 
 on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [tests-ci]
+    branches: ["**"]
 
 env:
   GODOT_VERSION: 4.7.2
@@ -103,6 +103,9 @@ jobs:
         shell: bash
         run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
+      - name: Build the separate Godot test assembly
+        run: dotnet build "tests/godot/Halide.GodotTests.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+
       - name: Build the sample extension
         shell: bash
         run: dotnet build extensions/Sample
@@ -124,7 +127,7 @@ jobs:
         shell: bash
         run: |
           PY=python3; if [ "${{ matrix.name }}" = "windows" ]; then PY=python; fi
-          $PY halide/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --out "$GITHUB_WORKSPACE/results/headless"
+          $PY tests/godot/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --out "$GITHUB_WORKSPACE/results/headless"
 
       - name: Windowed suite
         if: always()
@@ -138,7 +141,7 @@ jobs:
             openbox &
             sleep 1
           fi
-          $PY halide/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --windowed --extra "${{ matrix.extra }}" --out "$GITHUB_WORKSPACE/results/windowed"
+          $PY tests/godot/Tools/run_tests.py --godot "$GITHUB_WORKSPACE/${{ matrix.bin }}" --windowed --extra "${{ matrix.extra }}" --out "$GITHUB_WORKSPACE/results/windowed"
 
       # Home, Settings and a project window in each preset layout, to look at
       - name: Screenshots

@@ -5,7 +5,7 @@
 # run automatically, with an HTML report (screenshots included) opening for each one.
 #
 # Start it:
-#   powershell -File C:\Users\Levi\Documents\GitHub\Halide\halide\Tools\es_runner_agent.ps1
+#   powershell -File tests\godot\Tools\es_runner_agent.ps1
 # Stop it: Ctrl+C, any time; it never touches your other windows or takes the mouse except while a
 # windowed test itself is actually running (the same way running it by hand would).
 
@@ -27,7 +27,7 @@ $SPIF_SENDCHANGE = 0x2
 # verbose diagnostics from the native menu thread (foreground-taken state, track results), while this is being debugged
 $env:EDITSHARP_MENU_DEBUG = "1"
 
-$repo = "C:\Users\Levi\Documents\GitHub\Halide\halide"
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $godot = "C:\tools\godot\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe"
 $queue = "C:\tmp\es-queue"
 $results = "C:\tmp\es-results"
@@ -54,7 +54,7 @@ while ($true) {
 
         Push-Location $repo
         try {
-            $argList = @("Tools\run_tests.py", "--godot", $godot, "--out", $outDir) + $job.args
+            $argList = @("tests\godot\Tools\run_tests.py", "--godot", $godot, "--out", $outDir) + $job.args
             & python @argList *>&1 | Tee-Object -FilePath (Join-Path $results "$id.log")
             $exitCode = $LASTEXITCODE
         } finally {
@@ -64,7 +64,7 @@ while ($true) {
         # not opened here: the report is self-contained (screenshots embedded) and gets sent back to
         # wherever the conversation actually is, not shown on this machine's screen
         try {
-            python (Join-Path $repo "Tools\test_report.py") $outDir
+            python (Join-Path $repo "tests\godot\Tools\test_report.py") $outDir
         } catch {
             Write-Host "report generation failed: $_" -ForegroundColor Red
         }

@@ -1,0 +1,21 @@
+name: Codebase map and test inventory
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  generated-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check generated map and test inventory
+        run: |
+          python docs/generate_codebase_map.py --check
+          python tests/godot/Tools/build_test_matrix.py --check
+      - name: Check source comment length
+        run: python docs/check_comment_lengths.py --check

@@ -1,20 +1,19 @@
-"""Regenerates Tools/test_matrix.csv from the actual test fixtures, keeping the hand-classified
-Windows/Linux/macOS real-input status columns for tests it already knows about, and flagging any
-newly-found test as "NEW - classify me" so it doesn't get silently missed.
+"""Regenerate the repository-level CSV inventory from the actual test fixtures.
 
-Run this whenever a fixture or test is added or renamed:
-    python Tools/build_test_matrix.py
-Then edit test_matrix.csv (a plain CSV, open it in anything) to fill in real classifications for
-anything marked "NEW - classify me", and update status columns as tests get converted.
+New tests are always marked "NEW - classify me", even when added to an existing
+fixture. Classify the test as API-only or real-input and set platform status before
+committing. Use --check in CI to catch stale inventory or missing classifications.
 """
+import argparse
 import csv
 import glob
 import os
 import re
 
-PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SUITE = os.path.join(PROJECT, "Scripts", "Tests", "Suite")
-CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_matrix.csv")
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+PROJECT = os.path.join(REPO, "halide")
+SUITE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Suite")
+CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "test_matrix.csv")
 
 # fixture -> (area, api_only_by_design, note). Edit this as fixtures are added/reclassified.
 FIXTURES = {
@@ -90,10 +89,14 @@ def load_existing():
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="fail if the CSV is stale or contains unclassified tests")
+    args = parser.parse_args()
     found = discover()
     existing = load_existing()
     rows = []
     new_count = 0
+    new_tests = []
 
     for fixture, test in found:
         key = (fixture, test)
@@ -102,27 +105,54 @@ def main():
             continue
 
         new_count += 1
-        area, api_only, note = FIXTURES.get(fixture, ("NEW - classify me", False, "fixture not classified yet in FIXTURES dict"))
-        is_api_only = (api_only or key in API_ONLY_TESTS) and key not in NOT_API_ONLY_TESTS
-        status = "n/a" if is_api_only else "todo"
-        mac_status = "n/a" if is_api_only else "blocked (no VM)"
+        area = FIXTURES.get(fixture, ("NEW - classify me", False, ""))[0]
+        new_tests.append(f"{fixture}.{test}")
         rows.append({
             "Area": area, "Fixture": fixture, "Test": test,
-            "API-only by design": "yes" if is_api_only else "no",
-            "Windows real input": status, "Linux real input": status, "macOS real input": mac_status,
-            "Notes": note if fixture in FIXTURES else "NEW - classify me",
+            "API-only by design": "NEW - classify me",
+            "Windows real input": "classify",
+            "Linux real input": "classify",
+            "macOS real input": "classify",
+            "Notes": "NEW - classify me: state why this is API-only, or describe the real user input and platform status.",
         })
 
-    # tests that no longer exist in code are dropped silently (renamed/removed)
     rows.sort(key=lambda r: (r["Area"], r["Fixture"], r["Test"]))
 
-    with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["Area", "Fixture", "Test", "API-only by design", "Windows real input", "Linux real input", "macOS real input", "Notes"])
-        w.writeheader()
-        w.writerows(rows)
+    import io
+    output = io.StringIO(newline="")
+    w = csv.DictWriter(output, fieldnames=["Area", "Fixture", "Test", "API-only by design", "Windows real input", "Linux real input", "macOS real input", "Notes"])
+    w.writeheader()
+    w.writerows(rows)
+    generated = output.getvalue()
 
-    print(f"{len(rows)} tests, {new_count} new (check for 'NEW - classify me' rows)")
+    if args.check:
+        stale = not os.path.exists(CSV_PATH) or open(CSV_PATH, encoding="utf-8", newline="").read() != generated
+        unclassified = []
+        for row in rows:
+            api_only = row["API-only by design"]
+            statuses = [row[column] for column in ("Windows real input", "Linux real input", "macOS real input")]
+            invalid = api_only not in {"yes", "no"} or row["Area"] == "NEW - classify me"
+            invalid |= api_only == "yes" and statuses != ["n/a"] * 3
+            invalid |= api_only == "no" and any(status not in {"done", "todo"} and not status.startswith("blocked") for status in statuses)
+            if invalid:
+                unclassified.append(f"{row['Fixture']}.{row['Test']}")
+        if stale or unclassified:
+            if stale:
+                print("test_matrix.csv is stale; run python tests/godot/Tools/build_test_matrix.py")
+            if unclassified:
+                print("Classify each newly discovered test in test_matrix.csv:")
+                print("\n".join(f"  {test}" for test in unclassified))
+            return 1
+        print(f"test inventory is current ({len(rows)} tests)")
+        return 0
+
+    with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
+        f.write(generated)
+    print(f"{len(rows)} tests, {new_count} new")
+    for test in new_tests:
+        print(f"  classify {test}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

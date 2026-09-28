@@ -404,3 +404,4 @@ Slopmaxxing/Runtime/ffmpeg/ffmpeg.exe
 Slopmaxxing/Runtime/ffmpeg/ffplay.exe
 Slopmaxxing/Runtime/ffmpeg/ffprobe.exe
 /EditSharp
+tests/godot/TestResults/
