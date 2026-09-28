@@ -155,7 +155,8 @@ public static class Tests
                     Framerate = 30,
                     VideoCodec = VideoCodec.H265,
                     AudioCodec = AudioCodec.AAC,
-                    //HardwareAccelerator = HardwareAccelerator.None
+                    // CI often exposes only a software adapter; keep fixture media deterministic there.
+                    HardwareAccelerator = HardwareAccelerator.None
                 },
                 Timeline = timeline,
                 OutputPath = Path.Combine(AppContext.BaseDirectory, "skibidi.mp4")

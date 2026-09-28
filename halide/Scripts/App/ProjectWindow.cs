@@ -103,8 +103,18 @@ public partial class ProjectWindow : Window
 		{
 			if (!IsInstanceValid(this)) return;
 			if (maximized) Mode = ModeEnum.Maximized;
+			else if (Mode == ModeEnum.Fullscreen) Mode = ModeEnum.Windowed;
 			GD.Print($"[WindowState] Restore's deferred callback: maximized={maximized}, Mode={Mode}");
+			if (OS.GetName() == "macOS" && !maximized) _ = ReapplyRestoredRectAsync(restored);
 		}).CallDeferred();
+	}
+
+	// macOS completes title-bar and Space transitions asynchronously. Reapply the saved content
+	// rectangle after the transition so Cocoa's intermediate frame notifications cannot resize it.
+	async Task ReapplyRestoredRectAsync(Rect2I rect)
+	{
+		await ToSignal(GetTree().CreateTimer(0.5), SceneTreeTimer.SignalName.Timeout);
+		if (GodotObject.IsInstanceValid(this) && Mode == ModeEnum.Windowed) WindowChrome.Place(this, rect);
 	}
 
 	public override void _Notification(int what)
