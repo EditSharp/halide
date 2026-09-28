@@ -104,6 +104,7 @@ jobs:
         run: dotnet build "halide/Halide.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       - name: Build the separate Godot test assembly
+        shell: bash
         run: dotnet build "tests/godot/Halide.GodotTests.csproj" -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
 
       - name: Build the sample extension
