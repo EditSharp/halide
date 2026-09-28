@@ -28,6 +28,11 @@ public sealed class WindowStateTests
 	{
 		ProjectHandle project = await TestApp.NewProjectAsync();
 		await TestApp.Seconds(0.5);
+		if (project.Window.Mode != Window.ModeEnum.Windowed)
+		{
+			project.Window.Mode = Window.ModeEnum.Windowed;
+			await TestApp.Seconds(0.5);
+		}
 		WindowChrome.Place(project.Window, Windowed);
 		await TestApp.Seconds(0.8);
 		return project;
