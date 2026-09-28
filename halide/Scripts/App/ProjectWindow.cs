@@ -77,6 +77,7 @@ public partial class ProjectWindow : Window
 
 	public override void _Process(double delta)
 	{
+		if (Godot.Time.GetTicksMsec() < suppressRememberedUntil) { pending = default; return; }
 		if (Mode != ModeEnum.Windowed) { pending = default; return; }
 		if (!pending.HasArea() || Godot.Time.GetTicksMsec() - pendingAt < SettleMs) return;
 
@@ -114,7 +115,10 @@ public partial class ProjectWindow : Window
 	// rectangle after the transition so Cocoa's intermediate frame notifications cannot resize it.
 	async Task ReapplyRestoredRectAsync(Rect2I rect)
 	{
-		await ToSignal(GetTree().CreateTimer(0.5), SceneTreeTimer.SignalName.Timeout);
+		await ToSignal(GetTree().CreateTimer(0.35), SceneTreeTimer.SignalName.Timeout);
+		if (!GodotObject.IsInstanceValid(this)) return;
+		if (Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
+		await ToSignal(GetTree().CreateTimer(0.3), SceneTreeTimer.SignalName.Timeout);
 		if (GodotObject.IsInstanceValid(this) && Mode == ModeEnum.Windowed) WindowChrome.Place(this, rect);
 	}
 
