@@ -89,7 +89,8 @@ public partial class ProjectWindow : Window
 	{
 		restored = Screens.Fit(rect);
 		pending = default;
-		suppressRememberedUntil = Godot.Time.GetTicksMsec() + SuppressMs;
+		ulong suppression = OS.GetName() == "macOS" ? 2000 : SuppressMs;
+		suppressRememberedUntil = Godot.Time.GetTicksMsec() + suppression;
 		InitialPosition = WindowInitialPosition.Absolute;
 		WindowChrome.Place(this, restored);
 		GD.Print($"[WindowState] Restore({rect}, maximized={maximized}) -> restored={restored}, ModeNow={Mode}");
@@ -103,7 +104,7 @@ public partial class ProjectWindow : Window
 		{
 			if (!IsInstanceValid(this)) return;
 			if (maximized) Mode = ModeEnum.Maximized;
-			else if (Mode == ModeEnum.Fullscreen) Mode = ModeEnum.Windowed;
+			else if (OS.GetName() == "macOS" && Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
 			GD.Print($"[WindowState] Restore's deferred callback: maximized={maximized}, Mode={Mode}");
 			if (OS.GetName() == "macOS" && !maximized) _ = ReapplyRestoredRectAsync(restored);
 		}).CallDeferred();
