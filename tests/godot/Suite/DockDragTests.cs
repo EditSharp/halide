@@ -16,7 +16,7 @@ public sealed class DockDragTests
 	Vector2I pointer;
 	bool held;
 
-	Window Main => project.Window;
+	ProjectWindow Main => project.Window;
 
 	[SetUp]
 	public async Task Open()
