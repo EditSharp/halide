@@ -22,6 +22,11 @@ public sealed class DockDragTests
 	public async Task Open()
 	{
 		project = await TestApp.NewProjectAsync();
+		if (Main.Mode != Window.ModeEnum.Windowed)
+		{
+			Main.Mode = Window.ModeEnum.Windowed;
+			await TestApp.Seconds(0.5);
+		}
 		Rect2I usable = DisplayServer.ScreenGetUsableRect(Main.CurrentScreen);
 		Main.Size = new Vector2I(System.Math.Min(1200, usable.Size.X - 96), System.Math.Min(720, usable.Size.Y - 96));
 		Main.Position = usable.Position + (usable.Size - Main.Size) / 2;
