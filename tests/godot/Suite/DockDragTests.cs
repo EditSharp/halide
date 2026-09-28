@@ -16,20 +16,20 @@ public sealed class DockDragTests
 	Vector2I pointer;
 	bool held;
 
-	Window Main => project.Window;
+	ProjectWindow Main => project.Window;
 
 	[SetUp]
 	public async Task Open()
 	{
 		project = await TestApp.NewProjectAsync();
 		Rect2I usable = DisplayServer.ScreenGetUsableRect(Main.CurrentScreen);
-		Main.Size = new Vector2I(System.Math.Min(1200, usable.Size.X - 96), System.Math.Min(720, usable.Size.Y - 96));
-		Main.Position = usable.Position + (usable.Size - Main.Size) / 2;
+		Vector2I size = new(System.Math.Min(1200, usable.Size.X - 96), System.Math.Min(720, usable.Size.Y - 96));
+		Main.Restore(new Rect2I(usable.Position + (usable.Size - size) / 2, size), maximized: false);
 		DockDrag.Pointer = () => pointer;
 		DockDrag.Held = () => held;
 		DragDrop.Pointer = () => pointer;
 		DragDrop.Held = () => held;
-		await TestApp.Seconds(0.5);
+		await TestApp.Seconds(0.8);
 	}
 
 	static Vector2I ToScreen(Window at, Vector2 global) => at.Position + (Vector2I)(global * at.ContentScaleFactor).Round();

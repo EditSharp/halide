@@ -13,5 +13,6 @@
   </Folder>
   <Project Path="../EditSharp/EditSharp.csproj" Id="a6492b06-aea6-400d-837a-934e39f0c8e7" />
   <Project Path="tests/EditSharp.Tests.csproj" />
+  <Project Path="tests/godot/Halide.GodotTests.csproj" />
   <Project Path="extensions/Sample/Sample.csproj" />
 </Solution>

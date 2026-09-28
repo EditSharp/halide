@@ -37,6 +37,9 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 	// a clip's graph button was pressed; the page opens an editor for it
 	public event Action<UIClip> GraphRequested;
 
+	ClipSelectionCommands selectionCommands;
+	ClipSelectionCommands SelectionCommands => selectionCommands ??= new(this);
+
 
 	// a captured drag can end without a release - the window lost focus, or the
 	// os swallowed the button. the pan cursor would otherwise stay stuck on,
@@ -56,149 +59,16 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 
 	// ---- editing the selection: cut, copy, paste, split, delete ----
 
-	// the channel the user last clicked, on a clip or on empty space. a
-	// paste re-bases the copied clips of that kind onto it. lastClicked is
-	// the clip itself when it was one - the copy remembers it as the clip in
-	// hand, so the paste lines that clip up with the target rather than the
-	// bottom of the set
-	(bool video, int index)? pasteTarget;
-	UIClip lastClicked;
+	public void MarkTarget(UIClip clip) => SelectionCommands.MarkTarget(clip);
+	void MarkTarget((ChannelType type, int index, bool exists) at) => SelectionCommands.MarkTarget(at);
+	public void CopySelection() => SelectionCommands.CopySelection();
+	public void DuplicateSelection() => SelectionCommands.DuplicateSelection();
+	public void CutSelection() => SelectionCommands.CutSelection();
+	public void Paste() => SelectionCommands.Paste();
+	public void SplitAtPlayhead(bool everything) => SelectionCommands.SplitAtPlayhead(everything);
+	public void DeleteSelection(RippleScope ripple, string description = null) => SelectionCommands.DeleteSelection(ripple, description);
 
-	public void MarkTarget(UIClip clip)
-	{
-		lastClicked = clip;
-
-		if (clip.Clip.Channel is Channel channel) pasteTarget = (channel is VideoChannel, channel.Index);
-	}
-
-	void MarkTarget((ChannelType type, int index, bool exists) at)
-	{
-		lastClicked = null;
-
-		if (at.exists) pasteTarget = (at.type == ChannelType.Video, at.index);
-	}
-
-	public void CopySelection()
-	{
-		if (Selection.Count == 0) return;
-
-		Clip anchor = lastClicked is not null && Selection.Contains(lastClicked) ? lastClicked.Clip : null;
-
-		Clipboard.Shared.Copy(ClipsItem.From(Selection.Select(s => s.Clip), anchor));
-	}
-
-	// copies of the selected clips straight after the selection, on the same channels; the clipboard is left alone
-	public void DuplicateSelection()
-	{
-		if (Selection.Count == 0) return;
-
-		List<ClipsItem.Entry> entries = ClipsItem.From(Selection.Select(s => s.Clip)).Materialize();
-		Time at = Selection.Max(s => s.Clip.End);
-		List<Clip> made = [];
-
-		using (Transaction.Scope change = UITimeline.History.Begin(entries.Count == 1 ? "Duplicate clip" : $"Duplicate {entries.Count} clips"))
-		{
-			foreach (ClipsItem.Entry e in entries)
-			{
-				e.Clip.Start = at + e.Offset;
-				EnsureChannel(e.Video, e.ChannelIndex).AddClip(e.Clip);
-				made.Add(e.Clip);
-			}
-
-			foreach (IGrouping<Guid?, ClipsItem.Entry> group in entries.Where(e => e.LinkGroup is not null).GroupBy(e => e.LinkGroup))
-			{
-				if (group.Count() > 1) UITimeline.Timeline.Link(group.Select(e => e.Clip));
-			}
-
-			change.Commit();
-		}
-
-		Reconcile();
-		SelectClips(made);
-	}
-
-	// copy, then a plain delete - the gap stays
-	public void CutSelection()
-	{
-		if (Selection.Count == 0) return;
-
-		CopySelection();
-		DeleteSelection(RippleScope.None, "Cut");
-	}
-
-	// the copied clips land with the earliest at the playhead, keeping their
-	// spacing. the ones of the kind the user last clicked are re-based onto
-	// that channel: the clip that was in hand when copying goes there and
-	// the rest keep their places around it (the lowest goes there when no
-	// clip was in hand). the other kind stays on the channels it came from.
-	// whatever is under them is overwritten, like a drop, and channels are
-	// made where the paste reaches past the top - never below the bottom
-	public void Paste()
-	{
-		if (!Clipboard.Shared.TryGet(out ClipsItem item) || item.Entries.Count == 0) return;
-
-		List<ClipsItem.Entry> entries = item.Materialize();
-		Time at = UITimeline.PlayheadTime;
-
-		if (pasteTarget is (bool video, int index))
-		{
-			// the move is a number of rows on screen, worked out from the clip in
-			// hand (or the lowest of the target's kind) to the target channel,
-			// and every clip moves by that many rows - video and audio alike.
-			// rows count downwards; video indices go up the screen and audio
-			// indices go down it, so the two kinds shift in opposite directions
-			int videoCount = UITimeline.Timeline.VideoChannels.Count;
-			int Row(bool isVideo, int channelIndex) => isVideo ? videoCount - 1 - channelIndex : videoCount + channelIndex;
-
-			ClipsItem.Entry? anchor = item.AnchorIndex >= 0 ? entries[item.AnchorIndex] : null;
-			List<ClipsItem.Entry> ofKind = [.. entries.Where(e => e.Video == video)];
-
-			int? fromRow = anchor is ClipsItem.Entry held ? Row(held.Video, held.ChannelIndex)
-				: ofKind.Count > 0 ? Row(video, ofKind.Min(e => e.ChannelIndex))
-				: null;
-
-			if (fromRow is int from)
-			{
-				int rows = Row(video, index) - from;
-				int videoShift = -rows;
-				int audioShift = rows;
-
-				// nothing can go below the first channel of its kind
-				List<ClipsItem.Entry> videos = [.. entries.Where(e => e.Video)];
-				List<ClipsItem.Entry> audios = [.. entries.Where(e => !e.Video)];
-
-				if (videos.Count > 0) videoShift = Mathf.Max(videoShift, -videos.Min(e => e.ChannelIndex));
-				if (audios.Count > 0) audioShift = Mathf.Max(audioShift, -audios.Min(e => e.ChannelIndex));
-
-				entries = [.. entries.Select(e => e with { ChannelIndex = e.ChannelIndex + (e.Video ? videoShift : audioShift) })];
-			}
-		}
-
-		List<Clip> pasted = [];
-
-		using (Transaction.Scope change = UITimeline.History.Begin(entries.Count == 1 ? "Paste clip" : $"Paste {entries.Count} clips"))
-		{
-			foreach (ClipsItem.Entry e in entries)
-			{
-				e.Clip.Start = at + e.Offset;
-				EnsureChannel(e.Video, e.ChannelIndex).AddClip(e.Clip);
-				pasted.Add(e.Clip);
-			}
-
-			// linked when copied, linked when pasted
-			foreach (IGrouping<Guid?, ClipsItem.Entry> group in entries.Where(e => e.LinkGroup is not null).GroupBy(e => e.LinkGroup))
-			{
-				if (group.Count() > 1) UITimeline.Timeline.Link(group.Select(e => e.Clip));
-			}
-
-			change.Commit();
-		}
-
-		Reconcile();
-		SelectClips(pasted);
-	}
-
-	Channel EnsureChannel(bool video, int index)
+	internal Channel EnsureChannel(bool video, int index)
 	{
 		Timeline timeline = UITimeline.Timeline;
 
@@ -212,56 +82,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		return timeline.AudioChannels[index];
 	}
 
-	// cuts at the playhead: the selected clips that span it, or every clip
-	// that spans it when nothing is selected or `everything` is asked for.
-	// the selection follows the clips it was on: a selected clip that was
-	// split is replaced by its pieces, the rest stay selected. with nothing
-	// selected, nothing ends up selected
-	public void SplitAtPlayhead(bool everything)
-	{
-		Time at = UITimeline.PlayheadTime;
-		Timeline timeline = UITimeline.Timeline;
 
-		IEnumerable<Clip> candidates = everything || Selection.Count == 0
-			? timeline.Channels.SelectMany(c => c.Clips)
-			: Selection.Select(s => s.Clip);
-
-		List<Clip> spanning = [.. candidates.Where(c => c.Start < at && c.End > at).Distinct()];
-		if (spanning.Count == 0) return;
-
-		HashSet<Clip> before = [.. timeline.Channels.SelectMany(c => c.Clips)];
-
-		// where the selected clips were, so their pieces can be found afterwards
-		List<Clip> selected = [.. Selection.Select(s => s.Clip)];
-		List<(Channel channel, Time start, Time end)> selectedSpans = [.. selected.Select(c => (c.Channel, c.Start, c.End))];
-
-		using (Transaction.Scope change = UITimeline.History.Begin(spanning.Count == 1 ? "Split clip" : $"Split {spanning.Count} clips"))
-		{
-			HashSet<Guid> groups = [];
-
-			foreach (Clip clip in spanning)
-			{
-				// a linked group splits as one, whichever of its members were picked
-				if (clip.LinkGroupId is Guid id)
-				{
-					if (groups.Add(id)) timeline.GetLinkGroup(id)?.Split(at);
-				}
-				else clip.Split(at);
-			}
-
-			change.Commit();
-		}
-
-		Reconcile();
-
-		// the selection: whatever was selected and survived, plus the pieces
-		// of whatever was selected and split
-		IEnumerable<Clip> pieces = timeline.Channels.SelectMany(c => c.Clips)
-			.Where(c => !before.Contains(c))
-			.Where(c => selectedSpans.Any(s => ReferenceEquals(s.channel, c.Channel) && c.Start >= s.start && c.End <= s.end));
-
-		SelectClips(selected.Where(c => c.Channel is not null).Concat(pieces));
-	}
 
 	public enum RippleScope
 	{
@@ -274,56 +95,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		AllChannels
 	}
 
-	public void DeleteSelection(RippleScope ripple, string description = null)
-	{
-		if (Selection.Count == 0) return;
 
-		List<Clip> clips = [.. Selection.Select(s => s.Clip)];
-		Timeline timeline = UITimeline.Timeline;
-		description ??= ripple == RippleScope.None ? "Delete" : "Ripple delete";
-
-		using (Transaction.Scope change = UITimeline.History.Begin(clips.Count == 1 ? $"{description} clip" : $"{description} {clips.Count} clips"))
-		{
-			switch (ripple)
-			{
-				case RippleScope.None:
-					foreach (Clip clip in clips) clip.Delete();
-					break;
-
-				case RippleScope.OwnChannels:
-					// latest first, so closing one gap never moves a clip still
-					// waiting its turn
-					foreach (Clip clip in clips.OrderByDescending(c => c.Start)) clip.RippleDelete();
-					break;
-
-				case RippleScope.AllChannels:
-					foreach ((Time start, Time end) in MergeRanges(clips).OrderByDescending(r => r.start))
-						timeline.RippleRemoveRange(start, end);
-					break;
-			}
-
-			change.Commit();
-		}
-
-		Selection.Clear();
-		Reconcile();
-	}
-
-	// the clips' spans, with any that touch or overlap joined into one
-	static List<(Time start, Time end)> MergeRanges(IEnumerable<Clip> clips)
-	{
-		List<(Time start, Time end)> merged = [];
-
-		foreach (Clip c in clips.OrderBy(c => c.Start))
-		{
-			if (merged.Count > 0 && c.Start <= merged[^1].end)
-				merged[^1] = (merged[^1].start, c.End > merged[^1].end ? c.End : merged[^1].end);
-			else
-				merged.Add((c.Start, c.End));
-		}
-
-		return merged;
-	}
 
 	public void SelectClips(IEnumerable<Clip> clips)
 	{
@@ -1102,7 +874,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		UpdateBox();
 	}
 
-	enum ChannelType { Video, Audio }
+	internal enum ChannelType { Video, Audio }
 	(ChannelType type, int index, bool exists) GetChannelAtPoint(Vector2 globalPosition)
 	{
 		// convert global position to local position.
@@ -1259,7 +1031,7 @@ public partial class UIClipsView : PanelContainer, IDragCancellable, IDropTarget
 		public int HighestChannelIndex => this.Max(c => c.Clip.Channel.Index);
 	}
 
-	ClipsSelection Selection = new();
+	internal ClipsSelection Selection = new();
 
 	public void SelectClip(UIClip uiClip, SelectionMode mode = SelectionMode.ExclusiveIfUnselected, bool invert = false)
 	{

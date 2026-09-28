@@ -14,15 +14,14 @@ namespace Halide.Tests;
 // runs every [TestFixture]'s [Test]s, each fixture in a user-data folder of its own, and quits: 0 when all passed.
 //   -- [--filter=TEXT] [--fixture=NAME] [--windowed-only] [--list] [--junit=FILE.xml] [--artifacts=DIR]
 // under --headless, [Windowed] tests are skipped; a windowed run with --windowed-only runs just those
-public partial class TestRunner : Node
+public sealed class TestRunner(TestRunnerHost host)
 {
 	readonly List<TestResult> results = [];
 	string artifacts;
 	string recordingScratch;
 
-	public override async void _Ready()
+	public async Task Execute(string[] args)
 	{
-		string[] args = OS.GetCmdlineUserArgs();
 		string Arg(string name) => args.FirstOrDefault(a => a.StartsWith($"--{name}="))?[$"--{name}=".Length..];
 		bool windowedOnly = args.Contains("--windowed-only");
 		string filter = Arg("filter");
@@ -30,8 +29,9 @@ public partial class TestRunner : Node
 		artifacts = Arg("artifacts");
 		if (artifacts is not null) Directory.CreateDirectory(artifacts);
 
-		GetTree().Root.GuiEmbedSubwindows = false;
-		HostWindow.Hide(GetTree().Root);
+		host.GetTree().Root.GuiEmbedSubwindows = false;
+		HostWindow.Hide(host.GetTree().Root);
+		ProjectThumbnails.Enabled = false;
 		EditSharp.Compositing.Gpu.GpuDiagnostics.TrackCreation = args.Contains("--gpu-origins");
 		string root = Path.Combine(Path.GetTempPath(), $"editsharp-tests-{Guid.NewGuid():N}");
 
@@ -43,7 +43,7 @@ public partial class TestRunner : Node
 		{
 			foreach (Type f in fixtures)
 				foreach (MethodInfo m in Tests(f)) GD.Print($"TEST {f.Name}.{m.Name}{(Known(f, m) is null ? "" : " [known]")}");
-			GetTree().Quit();
+			host.GetTree().Quit();
 			return;
 		}
 
@@ -101,7 +101,7 @@ public partial class TestRunner : Node
 		Watch($"running {fixture.Name}.{test.Name}", timeout + 60);
 		TestResult result;
 
-		TestRecorder recorder = artifacts is null || TestApp.Headless ? null : TestRecorder.Start(GetTree(), recordingScratch ??= Path.Combine(Path.GetTempPath(), $"editsharp-recordings-{Guid.NewGuid():N}"));
+		TestRecorder recorder = artifacts is null || TestApp.Headless ? null : TestRecorder.Start(host.GetTree(), recordingScratch ??= Path.Combine(Path.GetTempPath(), $"halide-recordings-{Guid.NewGuid():N}"));
 
 		try
 		{

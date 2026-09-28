@@ -28,7 +28,7 @@ public sealed class WindowStateTests
 	{
 		ProjectHandle project = await TestApp.NewProjectAsync();
 		await TestApp.Seconds(0.5);
-		WindowChrome.Place(project.Window, Windowed);
+		project.Window.Restore(Windowed, maximized: false);
 		await TestApp.Seconds(0.8);
 		return project;
 	}

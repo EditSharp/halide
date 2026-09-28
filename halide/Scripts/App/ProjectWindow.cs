@@ -43,7 +43,10 @@ public partial class ProjectWindow : Window
 	static string WindowTitle(string filePath) => filePath is null ? "Halide" : $"{System.IO.Path.GetFileNameWithoutExtension(filePath)} - Halide";
 
 	// where the window last was while neither maximized nor fullscreen, which is what a project saves
-	public Rect2I RestoredRect => Mode == ModeEnum.Windowed ? WindowChrome.ContentRect(this) : restored;
+	public Rect2I RestoredRect =>
+		Mode == ModeEnum.Windowed && Godot.Time.GetTicksMsec() >= suppressRememberedUntil
+			? WindowChrome.ContentRect(this)
+			: restored;
 
 	// a windowed place only counts once it has held still: going fullscreen or maximized passes through
 	// in-between sizes while the mode still reads windowed -- on macOS specifically, Zoom/fullscreen is an
@@ -62,6 +65,7 @@ public partial class ProjectWindow : Window
 
 	// set once closing is confirmed, so a stray signal during teardown never asks the OS about a window it has already torn down
 	bool closing;
+	Window.ModeEnum lastMode;
 
 	void RememberRestored()
 	{
@@ -77,6 +81,15 @@ public partial class ProjectWindow : Window
 
 	public override void _Process(double delta)
 	{
+		if (Mode != lastMode)
+		{
+			bool restored = Mode == ModeEnum.Windowed && lastMode != ModeEnum.Windowed;
+			lastMode = Mode;
+			if (restored && OS.GetName() == "macOS")
+				_ = ReapplyRestoredRectAsync(this.restored);
+		}
+
+		if (Godot.Time.GetTicksMsec() < suppressRememberedUntil) { pending = default; return; }
 		if (Mode != ModeEnum.Windowed) { pending = default; return; }
 		if (!pending.HasArea() || Godot.Time.GetTicksMsec() - pendingAt < SettleMs) return;
 
@@ -89,7 +102,8 @@ public partial class ProjectWindow : Window
 	{
 		restored = Screens.Fit(rect);
 		pending = default;
-		suppressRememberedUntil = Godot.Time.GetTicksMsec() + SuppressMs;
+		ulong suppression = OS.GetName() == "macOS" ? 2000 : SuppressMs;
+		suppressRememberedUntil = Godot.Time.GetTicksMsec() + suppression;
 		InitialPosition = WindowInitialPosition.Absolute;
 		WindowChrome.Place(this, restored);
 		GD.Print($"[WindowState] Restore({rect}, maximized={maximized}) -> restored={restored}, ModeNow={Mode}");
@@ -103,8 +117,28 @@ public partial class ProjectWindow : Window
 		{
 			if (!IsInstanceValid(this)) return;
 			if (maximized) Mode = ModeEnum.Maximized;
+			else if (OS.GetName() == "macOS" && Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
 			GD.Print($"[WindowState] Restore's deferred callback: maximized={maximized}, Mode={Mode}");
+			if (OS.GetName() == "macOS" && !maximized) _ = ReapplyRestoredRectAsync(restored);
 		}).CallDeferred();
+	}
+
+	// macOS completes title-bar and Space transitions asynchronously. Reapply the saved content
+	// rectangle after the transition so Cocoa's intermediate frame notifications cannot resize it.
+	bool reapplyingRestoredRect;
+	async Task ReapplyRestoredRectAsync(Rect2I rect)
+	{
+		if (reapplyingRestoredRect) return;
+		reapplyingRestoredRect = true;
+		try
+		{
+			await ToSignal(GetTree().CreateTimer(0.35), SceneTreeTimer.SignalName.Timeout);
+			if (!GodotObject.IsInstanceValid(this)) return;
+			if (Mode != ModeEnum.Windowed) Mode = ModeEnum.Windowed;
+			await ToSignal(GetTree().CreateTimer(0.3), SceneTreeTimer.SignalName.Timeout);
+			if (GodotObject.IsInstanceValid(this) && Mode == ModeEnum.Windowed) WindowChrome.Place(this, rect);
+		}
+		finally { reapplyingRestoredRect = false; }
 	}
 
 	public override void _Notification(int what)
@@ -114,6 +148,7 @@ public partial class ProjectWindow : Window
 
 	public override void _Ready()
 	{
+		lastMode = Mode;
 		if (Mode == ModeEnum.Windowed && !restored.HasArea()) restored = WindowChrome.ContentRect(this);
 		SizeChanged += RememberRestored;
 		CloseRequested += () => _ = CloseAsync();

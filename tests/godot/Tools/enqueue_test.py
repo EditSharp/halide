@@ -1,8 +1,8 @@
 """Queues a test run for Tools/es_runner_agent.ps1 (which must already be running in an interactive
 session) and, by default, waits for it and prints the outcome.
 
-Usage: python Tools/enqueue_test.py [run_tests.py args...] [--wait/--no-wait] [--timeout SECONDS]
-Example: python Tools/enqueue_test.py --filter NativeBarMenuTests --windowed
+Usage: python tests/godot/Tools/enqueue_test.py [run_tests.py args...] [--wait/--no-wait] [--timeout SECONDS]
+Example: python tests/godot/Tools/enqueue_test.py --filter NativeBarMenuTests --windowed
 """
 import argparse
 import io

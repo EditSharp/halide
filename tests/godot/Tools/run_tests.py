@@ -1,14 +1,14 @@
-"""Runs EditSharp's test suite, each fixture in a process of its own, and writes one JUnit report.
+"""Runs Halide's Godot test fixtures, one fixture per process, and writes one JUnit report.
 
 A native crash then only loses its own fixture, and is reported as a failure (or as a known issue when every test in
 the fixture is marked [KnownIssue]).
 
 Usage:
-  python Tools/run_tests.py [--godot EXE] [--windowed] [--filter TEXT] [--out DIR] [--extra "GODOT ARGS"]
+  python tests/godot/Tools/run_tests.py [--godot EXE] [--assembly DLL] [--windowed] [--filter TEXT] [--out DIR] [--extra "GODOT ARGS"]
 
   default     headless: every test that doesn't need windows
   --windowed  with windows: only the [Windowed] tests
-  --out       where results.xml, per-fixture logs and failure screenshots go (default Tools/TestResults)
+  --out       where results.xml, per-fixture logs and failure screenshots go (default tests/godot/TestResults)
   --extra     engine arguments for every run, such as a rendering driver on a machine without a GPU
 """
 import argparse
@@ -19,9 +19,13 @@ import sys
 import time
 import shlex
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from context_menu_preview import PROJECT, find_godot
+REPO = Path(__file__).resolve().parents[3]
+PROJECT = str(REPO / "halide")
+TEST_ASSEMBLY = REPO / "tests" / "godot" / "bin" / "Debug" / "net10.0" / "Halide.GodotTests.dll"
+sys.path.insert(0, str(Path(PROJECT) / "Tools"))
+from context_menu_preview import find_godot
 
 SCENE = "res://Tools/Scenes/Tests/TestRunner.tscn"
 EXTRA = []
@@ -32,7 +36,7 @@ def godot_command(godot, headless, *args):
     command = [godot]
     if headless:
         command.append("--headless")
-    return command + EXTRA + ["--path", PROJECT, SCENE, "--", *args]
+    return command + EXTRA + ["--path", PROJECT, "--scene", SCENE, "--", f"--test-assembly={TEST_ASSEMBLY}", *args]
 
 
 def list_tests(godot):
@@ -103,16 +107,21 @@ def run_fixture(godot, fixture, tests, windowed, out):
 
 
 def main():
+    global TEST_ASSEMBLY
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--godot")
+    parser.add_argument("--assembly", default=str(TEST_ASSEMBLY))
     parser.add_argument("--windowed", action="store_true")
     parser.add_argument("--filter")
-    parser.add_argument("--out", default=os.path.join(PROJECT, "Tools", "TestResults"))
+    parser.add_argument("--out", default=os.path.join(REPO, "tests", "godot", "TestResults"))
     parser.add_argument("--extra", default="")
     args = parser.parse_args()
+    TEST_ASSEMBLY = Path(args.assembly).resolve()
     EXTRA.extend(shlex.split(args.extra))
 
     godot = find_godot(args.godot)
+    if not TEST_ASSEMBLY.is_file():
+        sys.exit(f"test assembly not found: {TEST_ASSEMBLY}\nBuild it with: dotnet build tests/godot/Halide.GodotTests.csproj")
     os.makedirs(args.out, exist_ok=True)
     fixtures = list_tests(godot)
     if not fixtures:

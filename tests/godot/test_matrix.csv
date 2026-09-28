@@ -73,6 +73,7 @@ Keyboard shortcuts,KeyboardChainTests,SelectAllFollowsTheFocusedView,yes,n/a,n/a
 Keyboard shortcuts,KeyboardChainTests,TimelineCommandsReachTheTimeline,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
 Keyboard shortcuts,KeyboardChainTests,UndoAndRedoGoThroughTheEditor,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
 Keyboard shortcuts,KeyboardChainTests,ZoomCommandsChangeTheScale,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
+Keyboard shortcuts,NativeKeyboardChainTests,ClickingAMediaTileFocusesMediaOverTheTimeline,no,done,todo,blocked (no VM),real input: clicks a media tile and timeline clip to verify which view receives shortcuts
 Keyboard shortcuts,ShortcutTests,BadCombosDontParse,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
 Keyboard shortcuts,ShortcutTests,BindingUnbindingAndLookingUp,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
 Keyboard shortcuts,ShortcutTests,CombosParseLeniently,yes,n/a,n/a,n/a,blocked: RealInput has no key-press support yet
@@ -116,7 +117,6 @@ Media library,MediaServiceTests,ImportersTakeTheirExtensionsLatestFirst,yes,n/a,
 Media library,MediaServiceTests,ImportingAddsOnceAsOneEntry,yes,n/a,n/a,n/a,
 Media library,MediaServiceTests,RemovingIsUndoable,yes,n/a,n/a,n/a,
 Media library,MediaServiceTests,RemovingWhatIsntThereDoesNothing,yes,n/a,n/a,n/a,
-NEW - classify me,NativeKeyboardChainTests,ClickingAMediaTileFocusesMediaOverTheTimeline,no,done,todo,blocked (no VM),real input
 Playback,RenderingTests,PlaybackPlaysAndPauses,yes,n/a,n/a,n/a,
 Playback,RenderingTests,SeekingMovesThePicture,yes,n/a,n/a,n/a,
 Playback,RenderingTests,WaveformsAppearAfterLoad,yes,n/a,n/a,n/a,
