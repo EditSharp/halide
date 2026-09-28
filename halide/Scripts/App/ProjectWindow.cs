@@ -42,10 +42,19 @@ public partial class ProjectWindow : Window
 	public Rect2I RestoredRect => Mode == ModeEnum.Windowed ? WindowChrome.ContentRect(this) : restored;
 
 	// a windowed place only counts once it has held still: going fullscreen or maximized passes through
-	// in-between sizes while the mode still reads windowed
+	// in-between sizes while the mode still reads windowed -- on macOS specifically, Zoom/fullscreen is an
+	// animated OS transition (~300-400ms) taking Godot's own Mode property along for the ride, so a
+	// position/size notification fired mid-animation can still read Mode as Windowed. 500ms comfortably
+	// outlasts that while still being well under what a person dragging/resizing by hand would notice
 	Rect2I restored, pending;
 	ulong pendingAt;
-	const ulong SettleMs = 300;
+	const ulong SettleMs = 500;
+
+	// sets an authoritative `restored` itself (see Restore below); RememberRestored must not clobber that
+	// with a mid-transition read from the deferred Maximize/Fullscreen that follows it, so it's suppressed
+	// for a bit longer than one animated transition should ever take
+	ulong suppressRememberedUntil;
+	const ulong SuppressMs = 800;
 
 	// set once closing is confirmed, so a stray signal during teardown never asks the OS about a window it has already torn down
 	bool closing;
@@ -53,14 +62,22 @@ public partial class ProjectWindow : Window
 	void RememberRestored()
 	{
 		if (closing || Mode != ModeEnum.Windowed) return;
+		if (Godot.Time.GetTicksMsec() < suppressRememberedUntil)
+		{
+			GD.Print($"[WindowState] RememberRestored suppressed ({WindowChrome.ContentRect(this)} ignored, {suppressRememberedUntil - Godot.Time.GetTicksMsec()}ms left)");
+			return;
+		}
 		pending = WindowChrome.ContentRect(this);
 		pendingAt = Godot.Time.GetTicksMsec();
 	}
 
 	public override void _Process(double delta)
 	{
-		if (Mode != ModeEnum.Windowed) pending = default;
-		else if (pending.HasArea() && Godot.Time.GetTicksMsec() - pendingAt >= SettleMs) (restored, pending) = (pending, default);
+		if (Mode != ModeEnum.Windowed) { pending = default; return; }
+		if (!pending.HasArea() || Godot.Time.GetTicksMsec() - pendingAt < SettleMs) return;
+
+		if (pending != restored) GD.Print($"[WindowState] settled restored {restored} -> {pending}");
+		(restored, pending) = (pending, default);
 	}
 
 	// back where a project was left, fitted to a screen (monitors change, and older saves kept fullscreen sizes)
@@ -68,10 +85,21 @@ public partial class ProjectWindow : Window
 	{
 		restored = Screens.Fit(rect);
 		pending = default;
+		suppressRememberedUntil = Godot.Time.GetTicksMsec() + SuppressMs;
 		InitialPosition = WindowInitialPosition.Absolute;
 		WindowChrome.Place(this, restored);
-		// after the chrome has taken the frame, so the OS keeps the restored size without a caption in it
-		if (maximized) Callable.From(() => { if (IsInstanceValid(this)) Mode = ModeEnum.Maximized; }).CallDeferred();
+		GD.Print($"[WindowState] Restore({rect}, maximized={maximized}) -> restored={restored}, ModeNow={Mode}");
+		// after the chrome has taken the frame, so the OS keeps the restored size without a caption in it.
+		// the non-maximized branch sets Windowed explicitly rather than assuming it's already the default:
+		// macOS can carry a newly created window into an already-fullscreen Space when the window that just
+		// closed was itself fullscreen, which would otherwise leave a "restored" project reopening fullscreen
+		Callable.From(() =>
+		{
+			if (!IsInstanceValid(this)) return;
+			ModeEnum before = Mode;
+			Mode = maximized ? ModeEnum.Maximized : ModeEnum.Windowed;
+			if (before != Mode) GD.Print($"[WindowState] Restore's deferred mode set: {before} -> {Mode}");
+		}).CallDeferred();
 	}
 
 	public override void _Notification(int what)

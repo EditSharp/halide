@@ -68,6 +68,11 @@ public sealed class MenuTests
 	[Test]
 	public async Task EveryBarMenuGoesToTheHandlerSoTheLayoutsOneCanBeReachedToo()
 	{
+		// macOS never creates a BarMenus at all -- it uses the OS's own global menu bar instead
+		// (ProjectWindow.cs: MacGlobalMenu.Install() in place of BarMenus.Attach()), so this whole
+		// switching-through-one-handler scenario doesn't apply there
+		if (OS.GetName() == "macOS") Assert.Skip("macOS uses its own native global menu bar, not BarMenus");
+
 		Halide.Scripts.UI.ContextMenu.Platform.PlatformHandler real = ContextMenus.Handler;
 		BarRecorder recorder = new();
 		ContextMenus.Handler = recorder;

@@ -36,7 +36,21 @@ def godot_command(godot, headless, *args):
 
 
 def list_tests(godot):
-    out = subprocess.run(godot_command(godot, True, "--list"), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300).stdout
+    # a hang here used to take the whole run down with a bare, uninformative traceback and nothing else
+    # to go on -- Godot itself has been seen to hang on --list with zero output on a freshly-provisioned
+    # CI runner. one retry (a truly stuck runner won't be helped by it, but a slow first-run JIT/shader
+    # warmup will) plus surfacing whatever the process did print gives something to actually debug from
+    for attempt in (1, 2):
+        try:
+            out = subprocess.run(godot_command(godot, True, "--list"), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300).stdout
+            break
+        except subprocess.TimeoutExpired as e:
+            text = lambda b: b.decode("utf-8", "replace") if isinstance(b, bytes) else (b or "")
+            partial = (text(e.stdout) + text(e.stderr)).strip()
+            print(f"--list timed out after 300s (attempt {attempt}/2){': ' + partial if partial else ' -- no output at all before the timeout'}", file=sys.stderr, flush=True)
+            if attempt == 2:
+                sys.exit("--list hung twice in a row: Godot itself isn't responding, not a test problem. Check the runner/GPU driver rather than the test suite.")
+
     tests = {}
     for line in out.splitlines():
         m = re.match(r"^TEST (\w+)\.(\w+)( \[known\])?$", line.strip())

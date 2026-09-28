@@ -86,9 +86,14 @@ jobs:
       - name: Windows ffmpeg
         if: matrix.name == 'windows'
         shell: pwsh
+        # a static binary download instead of choco: choco install ffmpeg has hung for hours on this
+        # runner before (community package mirror flakiness), where a direct download is seconds
         run: |
-          choco install ffmpeg -y --no-progress
-          ffprobe -version | Select-Object -First 1
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-extracted
+          $bin = (Get-ChildItem -Path ffmpeg-extracted -Directory | Select-Object -First 1).FullName + "\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          & "$bin\ffprobe.exe" -version | Select-Object -First 1
 
       - name: Build the macOS natives
         if: matrix.name == 'macos'
