@@ -43,7 +43,10 @@ public partial class ProjectWindow : Window
 	static string WindowTitle(string filePath) => filePath is null ? "Halide" : $"{System.IO.Path.GetFileNameWithoutExtension(filePath)} - Halide";
 
 	// where the window last was while neither maximized nor fullscreen, which is what a project saves
-	public Rect2I RestoredRect => Mode == ModeEnum.Windowed ? WindowChrome.ContentRect(this) : restored;
+	public Rect2I RestoredRect =>
+		Mode == ModeEnum.Windowed && Godot.Time.GetTicksMsec() >= suppressRememberedUntil
+			? WindowChrome.ContentRect(this)
+			: restored;
 
 	// a windowed place only counts once it has held still: going fullscreen or maximized passes through
 	// in-between sizes while the mode still reads windowed -- on macOS specifically, Zoom/fullscreen is an
