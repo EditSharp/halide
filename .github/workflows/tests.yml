@@ -62,7 +62,7 @@ jobs:
       - name: Unit tests
         shell: bash
         run: >
-          dotnet test edit-sharp-tests -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
+          dotnet test tests -p:UseLocalEditSharp=true "-p:EditSharpProject=$GITHUB_WORKSPACE/EditSharp/EditSharp.csproj"
           --logger "junit;LogFilePath=$GITHUB_WORKSPACE/results/unit/results.xml"
 
       - name: Fetch Godot
@@ -100,7 +100,7 @@ jobs:
 
       - name: Build the sample extension
         shell: bash
-        run: dotnet build edit-sharp-extensions/Sample
+        run: dotnet build extensions/Sample
 
       - name: Import project
         shell: bash

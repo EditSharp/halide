@@ -12,6 +12,6 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="../EditSharp/EditSharp.csproj" Id="a6492b06-aea6-400d-837a-934e39f0c8e7" />
-  <Project Path="edit-sharp-tests/EditSharp.Tests.csproj" />
-  <Project Path="edit-sharp-extensions/Sample/Sample.csproj" />
+  <Project Path="tests/EditSharp.Tests.csproj" />
+  <Project Path="extensions/Sample/Sample.csproj" />
 </Solution>

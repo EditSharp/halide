@@ -15,7 +15,7 @@ namespace Halide.Tests;
 public sealed class ExtensionTests
 {
 	// the sample extension's build output, when it's been built (CI builds it first)
-	static string SampleBuild => Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "edit-sharp-extensions", "Sample", "bin", "Debug", "net10.0"));
+	static string SampleBuild => Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "extensions", "Sample", "bin", "Debug", "net10.0"));
 
 	string folder;
 	ExtensionManager Manager => TestApp.App.Extensions;
@@ -50,7 +50,7 @@ public sealed class ExtensionTests
 
 	string InstallSample()
 	{
-		if (!File.Exists(Path.Combine(SampleBuild, "SampleExtension.dll"))) Assert.Skip("the sample extension isn't built (dotnet build edit-sharp-extensions/Sample)");
+		if (!File.Exists(Path.Combine(SampleBuild, "SampleExtension.dll"))) Assert.Skip("the sample extension isn't built (dotnet build extensions/Sample)");
 		string dir = Path.Combine(folder, "editsharp.sample");
 		Directory.CreateDirectory(dir);
 		foreach (string file in new[] { "SampleExtension.dll", "extension.json" }) File.Copy(Path.Combine(SampleBuild, file), Path.Combine(dir, file));
