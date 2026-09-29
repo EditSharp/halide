@@ -405,3 +405,4 @@ Slopmaxxing/Runtime/ffmpeg/ffplay.exe
 Slopmaxxing/Runtime/ffmpeg/ffprobe.exe
 /EditSharp
 tests/godot/TestResults/
+.projectmap/map.json
